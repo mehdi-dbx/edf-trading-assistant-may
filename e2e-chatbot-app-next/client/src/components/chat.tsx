@@ -24,6 +24,8 @@ import { ChatTransport } from '../lib/ChatTransport';
 import type { ClientSession } from '@chat-template/auth';
 import { softNavigateToChatId } from '@/lib/navigation';
 import { useAppConfig } from '@/contexts/AppConfigContext';
+import { useChatData } from '@/hooks/useChatData';
+import { useLocation } from 'react-router-dom';
 
 export function Chat({
   id,
@@ -41,6 +43,10 @@ export function Chat({
   session: ClientSession;
   initialLastContext?: LanguageModelUsage;
 }) {
+  const { pathname } = useLocation();
+  const isNewChat = pathname === '/';
+  const { chatData } = useChatData(id, !isNewChat);
+
   const { visibilityType } = useChatVisibility({
     chatId: id,
     initialVisibilityType,
@@ -51,6 +57,7 @@ export function Chat({
   const { chatHistoryEnabled } = useAppConfig();
 
   const [input, setInput] = useState<string>('');
+  const [showIntermediateSteps, setShowIntermediateSteps] = useState(true);
   const [_usage, setUsage] = useState<LanguageModelUsage | undefined>(
     initialLastContext,
   );
@@ -85,7 +92,7 @@ export function Chat({
     abortController.current?.abort('USER_ABORT_SIGNAL');
   }, []);
 
-  const isNewChat = initialMessages.length === 0;
+  const isNewChatByMessages = initialMessages.length === 0;
   const didFetchHistoryOnNewChat = useRef(false);
   const fetchChatHistory = useCallback(() => {
     mutate(unstable_serialize(getChatHistoryPaginationKey));
@@ -109,7 +116,7 @@ export function Chat({
     transport: new ChatTransport({
       onStreamPart: (part) => {
         // As soon as we recive a stream part, we fetch the chat history again for new chats
-        if (isNewChat && !didFetchHistoryOnNewChat.current) {
+        if (isNewChatByMessages && !didFetchHistoryOnNewChat.current) {
           fetchChatHistory();
           didFetchHistoryOnNewChat.current = true;
         }
@@ -275,10 +282,28 @@ export function Chat({
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
 
+  const pageTitle =
+    chatData?.chat?.title ||
+    (messages.length > 0 &&
+      (() => {
+        const firstUser = messages.find((m) => m.role === 'user');
+        const textPart = firstUser?.parts?.find(
+          (p): p is { type: 'text'; text: string } => p.type === 'text',
+        );
+        return textPart?.text?.slice(0, 60);
+      })()) ||
+    'Generate check-in performance reports for airlines';
+
   return (
     <>
       <div className="overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col bg-background">
-        <ChatHeader />
+        <ChatHeader
+          pageTitle={pageTitle}
+          showIntermediateSteps={showIntermediateSteps}
+          onToggleIntermediateSteps={() =>
+            setShowIntermediateSteps((s) => !s)
+          }
+        />
 
         <Messages
           chatId={id}
@@ -290,6 +315,7 @@ export function Chat({
           sendMessage={sendMessage}
           isReadonly={isReadonly}
           selectedModelId={initialChatModel}
+          showIntermediateSteps={showIntermediateSteps}
         />
 
         <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">

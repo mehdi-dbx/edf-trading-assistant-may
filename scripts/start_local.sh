@@ -17,6 +17,11 @@ for port in 8000 3000 3001; do
 done
 sleep 1
 
+# --- BEGIN: TEMPORARY LOCAL TESTING ONLY (not used on Databricks) ---
+# macOS: WeasyPrint (PDF report tool) needs Homebrew Pango/Cairo
+[[ "$(uname -s)" = Darwin && -d /opt/homebrew/lib ]] && export DYLD_LIBRARY_PATH="/opt/homebrew/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+# --- END: TEMPORARY LOCAL TESTING ONLY ---
+
 # Load .env then .env.local so DATABRICKS_* and API_PROXY are set for all children
 set -a
 [[ -f .env       ]] && source .env

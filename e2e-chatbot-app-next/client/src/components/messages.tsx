@@ -19,6 +19,7 @@ interface MessagesProps {
   regenerate: UseChatHelpers<ChatMessage>['regenerate'];
   isReadonly: boolean;
   selectedModelId: string;
+  showIntermediateSteps: boolean;
 }
 
 function PureMessages({
@@ -31,6 +32,7 @@ function PureMessages({
   regenerate,
   isReadonly,
   selectedModelId,
+  showIntermediateSteps,
 }: MessagesProps) {
   const {
     containerRef: messagesContainerRef,
@@ -85,6 +87,7 @@ function PureMessages({
               requiresScrollPadding={
                 hasSentMessage && index === messages.length - 1
               }
+              showIntermediateSteps={showIntermediateSteps}
             />
           ))}
 
@@ -119,8 +122,10 @@ function PureMessages({
 export const Messages = memo(PureMessages, (prevProps, nextProps) => {
   if (prevProps.status !== nextProps.status) return false;
   if (prevProps.selectedModelId !== nextProps.selectedModelId) return false;
+  if (prevProps.showIntermediateSteps !== nextProps.showIntermediateSteps)
+    return false;
   if (prevProps.messages.length !== nextProps.messages.length) return false;
   if (!equal(prevProps.messages, nextProps.messages)) return false;
 
-  return false;
+  return true;
 });

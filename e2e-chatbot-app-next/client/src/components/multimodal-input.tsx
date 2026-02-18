@@ -18,14 +18,12 @@ import { SuggestedActions } from './suggested-actions';
 import {
   PromptInput,
   PromptInputTextarea,
-  PromptInputToolbar,
-  PromptInputTools,
   PromptInputSubmit,
 } from './elements/prompt-input';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowDown, ArrowUpIcon, StopCircleIcon } from 'lucide-react';
+import { ArrowDown, ArrowRight, Paperclip, StopCircleIcon } from 'lucide-react';
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import type { VisibilityType } from './visibility-selector';
 import type { Attachment, ChatMessage } from '@chat-template/core';
@@ -254,7 +252,7 @@ function PureMultimodalInput({
       />
 
       <PromptInput
-        className="rounded-xl border border-border bg-background p-3 shadow-xs transition-all duration-200 focus-within:border-border hover:border-muted-foreground/50"
+        className="rounded-xl border-2 border-primary bg-background p-3 shadow-xs transition-all duration-200 focus-within:border-primary hover:border-primary/80"
         onSubmit={(event) => {
           event.preventDefault();
           if (status !== 'ready') {
@@ -297,24 +295,32 @@ function PureMultimodalInput({
             ))}
           </div>
         )}
-        <div className="flex flex-row items-start gap-1 sm:gap-2">
-          <PromptInputTextarea
-            data-testid="multimodal-input"
-            ref={textareaRef}
-            placeholder="Send a message..."
-            value={input}
-            onChange={handleInput}
-            minHeight={44}
-            maxHeight={200}
-            disableAutoResize={true}
-            className="grow resize-none border-0! border-none! bg-transparent p-2 text-sm outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
-            rows={1}
-            autoFocus
-          />{' '}
-        </div>
-        <PromptInputToolbar className="!border-top-0 border-t-0! p-0 shadow-none dark:border-0 dark:border-transparent!">
-          <PromptInputTools className="gap-0 sm:gap-0.5" />
-
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <PromptInputTextarea
+              data-testid="multimodal-input"
+              ref={textareaRef}
+              placeholder="Type in your question here.."
+              value={input}
+              onChange={handleInput}
+              minHeight={44}
+              maxHeight={200}
+              disableAutoResize={true}
+              className="w-full resize-none border-0! border-none! bg-transparent p-2 text-sm outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
+              rows={1}
+              autoFocus
+            />
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-8 shrink-0"
+            onClick={() => fileInputRef.current?.click()}
+            aria-label="Attach file"
+          >
+            <Paperclip className="h-4 w-4 text-muted-foreground" />
+          </Button>
           {status === 'submitted' || status === 'streaming' ? (
             <StopButton stop={stop} setMessages={setMessages} />
           ) : (
@@ -322,12 +328,12 @@ function PureMultimodalInput({
               data-testid="send-button"
               status={status}
               disabled={!input.trim() || uploadQueue.length > 0}
-              className="size-8 rounded-full bg-primary text-primary-foreground transition-colors duration-200 hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
+              className="size-8 shrink-0 rounded-full bg-primary text-primary-foreground transition-colors duration-200 hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
             >
-              <ArrowUpIcon size={14} />
+              <ArrowRight size={14} />
             </PromptInputSubmit>
           )}
-        </PromptInputToolbar>
+        </div>
       </PromptInput>
     </div>
   );

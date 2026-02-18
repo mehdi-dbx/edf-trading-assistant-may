@@ -37,7 +37,22 @@ def main():
     wh_id = getattr(wh_id, "id", wh_id)
     vol = f"/Volumes/{catalog}/{schema}/{vol_name}"
 
-    for csv in sorted(Path(__file__).resolve().parent.glob("*.csv")):
+    data_dir = Path(__file__).resolve().parent
+    if len(sys.argv) > 1:
+        csv_path = Path(sys.argv[1])
+        if not csv_path.is_absolute():
+            csv_path = (data_dir / csv_path).resolve()
+        if not csv_path.exists():
+            print(f"File not found: {csv_path}", file=sys.stderr)
+            sys.exit(1)
+        if csv_path.suffix.lower() != ".csv":
+            print("Expected a .csv file.", file=sys.stderr)
+            sys.exit(1)
+        csv_files = [csv_path]
+    else:
+        csv_files = sorted(data_dir.glob("*.csv"))
+
+    for csv in csv_files:
         rpath = f"{vol}/{csv.name}"
         w.files.upload_from(file_path=rpath, source_path=str(csv), overwrite=True)
         t = f"`{catalog}`.`{schema}`.`{csv.stem.replace('-', '_')}`"

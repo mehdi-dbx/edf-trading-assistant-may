@@ -97,7 +97,13 @@ export function getChatHistoryPaginationKey(
   return `/api/history?ending_before=${firstChatFromPage.id}&limit=${PAGE_SIZE}`;
 }
 
-export function SidebarHistory({ user }: { user?: ClientUser | null }) {
+export function SidebarHistory({
+  user,
+  searchQuery = '',
+}: {
+  user?: ClientUser | null;
+  searchQuery?: string;
+}) {
   const { setOpenMobile } = useSidebar();
   const { id } = useParams();
   const { chatHistoryEnabled } = useConfig();
@@ -230,7 +236,22 @@ export function SidebarHistory({ user }: { user?: ClientUser | null }) {
                   (paginatedChatHistory) => paginatedChatHistory.chats,
                 );
 
-                const groupedChats = groupChatsByDate(chatsFromHistory);
+                const query = searchQuery.trim().toLowerCase();
+                const filteredChats = query
+                  ? chatsFromHistory.filter((chat) =>
+                      chat.title?.toLowerCase().includes(query),
+                    )
+                  : chatsFromHistory;
+
+                const groupedChats = groupChatsByDate(filteredChats);
+
+                if (query && filteredChats.length === 0) {
+                  return (
+                    <div className="px-2 py-4 text-center text-sidebar-foreground/70 text-sm">
+                      No chats match your search.
+                    </div>
+                  );
+                }
 
                 return (
                   <div className="flex flex-col gap-6">

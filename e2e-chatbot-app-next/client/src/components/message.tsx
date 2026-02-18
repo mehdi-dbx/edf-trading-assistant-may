@@ -38,6 +38,17 @@ import { MessageOAuthError } from './message-oauth-error';
 import { isCredentialErrorMessage } from '@/lib/oauth-error-utils';
 import { Streamdown } from 'streamdown';
 import { useApproval } from '@/hooks/use-approval';
+import { useSession } from '@/contexts/SessionContext';
+
+function getInitials(displayName: string, maxLetters = 2): string {
+  const trimmed = displayName.trim();
+  if (!trimmed) return 'U';
+  const words = trimmed.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase().slice(0, maxLetters);
+  }
+  return trimmed.slice(0, maxLetters).toUpperCase() || trimmed.charAt(0).toUpperCase();
+}
 
 const PurePreviewMessage = ({
   message,
@@ -49,6 +60,7 @@ const PurePreviewMessage = ({
   regenerate,
   isReadonly,
   requiresScrollPadding,
+  showIntermediateSteps,
 }: {
   chatId: string;
   message: ChatMessage;
@@ -60,9 +72,17 @@ const PurePreviewMessage = ({
   regenerate: UseChatHelpers<ChatMessage>['regenerate'];
   isReadonly: boolean;
   requiresScrollPadding: boolean;
+  showIntermediateSteps: boolean;
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [showErrors, setShowErrors] = useState(false);
+  const { session } = useSession();
+  const displayName =
+    session?.user?.preferredUsername ||
+    session?.user?.name ||
+    session?.user?.email ||
+    'User';
+  const userInitials = getInitials(displayName);
 
   // Hook for handling MCP approval requests
   const { submitApproval, isSubmitting, pendingApprovalId } = useApproval({
@@ -185,16 +205,11 @@ const PurePreviewMessage = ({
                     <MessageContent
                       data-testid="message-content"
                       className={cn({
-                        'w-fit break-words rounded-2xl px-3 py-2 text-right text-white':
+                        'w-fit break-words rounded-2xl border px-3 py-2 text-right text-foreground bg-white dark:bg-background border-slate-200 dark:border-slate-700':
                           message.role === 'user',
                         'bg-transparent px-0 py-0 text-left':
                           message.role === 'assistant',
                       })}
-                      style={
-                        message.role === 'user'
-                          ? { backgroundColor: '#006cff' }
-                          : undefined
-                      }
                     >
                       <Response>
                         {sanitizeText(joinMessagePartSegments(parts))}
@@ -227,6 +242,7 @@ const PurePreviewMessage = ({
 
             // Render Databricks tool calls and results
             if (part.type === `dynamic-tool`) {
+              if (!showIntermediateSteps) return null;
               const { toolCallId, input, state, errorText, output, toolName } = part;
 
               // Check if this is an MCP tool call by looking for approvalRequestId in metadata
@@ -387,6 +403,15 @@ const PurePreviewMessage = ({
             </div>
           )}
         </div>
+
+        {message.role === 'user' && (
+          <div
+            className="flex size-8 shrink-0 items-center justify-center rounded-full bg-blue-800 text-xs font-medium text-white"
+            data-testid="message-user-avatar"
+          >
+            {userInitials}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -399,9 +424,11 @@ export const PreviewMessage = memo(
     if (prevProps.message.id !== nextProps.message.id) return false;
     if (prevProps.requiresScrollPadding !== nextProps.requiresScrollPadding)
       return false;
+    if (prevProps.showIntermediateSteps !== nextProps.showIntermediateSteps)
+      return false;
     if (!equal(prevProps.message.parts, nextProps.message.parts)) return false;
 
-    return false;
+    return true;
   },
 );
 

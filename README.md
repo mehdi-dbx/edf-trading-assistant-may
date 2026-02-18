@@ -124,6 +124,8 @@ This runs the full stack at http://localhost:3000 (frontend), with backend on 80
    uv run start-server --workers 4 # run the server with multiple workers
    ```
 
+   **macOS and the PDF report tool (local testing only):** On Databricks, WeasyPrint works without any extra setup. For local runs on macOS, if you see a WeasyPrint error about `libgobject-2.0-0`, install Pango/Cairo via Homebrew (`brew install pango cairo`) and run with `DYLD_LIBRARY_PATH=/opt/homebrew/lib uv run start-server` (or use `./scripts/start_local.sh`). Code marked "TEMPORARY LOCAL TESTING ONLY - REMOVE FOR DATABRICKS" in `agent_server/start_server.py` is for local macOS only and can be removed when deploying to Databricks.
+
    - Example streaming request:
      ```bash
      curl -X POST http://localhost:8000/invocations \

@@ -1,3 +1,15 @@
+import os
+import sys
+
+# --- BEGIN: TEMPORARY LOCAL TESTING ONLY - REMOVE FOR DATABRICKS ---
+# On macOS, WeasyPrint (PDF report tool) needs Homebrew Pango/Cairo; not needed on Databricks.
+if sys.platform == "darwin":
+    brew_lib = "/opt/homebrew/lib"
+    if os.path.isdir(brew_lib):
+        existing = os.environ.get("DYLD_LIBRARY_PATH", "")
+        os.environ["DYLD_LIBRARY_PATH"] = f"{brew_lib}{':' + existing if existing else ''}"
+# --- END: TEMPORARY LOCAL TESTING ONLY - REMOVE FOR DATABRICKS ---
+
 from dotenv import load_dotenv
 from mlflow.genai.agent_server import AgentServer, setup_mlflow_git_based_version_tracking
 

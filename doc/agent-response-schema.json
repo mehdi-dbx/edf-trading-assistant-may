@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent-response",
+  "title": "Agent invocations response",
+  "description": "JSON schema for POST /invocations response (non-streaming)",
+  "type": "object",
+  "required": ["object", "output"],
+  "properties": {
+    "object": {
+      "type": "string",
+      "const": "response",
+      "description": "Fixed value for responses"
+    },
+    "output": {
+      "type": "array",
+      "description": "Ordered list of output items: messages, function calls, function call outputs",
+      "items": {
+        "$ref": "#/$defs/OutputItem"
+      }
+    }
+  },
+  "$defs": {
+    "OutputItem": {
+      "oneOf": [
+        { "$ref": "#/$defs/MessageItem" },
+        { "$ref": "#/$defs/FunctionCallItem" },
+        { "$ref": "#/$defs/FunctionCallOutputItem" }
+      ]
+    },
+    "MessageItem": {
+      "type": "object",
+      "required": ["type", "id", "content", "role"],
+      "properties": {
+        "type": { "const": "message" },
+        "id": { "type": "string", "description": "Run/message id (e.g. lc_run--...)" },
+        "content": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ContentBlock" }
+        },
+        "role": { "enum": ["assistant"] }
+      }
+    },
+    "ContentBlock": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "const": "output_text" },
+        "text": { "type": "string", "description": "Assistant reply text" }
+      }
+    },
+    "FunctionCallItem": {
+      "type": "object",
+      "required": ["type", "id", "call_id", "name", "arguments"],
+      "properties": {
+        "type": { "const": "function_call" },
+        "id": { "type": "string" },
+        "call_id": { "type": "string" },
+        "name": { "type": "string", "description": "Tool name (e.g. query_space_..., poll_response_...)" },
+        "arguments": { "type": "string", "description": "JSON string of tool arguments" }
+      }
+    },
+    "FunctionCallOutputItem": {
+      "type": "object",
+      "required": ["type", "call_id", "output"],
+      "properties": {
+        "type": { "const": "function_call_output" },
+        "call_id": { "type": "string" },
+        "output": {
+          "type": "string",
+          "description": "JSON string of tool result (often array of { type, text, id })"
+        }
+      }
+    }
+  }
+}

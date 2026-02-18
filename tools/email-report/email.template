@@ -1,0 +1,19 @@
+---SUBJECT---
+Check-in Performance Report - [Airline Name] ([Period])
+---BODY---
+Dear [Contact Name],
+
+Please find attached your airline's check-in performance report for the period of [Period Long].
+
+Key Highlights:
+• Total check-ins processed
+• Average processing time
+• Passenger load factors
+• SLA compliance metrics
+
+The report includes detailed charts, trends, and actionable insights. If you have any questions, please don't hesitate to contact us.
+
+Best regards,
+Amadeus Airport Insights Team
+---ATTACHMENT_FILENAME---
+[Airline]_CheckIn_Report_[PeriodSlug].pdf
