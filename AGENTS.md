@@ -77,14 +77,14 @@ Ask the user: "I see there's an existing app with the same name. Would you like 
 | Setup | `uv run quickstart` |
 | Discover tools | `uv run discover-tools` |
 | Run locally (build + serve) | `uv run start-app` |
-| Run locally with live reload (dev) | `./scripts/dev.sh` |
+| Run locally with live reload (dev) | `./scripts/start_local.sh` |
 | Deploy | `databricks bundle deploy && databricks bundle run agent_langgraph` |
 | View logs | `databricks apps logs <app-name> --follow` |
 
 ### Dev mode and restart/rerun (instructions for me)
 
-- **When the user wants live frontend updates (no manual reload):** I run `./scripts/dev.sh` from the project root. I do not use `uv run start-app` for that. The script starts the backend with `--reload` and the frontend with `npm run dev:client` (Vite HMR). Frontend: http://localhost:3000, backend: http://localhost:8000. Stop with Ctrl+C; both processes exit.
-- **When the user asks to "run the app" or "run locally" without specifying dev:** I use `uv run start-app` (after quickstart if needed). I do not switch to `./scripts/dev.sh` unless they asked for live reload or automatic frontend updates.
+- **When the user wants live frontend updates (no manual reload):** I run `./scripts/start_local.sh` from the project root. The script starts backend (8000), Node API (3001), and frontend (3000) with port cleanup. Frontend: http://localhost:3000. Stop with Ctrl+C.
+- **When the user asks to "run the app" or "run locally" without specifying dev:** I use `uv run start-app` (after quickstart if needed). I use `./scripts/start_local.sh` when they want the full local stack with live reload.
 - **When to restart/rerun:** I tell the user to rerun the same command (or I rerun it) when: (1) they change `.env` (e.g. API_PROXY, MLFLOW_EXPERIMENT_ID, profile), (2) they pull changes that affect backend or frontend deps or scripts, (3) one of the processes exits with an error and they want a clean state. For frontend-only or backend-only code edits in dev mode, no restart is needed (HMR / --reload handle it).
 
 ---
@@ -98,8 +98,8 @@ Ask the user: "I see there's an existing app with the same name. Would you like 
 | `agent_server/evaluate_agent.py` | Agent evaluation with MLflow scorers |
 | `databricks.yml` | Bundle config & resource permissions |
 | `scripts/quickstart.py` | One-command setup script |
-| `scripts/start_app.py` | Build + run backend and frontend (production-like) |
-| `scripts/dev.sh` | Single-command dev: backend --reload + frontend HMR |
+| `scripts/start_app.py` | Build + run backend and frontend (used for deploy) |
+| `scripts/start_local.sh` | Full local stack: backend (8000) + Node API (3001) + Vite (3000), port cleanup |
 | `scripts/discover_tools.py` | Discovers available workspace resources |
 
 ---

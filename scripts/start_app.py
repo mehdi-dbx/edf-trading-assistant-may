@@ -152,6 +152,7 @@ class ProcessManager:
 
     def run(self, backend_args=None):
         load_dotenv(dotenv_path=".env", override=True)
+        load_dotenv(dotenv_path=".env.local", override=True)
 
         if not self.clone_frontend_if_needed():
             return 1

@@ -33,6 +33,14 @@ uv run start-app
 
 This will start the agent server and the chat app at http://localhost:8000.
 
+For local development with live reload (backend, Node API, and Vite frontend), use:
+
+```bash
+./scripts/start_local.sh
+```
+
+This runs the full stack at http://localhost:3000 (frontend), with backend on 8000 and the Node API on 3001.
+
 **Next steps**: see [modifying your agent](#modifying-your-agent) to customize and iterate on the agent code.
 
 ## Manual local development loop setup
