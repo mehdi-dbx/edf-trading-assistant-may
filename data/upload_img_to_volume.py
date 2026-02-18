@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
-"""Upload a local image to a Unity Catalog Volume path via CLI.
+"""Upload local PNG logos to Unity Catalog Volume: /Volumes/{catalog}/{schema}/reports/logos/[airline_name]_logo.png.
 
 Usage:
+  uv run python data/upload_img_to_volume.py
+      Upload all data/img/*.png to .../reports/logos/{stem}_logo.png (e.g. air_france.png -> air_france_logo.png).
+
+  uv run python data/upload_img_to_volume.py [source]
+      Upload a single file; destination is .../reports/logos/{stem}_logo.png.
+
   uv run python data/upload_img_to_volume.py [source] [destination]
+      Upload source to the given Volume path (overrides default naming).
 
-  source      Local image path (default: data/img/air_france_logo.png)
-  destination Volume path (default: /Volumes/<catalog>/<schema>/reports/logos/default/logo.png)
-               Uses AMADEUS_UNITY_CATALOG_SCHEMA for catalog.schema.
-
-  Or set VOLUME_LOGO_PATH to the full destination path (overrides default destination).
+Uses AMADEUS_UNITY_CATALOG_SCHEMA for catalog.schema.
 """
 import os
 import sys
@@ -28,14 +31,7 @@ def main() -> None:
     from databricks.sdk.service.catalog import VolumeType
 
     data_dir = Path(__file__).resolve().parent
-    default_src = data_dir / "img" / "air_france_logo.png"
-
-    source = Path(sys.argv[1]) if len(sys.argv) > 1 else default_src
-    if not source.is_absolute():
-        source = (data_dir / source).resolve()
-    if not source.exists():
-        print(f"File not found: {source}", file=sys.stderr)
-        sys.exit(1)
+    img_dir = data_dir / "img"
 
     w = WorkspaceClient()
     spec = os.environ.get("AMADEUS_UNITY_CATALOG_SCHEMA", "").strip()
@@ -43,29 +39,43 @@ def main() -> None:
         print("Set AMADEUS_UNITY_CATALOG_SCHEMA to catalog.schema", file=sys.stderr)
         sys.exit(1)
     catalog, schema = spec.split(".", 1)
+    base = f"/Volumes/{catalog}/{schema}/reports/logos"
 
-    dest = os.environ.get("VOLUME_LOGO_PATH", "").strip()
-    if not dest and len(sys.argv) > 2:
-        dest = sys.argv[2]
-    if not dest:
-        dest = f"/Volumes/{catalog}/{schema}/reports/logos/default_logo.png"
+    # Resolve source file(s)
+    if len(sys.argv) >= 2:
+        source = Path(sys.argv[1])
+        if not source.is_absolute():
+            source = (data_dir / source).resolve()
+        if not source.exists():
+            print(f"File not found: {source}", file=sys.stderr)
+            sys.exit(1)
+        if source.suffix.lower() != ".png":
+            print("Expected a .png file.", file=sys.stderr)
+            sys.exit(1)
+        sources = [source]
+    else:
+        sources = sorted(img_dir.glob("*.png"))
+        if not sources:
+            print(f"No PNG files in {img_dir}", file=sys.stderr)
+            sys.exit(1)
 
-    if not dest.startswith("/Volumes/"):
-        print("Destination must be a Volume path: /Volumes/<catalog>/<schema>/<volume>/...", file=sys.stderr)
-        sys.exit(1)
+    # Create volume if missing
+    try:
+        w.volumes.create(catalog_name=catalog, schema_name=schema, name="reports", volume_type=VolumeType.MANAGED)
+    except Exception as e:
+        if "already exists" not in str(e).lower() and "RESOURCE_ALREADY_EXISTS" not in str(e):
+            raise
 
-    # Create volume if missing (e.g. reports)
-    parts = dest.removeprefix("/Volumes/").split("/")
-    if len(parts) >= 3:
-        vol_name = parts[2]
-        try:
-            w.volumes.create(catalog_name=catalog, schema_name=schema, name=vol_name, volume_type=VolumeType.MANAGED)
-        except Exception as e:
-            if "already exists" not in str(e).lower() and "RESOURCE_ALREADY_EXISTS" not in str(e):
-                raise
-
-    w.files.upload_from(file_path=dest, source_path=str(source), overwrite=True)
-    print(f"Uploaded {source} -> {dest}")
+    for source in sources:
+        if len(sys.argv) >= 3 and len(sources) == 1:
+            dest = sys.argv[2]
+        else:
+            dest = f"{base}/{source.stem}_logo.png"
+        if not dest.startswith("/Volumes/"):
+            print(f"Destination must be a Volume path: {dest}", file=sys.stderr)
+            sys.exit(1)
+        w.files.upload_from(file_path=dest, source_path=str(source), overwrite=True)
+        print(f"Uploaded {source.name} -> {dest}")
 
 
 if __name__ == "__main__":

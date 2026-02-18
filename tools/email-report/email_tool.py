@@ -79,10 +79,6 @@ def send_email_report_tool(input: dict) -> str:
     except KeyError as e:
         return f"Error: missing required input field {e}."
 
-    path = Path(pdf_path)
-    if not path.exists():
-        return f"Error: PDF file not found at {pdf_path}."
-
     try:
         subject_tpl, body_tpl, attachment_tpl = load_template()
     except FileNotFoundError as e:
@@ -95,7 +91,19 @@ def send_email_report_tool(input: dict) -> str:
     attachment_filename = substitute(
         attachment_tpl, contact_name, airline_name, period_label
     )
-    pdf_bytes = path.read_bytes()
+    if pdf_path.startswith("/Volumes/"):
+        from databricks.sdk import WorkspaceClient
+
+        w = WorkspaceClient()
+        resp = w.files.download(pdf_path)
+        if not getattr(resp, "contents", None):
+            return f"Error: PDF file not found at {pdf_path}."
+        pdf_bytes = resp.contents.read()
+    else:
+        path = Path(pdf_path)
+        if not path.exists():
+            return f"Error: PDF file not found at {pdf_path}."
+        pdf_bytes = path.read_bytes()
     if len(pdf_bytes) > 40 * 1024 * 1024:
         return "Error: PDF is larger than 40MB; Resend cannot send it."
     pdf_b64 = base64.b64encode(pdf_bytes).decode("ascii")

@@ -80,7 +80,7 @@
   {% for section in data.sections %}
   <section class="section">
     <h2>{{ section.title }}</h2>
-    <p>{{ section.content }}</p>
+    <div class="section-content">{{ section.content | replace('\n', '<br>') }}</div>
   </section>
   {% endfor %}
 

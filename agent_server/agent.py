@@ -26,12 +26,7 @@ sp_workspace_client = WorkspaceClient()
 
 def init_mcp_client(workspace_client: WorkspaceClient) -> DatabricksMultiServerMCPClient:
     host_name = get_databricks_host_from_env()
-    servers = [
-        DatabricksMCPServer(
-            name="system-ai",
-            url=f"{host_name}/api/2.0/mcp/functions/system/ai",
-        ),
-    ]
+    servers = []
     genie_space_id = os.environ.get("AMADEUS_GENIE_CHECKIN", "").strip()
     if genie_space_id:
         servers.append(
@@ -64,12 +59,23 @@ def _get_email_report_tool():
     return send_email_report_tool
 
 
+def _get_download_reports_tool():
+    """Load the download reports tool from tools/pdf-report (download_reports_tool.py)."""
+    project_root = Path(__file__).resolve().parents[1]
+    pdf_report_dir = project_root / "tools" / "pdf-report"
+    if str(pdf_report_dir) not in sys.path:
+        sys.path.insert(0, str(pdf_report_dir))
+    from download_reports_tool import download_reports_tool
+    return download_reports_tool
+
+
 async def init_agent(workspace_client: Optional[WorkspaceClient] = None):
     mcp_client = init_mcp_client(workspace_client or sp_workspace_client)
     mcp_tools = await mcp_client.get_tools()
     pdf_tool = _get_pdf_report_tool()
     email_report_tool = _get_email_report_tool()
-    tools = list(mcp_tools) + [pdf_tool, email_report_tool]
+    download_reports_tool = _get_download_reports_tool()
+    tools = list(mcp_tools) + [pdf_tool, email_report_tool, download_reports_tool]
     return create_agent(tools=tools, model=ChatDatabricks(endpoint="databricks-gpt-5-2"))
 
 

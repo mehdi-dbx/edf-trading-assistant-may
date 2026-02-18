@@ -27,6 +27,8 @@ class ReportInput(BaseModel):
     customer_name: str
     logo_path: str
     data: ReportData
+    period_label: str | None = None  # e.g. "Jan 5-12, 2026" (for filename)
+    report_date: str | None = None  # e.g. "2026-02-01" or "2026-02-01 to 2026-02-07"
 
 
 if __name__ == "__main__":

@@ -2,6 +2,8 @@
 
 import base64
 import os
+import re
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -55,10 +57,52 @@ def load_logo_b64(path: str) -> str:
     return f"data:{mime};base64,{b64}"
 
 
+def _slug(name: str) -> str:
+    """Filesystem-safe slug: spaces and punctuation to single underscore, lowercase."""
+    s = re.sub(r"[^\w\s-]", "", name)
+    s = re.sub(r"[-\s]+", "_", s).strip("_").lower()
+    return s or "report"
+
+
+def _period_suffix(period_label: str | None) -> str:
+    """Short period hint for filename (no duplicate text). e.g. 'last 7 days' -> '7days'."""
+    if not period_label or not period_label.strip():
+        return "report"
+    pl = period_label.strip().lower()
+    if "7 days" in pl or "7day" in pl or "last 7" in pl:
+        return "7days"
+    if "14 days" in pl or "14day" in pl or "last 14" in pl:
+        return "14days"
+    if "30 days" in pl or "30day" in pl or "last 30" in pl or "1 month" in pl:
+        return "30days"
+    # Date range like "Jan 5-12, 2026" -> Jan_5_12_2026 (short slug, no spaces)
+    s = _slug(period_label.replace(",", " ").replace("-", "_"))
+    return s[:24] if len(s) > 24 else s or "report"
+
+
+def get_volume_report_path(
+    airline_name: str,
+    volume_base: str,
+    period_label: str | None = None,
+    report_date: str | None = None,
+) -> str:
+    """Return Volume path string for one report: {volume_base}/{airline_slug}/{filename}.pdf.
+
+    Filename: {airline_slug}_perf_{YYYY_MM_DD}_{period_suffix}.pdf
+    (e.g. qatar_airways_perf_2026_02_18_7days.pdf). Uses generation date to avoid duplicates.
+    """
+    slug = _slug(airline_name)
+    gen_date = datetime.now(timezone.utc).strftime("%Y_%m_%d")
+    period_hint = _period_suffix(period_label)
+    filename = f"{slug}_perf_{gen_date}_{period_hint}.pdf"
+    base = volume_base.rstrip("/")
+    return f"{base}/{slug}/{filename}"
+
+
 def get_output_path(customer_id: str, volume_base: str) -> Path:
     """Return path for report PDF: <volume_base>/reports/<customer_id>/report.pdf.
 
-    Creates parent directories if they do not exist.
+    Creates parent directories if they do not exist. Kept for backward compatibility in tests.
     """
     out_dir = Path(volume_base) / "reports" / customer_id
     out_dir.mkdir(parents=True, exist_ok=True)
