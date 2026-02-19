@@ -59,26 +59,42 @@ class SendReportEmailsRequest(BaseModel):
     recipients: list[SendReportRecipient]
 
 
+def _trace_log(message: str, data: dict):
+    import json
+    path = "/Users/mehdi.lamrani/code/_/amadeus-airops/.cursor/debug.log"
+    try:
+        with open(path, "a") as f:
+            f.write(json.dumps({"timestamp": __import__("time").time() * 1000, "location": "start_server.py", "message": message, "data": data}) + "\n")
+    except Exception:
+        pass
+
+
 @app.post("/api/send-report-emails")
 def send_report_emails(body: SendReportEmailsRequest):
     """Send report PDFs to the given recipients. Each recipient must have airline_name, contact_name, to_email, pdf_path, period_label."""
+    # #region agent log
+    _trace_log("send_report_emails called", {"hypothesisId": "A", "recipient_count": len(body.recipients), "first_pdf_path": body.recipients[0].pdf_path if body.recipients else None})
+    # #endregion
     try:
         results = []
         for r in body.recipients:
             try:
-                out = send_email_report_tool.invoke({
-                    "input": {
-                        "to_email": r.to_email,
-                        "contact_name": r.contact_name,
-                        "airline_name": r.airline_name,
-                        "pdf_path": r.pdf_path,
-                        "period_label": r.period_label,
-                    }
-                })
+                # .invoke() does not pass input to the wrapped function; call the underlying func with kwargs.
+                out = send_email_report_tool.func(
+                    to_email=r.to_email,
+                    contact_name=r.contact_name,
+                    airline_name=r.airline_name,
+                    pdf_path=r.pdf_path,
+                    period_label=r.period_label,
+                )
             except Exception as e:
                 results.append({"airline_name": r.airline_name, "to_email": r.to_email, "result": f"Error: {e}"})
                 continue
             results.append({"airline_name": r.airline_name, "to_email": r.to_email, "result": out})
+        # #region agent log
+        for i, res in enumerate(results):
+            _trace_log("send_report_emails result", {"hypothesisId": "E", "index": i, "result_prefix": (res.get("result") or "")[:120]})
+        # #endregion
         return {"sent": len(body.recipients), "results": results}
     except Exception as e:
         import traceback

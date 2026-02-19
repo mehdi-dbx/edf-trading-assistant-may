@@ -5,10 +5,21 @@ import html
 import json
 import os
 import re
+import time
 import resend  # type: ignore[import-untyped]
 from langchain_core.tools import tool
 
 from .template_loader import load_template
+
+TRACE_LOG_PATH = "/Users/mehdi.lamrani/code/_/amadeus-airops/.cursor/debug.log"
+
+
+def _trace_log(message: str, data: dict):
+    try:
+        with open(TRACE_LOG_PATH, "a") as f:
+            f.write(json.dumps({"timestamp": time.time() * 1000, "location": "email_tool.py", "message": message, "data": data}) + "\n")
+    except Exception:
+        pass
 
 
 def _slug(s: str) -> str:
@@ -43,14 +54,19 @@ def _body_to_html(body: str) -> str:
 
 
 @tool
-def send_email_report_tool(**kwargs) -> str:
+def send_email_report_tool(*args, **kwargs) -> str:
     """Send the check-in performance report PDF to one airline contact.
 
     Call with to_email, contact_name, airline_name, pdf_path, period_label. Sends the report PDF to that recipient. Required env: RESEND_API_KEY.
 
     To build the recipient checklist first: call get_airline_contacts_tool to get the contact list, match contacts to your airlines (from report/PDF context), build the email_recipients list, and output it for the UI. Then call this tool once per recipient to send (or let the UI call the send API on confirm).
     """
-    data = kwargs.get("input", kwargs) if "input" in kwargs else kwargs
+    # #region agent log
+    _trace_log("tool received", {"hypothesisId": "B", "args_len": len(args), "args0_keys": list(args[0].keys()) if args and isinstance(args[0], dict) else None, "kwargs_keys": list(kwargs.keys())})
+    # #endregion
+    # Backend calls .invoke({"input": {...}}); runnable may pass as positional arg or as kwargs
+    payload = args[0] if args and isinstance(args[0], dict) else kwargs
+    data = payload.get("input", payload) if isinstance(payload, dict) else kwargs
     if isinstance(data, str):
         try:
             data = json.loads(data)
@@ -58,6 +74,9 @@ def send_email_report_tool(**kwargs) -> str:
             return "Error: input must be valid JSON with to_email, contact_name, airline_name, pdf_path, period_label."
     if not isinstance(data, dict):
         data = kwargs
+    # Unwrap when framework nests: e.g. invoke({"input": {...}}) becomes input={"input": {...}}
+    if isinstance(data, dict) and "input" in data and not data.get("to_email"):
+        data = data.get("input", data)
 
     has_send_fields = (
         isinstance(data, dict)
@@ -68,6 +87,9 @@ def send_email_report_tool(**kwargs) -> str:
         and data.get("period_label")
     )
     if not has_send_fields:
+        # #region agent log
+        _trace_log("early return: recipient list msg (no send fields)", {"hypothesisId": "B", "has_send_fields": False})
+        # #endregion
         return (
             "To get the recipient list: call get_airline_contacts_tool to fetch contacts, match them to your airlines (with pdf_path and period_label from context), build email_recipients, and output the checklist. To send an email: call this tool with to_email, contact_name, airline_name, pdf_path, period_label."
         )
@@ -103,12 +125,21 @@ def send_email_report_tool(**kwargs) -> str:
         return "Error: pdf_path must be a Unity Catalog Volume path (e.g. /Volumes/catalog/schema/reports/...). Local paths are not supported."
     from databricks.sdk import WorkspaceClient
 
+    # #region agent log
+    _trace_log("downloading PDF", {"hypothesisId": "E", "pdf_path": pdf_path, "to_email": to_email})
+    # #endregion
     w = WorkspaceClient()
     resp = w.files.download(pdf_path)
 
     if not getattr(resp, "contents", None):
+        # #region agent log
+        _trace_log("PDF not found (no contents)", {"hypothesisId": "E", "pdf_path": pdf_path})
+        # #endregion
         return f"Error: PDF file not found at {pdf_path}."
     pdf_bytes = resp.contents.read()
+    # #region agent log
+    _trace_log("PDF downloaded", {"hypothesisId": "E", "pdf_path": pdf_path, "bytes": len(pdf_bytes)})
+    # #endregion
     
     if len(pdf_bytes) > 40 * 1024 * 1024:
         return "Error: PDF is larger than 40MB; Resend cannot send it."
@@ -124,9 +155,18 @@ def send_email_report_tool(**kwargs) -> str:
             {"filename": attachment_filename, "content": pdf_b64},
         ],
     }
+    # #region agent log
+    _trace_log("calling Resend.Emails.send", {"hypothesisId": "C", "to_email": to_email, "from_email": from_email})
+    # #endregion
     try:
-        resend.Emails.send(params)
+        r = resend.Emails.send(params)
+        # #region agent log
+        _trace_log("Resend.Emails.send returned", {"hypothesisId": "D", "to_email": to_email, "resend_return": str(r) if r is not None else "None", "resend_type": type(r).__name__})
+        # #endregion
     except Exception as e:
+        # #region agent log
+        _trace_log("Resend exception", {"hypothesisId": "C", "to_email": to_email, "error_type": type(e).__name__, "error_msg": str(e)})
+        # #endregion
         return f"Resend error: {e}"
 
     return f"Email sent to {to_email} with report attached ({attachment_filename})."
