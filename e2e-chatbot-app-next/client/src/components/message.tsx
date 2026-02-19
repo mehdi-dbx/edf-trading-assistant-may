@@ -208,12 +208,24 @@ const PurePreviewMessage = ({
                 const text = joinMessagePartSegments(parts);
                 const isReportDownload =
                   message.role === 'assistant' && text.includes('reports.zip');
+                const hasGeneratedReportPaths =
+                  message.role === 'assistant' &&
+                  text.includes('.pdf') &&
+                  (text.includes('/reports/') ||
+                    (text.includes('/Volumes/') && text.includes('reports/')));
                 const emailRecipients =
                   message.role === 'assistant' ? extractEmailRecipients(text) : null;
                 const textToShow =
                   emailRecipients != null
                     ? text.replace(/```(?:json)?\s*[\s\S]*?```/g, '').trim()
                     : text;
+                const textForDisplay =
+                  hasGeneratedReportPaths && textToShow
+                    ? textToShow.replace(
+                        /\/Volumes\/[^/]+\/[^/]+\/(?=reports\/)/g,
+                        '',
+                      )
+                    : textToShow;
                 const content = (
                   <MessageContent
                     data-testid="message-content"
@@ -224,12 +236,12 @@ const PurePreviewMessage = ({
                         message.role === 'assistant',
                     })}
                   >
-                    <Response>{sanitizeText(textToShow)}</Response>
+                    <Response>{sanitizeText(textForDisplay)}</Response>
                   </MessageContent>
                 );
                 return (
                   <div key={key} className="flex w-full flex-col gap-3">
-                    {isReportDownload ? (
+                    {isReportDownload || hasGeneratedReportPaths ? (
                       <div className="rounded-lg border-2 border-green-200 bg-green-50/90 p-4 dark:border-green-800 dark:bg-green-950/50">
                         <div className="flex items-start gap-3">
                           <Check className="size-5 shrink-0 text-green-600 dark:text-green-400" />

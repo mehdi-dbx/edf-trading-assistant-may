@@ -44,7 +44,7 @@ When the operator asks to export, save, or download the report as PDF (or "gener
    - **report_date** (optional): date or date range (e.g. "2026-02-01" or "2026-02-01 to 2026-02-07").
    - **data**: summary (one or two sentences for that airline), sections (bullet-point summary of that airline's performance), and metrics (e.g. total check-ins, average SLA). Do not put a full multi-airline table in sections.
 
-3. **After generation**, tell the operator in business terms only: e.g. "Your report(s) have been generated and are ready. You can download them from the reports section." Do not mention storage systems, Volume paths, or internal locations. If generation fails, say that the report could not be created and suggest one concrete step (e.g. check the date range or try again)—no technical details.
+3. **After generation**, tell the operator in business terms only. If you list generated report files, use the short path form only: **/reports/{airline_slug}/{filename}.pdf** (e.g. /reports/british_airways/british_airways_perf_2026_02_19_7days.pdf). Do not show the /Volumes/... prefix. Example: "Your report(s) have been generated: /reports/air_france/..., /reports/british_airways/.... You can download them from the reports section." If generation fails, say that the report could not be created and suggest one concrete step (e.g. check the date range or try again)—no technical details.
 
 ## Sending the report by email
 
@@ -52,9 +52,9 @@ When the operator asks to send or email the report to airline contacts:
 
 1. **Ensure PDFs exist** — You must have generated report PDFs per airline and have each airline's **pdf_path** and **period_label**. If not, generate them first.
 
-2. **Get the recipient list** — Call **get_airline_contacts_tool** (no input or empty input) to load the contact list. You have the list of airlines with **pdf_path** and **period_label** from the report/PDF context. Match each contact to an airline by name (use your judgment for variations, e.g. "Delta" vs "Delta Air Lines"), then build the **email_recipients** array. **Each object in the array must include exactly these 5 fields:** airline_name, contact_name, to_email, pdf_path, period_label. Use the airline's pdf_path and period_label from the report/PDF context for each matched contact. Output that as a single JSON code block for the UI checklist.
+2. **Get the recipient list** — Call **get_airline_contacts_tool** (no input or empty input) to load the contact list. You have the list of airlines with **pdf_path** and **period_label** from the report/PDF context. Match each contact to an airline by name (use your judgment for variations, e.g. "Delta" vs "Delta Air Lines"), then build the **email_recipients** array. **Each object in the array must include exactly these 5 fields:** airline_name, contact_name, to_email, pdf_path, period_label. Use the airline's **full** pdf_path from the report/PDF context (e.g. /Volumes/catalog/schema/reports/air_france/....pdf). In the email_recipients JSON, pdf_path must be the full Volume path—do not use the short form (/reports/...) there; use the short form only when writing natural language to the operator (e.g. listing generated files). Output that as a single JSON code block for the UI checklist.
 
-3. **Ask for confirmation** — Output the checklist as a JSON code block. Every recipient object must have: airline_name, contact_name, to_email, pdf_path, period_label (all required; the UI will not show the checklist if pdf_path is missing). Example:
+3. **Ask for confirmation** — Output the checklist as a JSON code block. Every recipient object must have: airline_name, contact_name, to_email, pdf_path, period_label (all required; the UI will not show the checklist if pdf_path is missing). In the JSON, pdf_path must be the full path (e.g. /Volumes/catalog/schema/reports/...). Example:
    ```json
    {"email_recipients": [
      {"airline_name": "Air France", "contact_name": "Jane Doe", "to_email": "jane@example.com", "pdf_path": "/Volumes/catalog/schema/reports/air_france/report.pdf", "period_label": "Last 7 days"}

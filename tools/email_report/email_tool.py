@@ -106,7 +106,7 @@ def send_email_report_tool(*args, **kwargs) -> str:
     to_email = data["to_email"]
     contact_name = data["contact_name"]
     airline_name = data["airline_name"]
-    pdf_path = data["pdf_path"]
+    pdf_path = data["pdf_path"].strip()
     period_label = data["period_label"]
 
     try:
@@ -117,10 +117,25 @@ def send_email_report_tool(*args, **kwargs) -> str:
     subject = substitute(subject_tpl, contact_name, airline_name, period_label)
     body = substitute(body_tpl, contact_name, airline_name, period_label)
     html_content = _body_to_html(body)
-
     attachment_filename = substitute(
         attachment_tpl, contact_name, airline_name, period_label
     )
+
+    # Resolve short path (/reports/...) to full Volume path if needed
+    if pdf_path.startswith("/reports/") and not pdf_path.startswith("/Volumes/"):
+        volume_base = os.environ.get("VOLUME_BASE_PATH", "").strip()
+        if not volume_base or not volume_base.startswith("/Volumes/"):
+            spec = os.environ.get("AMADEUS_UNITY_CATALOG_SCHEMA", "").strip()
+            if "." in spec:
+                catalog, schema = spec.split(".", 1)
+                volume_base = f"/Volumes/{catalog}/{schema}/reports"
+            else:
+                volume_base = ""
+        if volume_base:
+            base = volume_base.rstrip("/")
+            suffix = pdf_path[8:] if pdf_path.startswith("/reports/") else pdf_path  # drop "/reports"
+            pdf_path = f"{base}/{suffix.lstrip('/')}"
+
     if not pdf_path.startswith("/Volumes/"):
         return "Error: pdf_path must be a Unity Catalog Volume path (e.g. /Volumes/catalog/schema/reports/...). Local paths are not supported."
     from databricks.sdk import WorkspaceClient
