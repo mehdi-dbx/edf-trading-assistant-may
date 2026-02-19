@@ -6,8 +6,8 @@ from pathlib import Path
 from jinja2 import Environment, FileSystemLoader
 from weasyprint import HTML
 
-from models import ReportInput
-from utils import load_logo_b64
+from .models import ReportInput
+from .utils import load_logo_b64
 
 
 def _templates_dir() -> Path:

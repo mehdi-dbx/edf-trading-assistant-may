@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 
 class ReportSection(BaseModel):
@@ -10,6 +10,13 @@ class ReportSection(BaseModel):
 
     title: str
     content: str
+
+    @field_validator("content", mode="before")
+    @classmethod
+    def content_to_str(cls, v: str | list[str]) -> str:
+        if isinstance(v, list):
+            return "\n".join(str(item) for item in v)
+        return str(v) if v is not None else ""
 
 
 class ReportData(BaseModel):

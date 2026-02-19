@@ -2,14 +2,13 @@
 
 import base64
 import html
+import json
 import os
 import re
-from pathlib import Path
-
 import resend  # type: ignore[import-untyped]
 from langchain_core.tools import tool
 
-from template_loader import load_template
+from .template_loader import load_template
 
 
 def _slug(s: str) -> str:
@@ -44,23 +43,35 @@ def _body_to_html(body: str) -> str:
 
 
 @tool
-def send_email_report_tool(input: dict) -> str:
-    """Send the check-in performance report PDF to one airline contact by email.
+def send_email_report_tool(**kwargs) -> str:
+    """Send the check-in performance report PDF to one airline contact.
 
-    Use this after generating the PDF (e.g. with pdf_report_tool) when the user
-    asks to send or email the report to airline contacts.
+    Call with to_email, contact_name, airline_name, pdf_path, period_label. Sends the report PDF to that recipient. Required env: RESEND_API_KEY.
 
-    Required env: RESEND_API_KEY. Optional: EMAIL_FROM (default Amadeus Airport Insights <onboarding@resend.dev>).
-
-    Input must be a JSON object with:
-    - to_email (str): recipient email address.
-    - contact_name (str): contact name for the greeting (e.g. "John Smith").
-    - airline_name (str): airline name for subject and attachment (e.g. "Singapore Airlines").
-    - pdf_path (str): absolute path to the PDF file (e.g. returned by pdf_report_tool).
-    - period_label (str): report period for subject/body (e.g. "Jan 5-12, 2026").
-
-    Returns a success message or an error description.
+    To build the recipient checklist first: call get_airline_contacts_tool to get the contact list, match contacts to your airlines (from report/PDF context), build the email_recipients list, and output it for the UI. Then call this tool once per recipient to send (or let the UI call the send API on confirm).
     """
+    data = kwargs.get("input", kwargs) if "input" in kwargs else kwargs
+    if isinstance(data, str):
+        try:
+            data = json.loads(data)
+        except json.JSONDecodeError:
+            return "Error: input must be valid JSON with to_email, contact_name, airline_name, pdf_path, period_label."
+    if not isinstance(data, dict):
+        data = kwargs
+
+    has_send_fields = (
+        isinstance(data, dict)
+        and data.get("to_email")
+        and data.get("contact_name")
+        and data.get("airline_name")
+        and data.get("pdf_path")
+        and data.get("period_label")
+    )
+    if not has_send_fields:
+        return (
+            "To get the recipient list: call get_airline_contacts_tool to fetch contacts, match them to your airlines (with pdf_path and period_label from context), build email_recipients, and output the checklist. To send an email: call this tool with to_email, contact_name, airline_name, pdf_path, period_label."
+        )
+
     api_key = os.environ.get("RESEND_API_KEY")
     if not api_key:
         return "Error: RESEND_API_KEY is not set. Set it in the environment to send emails."
@@ -70,14 +81,11 @@ def send_email_report_tool(input: dict) -> str:
         "Amadeus Airport Insights <onboarding@resend.dev>",
     )
 
-    try:
-        to_email = input["to_email"]
-        contact_name = input["contact_name"]
-        airline_name = input["airline_name"]
-        pdf_path = input["pdf_path"]
-        period_label = input["period_label"]
-    except KeyError as e:
-        return f"Error: missing required input field {e}."
+    to_email = data["to_email"]
+    contact_name = data["contact_name"]
+    airline_name = data["airline_name"]
+    pdf_path = data["pdf_path"]
+    period_label = data["period_label"]
 
     try:
         subject_tpl, body_tpl, attachment_tpl = load_template()
@@ -91,19 +99,17 @@ def send_email_report_tool(input: dict) -> str:
     attachment_filename = substitute(
         attachment_tpl, contact_name, airline_name, period_label
     )
-    if pdf_path.startswith("/Volumes/"):
-        from databricks.sdk import WorkspaceClient
+    if not pdf_path.startswith("/Volumes/"):
+        return "Error: pdf_path must be a Unity Catalog Volume path (e.g. /Volumes/catalog/schema/reports/...). Local paths are not supported."
+    from databricks.sdk import WorkspaceClient
 
-        w = WorkspaceClient()
-        resp = w.files.download(pdf_path)
-        if not getattr(resp, "contents", None):
-            return f"Error: PDF file not found at {pdf_path}."
-        pdf_bytes = resp.contents.read()
-    else:
-        path = Path(pdf_path)
-        if not path.exists():
-            return f"Error: PDF file not found at {pdf_path}."
-        pdf_bytes = path.read_bytes()
+    w = WorkspaceClient()
+    resp = w.files.download(pdf_path)
+
+    if not getattr(resp, "contents", None):
+        return f"Error: PDF file not found at {pdf_path}."
+    pdf_bytes = resp.contents.read()
+    
     if len(pdf_bytes) > 40 * 1024 * 1024:
         return "Error: PDF is larger than 40MB; Resend cannot send it."
     pdf_b64 = base64.b64encode(pdf_bytes).decode("ascii")

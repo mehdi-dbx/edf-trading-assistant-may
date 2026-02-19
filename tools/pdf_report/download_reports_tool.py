@@ -41,4 +41,4 @@ def download_reports_tool(input: str = "") -> str:
     if airline_slug:
         path += "?" + urlencode({"airline_slug": airline_slug})
     url = base_url + path
-    return f"Download all reports (ZIP): {url}\n\nOpen this link in your browser to download the ZIP file."
+    return f"[Download All Reports]({url})"

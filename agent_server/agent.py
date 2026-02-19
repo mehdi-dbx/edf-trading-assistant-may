@@ -1,5 +1,4 @@
 import os
-import sys
 from pathlib import Path
 from typing import AsyncGenerator, Optional
 
@@ -19,6 +18,10 @@ from agent_server.utils import (
     get_databricks_host_from_env,
     process_agent_astream_events,
 )
+from tools.email_report.get_airline_contacts_tool import get_airline_contacts_tool
+from tools.email_report.email_tool import send_email_report_tool
+from tools.pdf_report.download_reports_tool import download_reports_tool
+from tools.pdf_report.pdf_tool import pdf_report_tool
 
 mlflow.langchain.autolog()
 sp_workspace_client = WorkspaceClient()
@@ -39,43 +42,15 @@ def init_mcp_client(workspace_client: WorkspaceClient) -> DatabricksMultiServerM
     return DatabricksMultiServerMCPClient(servers)
 
 
-def _get_pdf_report_tool():
-    """Load the PDF report tool from tools/pdf-report (pdf_tool.py)."""
-    project_root = Path(__file__).resolve().parents[1]
-    pdf_report_dir = project_root / "tools" / "pdf-report"
-    if str(pdf_report_dir) not in sys.path:
-        sys.path.insert(0, str(pdf_report_dir))
-    from pdf_tool import pdf_report_tool
-    return pdf_report_tool
-
-
-def _get_email_report_tool():
-    """Load the email report tool from tools/email-report (email_tool.py)."""
-    project_root = Path(__file__).resolve().parents[1]
-    email_report_dir = project_root / "tools" / "email-report"
-    if str(email_report_dir) not in sys.path:
-        sys.path.insert(0, str(email_report_dir))
-    from email_tool import send_email_report_tool
-    return send_email_report_tool
-
-
-def _get_download_reports_tool():
-    """Load the download reports tool from tools/pdf-report (download_reports_tool.py)."""
-    project_root = Path(__file__).resolve().parents[1]
-    pdf_report_dir = project_root / "tools" / "pdf-report"
-    if str(pdf_report_dir) not in sys.path:
-        sys.path.insert(0, str(pdf_report_dir))
-    from download_reports_tool import download_reports_tool
-    return download_reports_tool
-
-
 async def init_agent(workspace_client: Optional[WorkspaceClient] = None):
     mcp_client = init_mcp_client(workspace_client or sp_workspace_client)
     mcp_tools = await mcp_client.get_tools()
-    pdf_tool = _get_pdf_report_tool()
-    email_report_tool = _get_email_report_tool()
-    download_reports_tool = _get_download_reports_tool()
-    tools = list(mcp_tools) + [pdf_tool, email_report_tool, download_reports_tool]
+    tools = list(mcp_tools) + [
+        pdf_report_tool,
+        get_airline_contacts_tool,
+        send_email_report_tool,
+        download_reports_tool,
+    ]
     return create_agent(tools=tools, model=ChatDatabricks(endpoint="databricks-gpt-5-2"))
 
 

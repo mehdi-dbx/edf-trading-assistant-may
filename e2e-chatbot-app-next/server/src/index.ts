@@ -48,6 +48,38 @@ app.get('/ping', (_req, res) => {
   res.status(200).send('pong');
 });
 
+// Backend base URL for proxy (FastAPI agent server); same host as API_PROXY without /invocations
+const getBackendBaseUrl = () => {
+  const apiProxy = process.env.API_PROXY ?? '';
+  if (apiProxy) {
+    const base = apiProxy.replace(/\/invocations\/?$/, '');
+    if (base) return base;
+  }
+  return 'http://localhost:8000';
+};
+
+// Proxy POST /api/send-report-emails to the FastAPI backend (agent server)
+app.post('/api/send-report-emails', async (req: Request, res: Response) => {
+  const base = getBackendBaseUrl();
+  const url = `${base}/api/send-report-emails`;
+  try {
+    const proxyRes = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body),
+    });
+    const text = await proxyRes.text();
+    res.status(proxyRes.status).setHeader('Content-Type', 'application/json');
+    res.send(text || JSON.stringify({ sent: 0, results: [] }));
+  } catch (err) {
+    console.error('[send-report-emails] proxy error:', err);
+    res.status(502).json({
+      error: 'Bad Gateway',
+      message: err instanceof Error ? err.message : 'Proxy to backend failed',
+    });
+  }
+});
+
 // API routes
 app.use('/api/chat', chatRouter);
 app.use('/api/history', historyRouter);
