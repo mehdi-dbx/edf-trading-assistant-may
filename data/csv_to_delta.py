@@ -124,6 +124,10 @@ def main():
         else:
             stmt = f"CREATE OR REPLACE TABLE {t} AS SELECT * FROM read_files('{rpath}', header => true)"
         _wait_for_statement(w, wh_id, stmt)
+        # Enable CDF for turnaround_events (required for poll_tms / UC1 monitoring)
+        if csv.stem.replace("-", "_") == "turnaround_events":
+            alter = f"ALTER TABLE {t} SET TBLPROPERTIES (delta.enableChangeDataFeed = true)"
+            _wait_for_statement(w, wh_id, alter)
     print("Done.")
 
 if __name__ == "__main__":

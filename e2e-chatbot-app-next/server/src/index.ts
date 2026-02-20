@@ -48,35 +48,23 @@ app.get('/ping', (_req, res) => {
   res.status(200).send('pong');
 });
 
-// Backend base URL for proxy (FastAPI agent server); same host as API_PROXY without /invocations
-const getBackendBaseUrl = () => {
-  const apiProxy = process.env.API_PROXY ?? '';
-  if (apiProxy) {
-    const base = apiProxy.replace(/\/invocations\/?$/, '');
-    if (base) return base;
-  }
-  return 'http://localhost:8000';
-};
-
-// Proxy POST /api/send-report-emails to the FastAPI backend (agent server)
-app.post('/api/send-report-emails', async (req: Request, res: Response) => {
-  const base = getBackendBaseUrl();
-  const url = `${base}/api/send-report-emails`;
+// Proxy to backend: simulated current time (advances queue on each call)
+app.get('/api/current-time', async (_req, res) => {
+  const apiProxy = process.env.API_PROXY || '';
+  const base = apiProxy.replace(/\/invocations\/?$/, '') || 'http://localhost:8000';
+  const url = `${base}/current-time`;
   try {
-    const proxyRes = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(req.body),
-    });
-    const text = await proxyRes.text();
-    res.status(proxyRes.status).setHeader('Content-Type', 'application/json');
-    res.send(text || JSON.stringify({ sent: 0, results: [] }));
+    const response = await fetch(url);
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(`[current-time] ${url} → ${response.status}`, text.slice(0, 200));
+      return res.status(response.status).json({ error: 'Backend error', details: text.slice(0, 200) });
+    }
+    const data = (await response.json()) as { currentTime: string };
+    return res.json(data);
   } catch (err) {
-    console.error('[send-report-emails] proxy error:', err);
-    res.status(502).json({
-      error: 'Bad Gateway',
-      message: err instanceof Error ? err.message : 'Proxy to backend failed',
-    });
+    console.error('[current-time] fetch failed', url, err);
+    return res.status(502).json({ error: 'Backend unavailable' });
   }
 });
 

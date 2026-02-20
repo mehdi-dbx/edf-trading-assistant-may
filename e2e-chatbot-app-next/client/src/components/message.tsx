@@ -35,13 +35,8 @@ import {
 } from './databricks-message-part-transformers';
 import { MessageError } from './message-error';
 import { MessageOAuthError } from './message-oauth-error';
-import {
-  EmailRecipientChecklist,
-  extractEmailRecipients,
-} from './email-recipient-checklist';
 import { isCredentialErrorMessage } from '@/lib/oauth-error-utils';
 import { Streamdown } from 'streamdown';
-import { Check } from 'lucide-react';
 import { useApproval } from '@/hooks/use-approval';
 import { useSession } from '@/contexts/SessionContext';
 
@@ -206,28 +201,9 @@ const PurePreviewMessage = ({
               }
               if (mode === 'view') {
                 const text = joinMessagePartSegments(parts);
-                const isReportDownload =
-                  message.role === 'assistant' && text.includes('reports.zip');
-                const hasGeneratedReportPaths =
-                  message.role === 'assistant' &&
-                  text.includes('.pdf') &&
-                  (text.includes('/reports/') ||
-                    (text.includes('/Volumes/') && text.includes('reports/')));
-                const emailRecipients =
-                  message.role === 'assistant' ? extractEmailRecipients(text) : null;
-                const textToShow =
-                  emailRecipients != null
-                    ? text.replace(/```(?:json)?\s*[\s\S]*?```/g, '').trim()
-                    : text;
-                const textForDisplay =
-                  hasGeneratedReportPaths && textToShow
-                    ? textToShow.replace(
-                        /\/Volumes\/[^/]+\/[^/]+\/(?=reports\/)/g,
-                        '',
-                      )
-                    : textToShow;
-                const content = (
+                return (
                   <MessageContent
+                    key={key}
                     data-testid="message-content"
                     className={cn({
                       'w-fit break-words rounded-2xl border px-3 py-2 text-right text-foreground bg-white dark:bg-background border-slate-200 dark:border-slate-700':
@@ -236,25 +212,8 @@ const PurePreviewMessage = ({
                         message.role === 'assistant',
                     })}
                   >
-                    <Response>{sanitizeText(textForDisplay)}</Response>
+                    <Response>{sanitizeText(text)}</Response>
                   </MessageContent>
-                );
-                return (
-                  <div key={key} className="flex w-full flex-col gap-3">
-                    {isReportDownload || hasGeneratedReportPaths ? (
-                      <div className="rounded-lg border-2 border-green-200 bg-green-50/90 p-4 dark:border-green-800 dark:bg-green-950/50">
-                        <div className="flex items-start gap-3">
-                          <Check className="size-5 shrink-0 text-green-600 dark:text-green-400" />
-                          <div className="min-w-0 flex-1">{content}</div>
-                        </div>
-                      </div>
-                    ) : (
-                      content
-                    )}
-                    {emailRecipients != null && emailRecipients.length > 0 && (
-                      <EmailRecipientChecklist recipients={emailRecipients} className="mt-1 w-full max-w-2xl" />
-                    )}
-                  </div>
                 );
               }
 

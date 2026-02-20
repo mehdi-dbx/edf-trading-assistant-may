@@ -1,41 +1,98 @@
-import { useState } from 'react';
-
-import { SidebarHistory } from '@/components/sidebar-history';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { useSidebar } from '@/components/ui/sidebar';
+import {
+  Home,
+  LayoutDashboard,
+  Network,
+  FileText,
+  BarChart3,
+  ChevronRight,
+  ChevronLeft,
+} from 'lucide-react';
 import type { ClientSession } from '@chat-template/auth';
 
+const navItems = [
+  { to: '/', icon: Home, label: 'Home' },
+  { icon: LayoutDashboard, label: 'Dashboard' },
+  { icon: Network, label: 'Network' },
+  { icon: FileText, label: 'Documents' },
+  { icon: BarChart3, label: 'Reports' },
+] as const;
+
 export function AppSidebar({
-  user,
+  user: _user,
   preferredUsername: _preferredUsername,
 }: {
   user: ClientSession['user'] | undefined;
   preferredUsername: string | null;
 }) {
-  const [searchQuery, setSearchQuery] = useState('');
+  const location = useLocation();
+  const { toggleSidebar, state } = useSidebar();
 
   return (
-    <Sidebar className="group-data-[side=left]:border-r-0">
-      <SidebarContent className="gap-2 px-2 pt-2">
-        <h2 className="px-2 font-semibold text-sidebar-foreground text-base">
-          History
-        </h2>
-        <div className="relative px-2">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search your chats here"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-8 pl-8 bg-background text-sm"
-          />
-        </div>
-        <SidebarHistory user={user} searchQuery={searchQuery} />
+    <Sidebar
+      className="group-data-[side=left]:border-r-0"
+      collapsible="icon"
+    >
+      <SidebarContent className="gap-0 px-2 pt-2">
+        <SidebarMenu>
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isHome = item.to === '/';
+            const isActive =
+              isHome && location.pathname === '/'
+                ? true
+                : !isHome && false;
+            return (
+              <SidebarMenuItem key={item.label}>
+                {isHome ? (
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive}
+                    tooltip={item.label}
+                  >
+                    <NavLink to="/">
+                      <Icon className="h-5 w-5" />
+                      <span>{item.label}</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                ) : (
+                  <SidebarMenuButton
+                    tooltip={item.label}
+                    className="cursor-default opacity-70"
+                    disabled
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span>{item.label}</span>
+                  </SidebarMenuButton>
+                )}
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
       </SidebarContent>
+      <SidebarFooter className="mt-auto p-2">
+        <SidebarMenuButton
+          onClick={toggleSidebar}
+          tooltip={state === 'collapsed' ? 'Expand sidebar' : 'Collapse sidebar'}
+          className="w-full"
+        >
+          {state === 'collapsed' ? (
+            <ChevronRight className="h-5 w-5" />
+          ) : (
+            <ChevronLeft className="h-5 w-5" />
+          )}
+          <span>{state === 'collapsed' ? 'Expand' : 'Collapse'}</span>
+        </SidebarMenuButton>
+      </SidebarFooter>
     </Sidebar>
   );
 }

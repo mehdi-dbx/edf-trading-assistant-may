@@ -2,7 +2,7 @@ import type { DataUIPart, LanguageModelUsage, UIMessageChunk } from 'ai';
 import { useChat } from '@ai-sdk/react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSWRConfig } from 'swr';
-import { ChatHeader } from '@/components/chat-header';
+import { ChatPanelHeader } from '@/components/chat-panel-header';
 import { fetchWithErrorHandlers, generateUUID } from '@/lib/utils';
 import { MultimodalInput } from './multimodal-input';
 import { Messages } from './messages';
@@ -27,6 +27,14 @@ import { useAppConfig } from '@/contexts/AppConfigContext';
 import { useChatData } from '@/hooks/useChatData';
 import { useLocation } from 'react-router-dom';
 
+export type ChatPanelHeaderProps = {
+  onNewChat: () => void;
+  onHistory: () => void;
+  expanded: boolean;
+  onExpand: () => void;
+  onClose?: () => void;
+};
+
 export function Chat({
   id,
   initialMessages,
@@ -34,6 +42,7 @@ export function Chat({
   initialVisibilityType,
   isReadonly,
   initialLastContext,
+  panelHeaderProps,
 }: {
   id: string;
   initialMessages: ChatMessage[];
@@ -42,6 +51,7 @@ export function Chat({
   isReadonly: boolean;
   session: ClientSession;
   initialLastContext?: LanguageModelUsage;
+  panelHeaderProps?: ChatPanelHeaderProps;
 }) {
   const { pathname } = useLocation();
   const isNewChat = pathname === '/';
@@ -282,28 +292,35 @@ export function Chat({
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
 
-  const pageTitle =
-    chatData?.chat?.title ||
-    (messages.length > 0 &&
-      (() => {
-        const firstUser = messages.find((m) => m.role === 'user');
-        const textPart = firstUser?.parts?.find(
-          (p): p is { type: 'text'; text: string } => p.type === 'text',
-        );
-        return textPart?.text?.slice(0, 60);
-      })()) ||
-    'Generate check-in performance reports for airlines';
+  const usePanelHeader = panelHeaderProps != null;
 
   return (
     <>
-      <div className="overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col bg-background">
-        <ChatHeader
-          pageTitle={pageTitle}
-          showIntermediateSteps={showIntermediateSteps}
-          onToggleIntermediateSteps={() =>
-            setShowIntermediateSteps((s) => !s)
-          }
-        />
+      <div className="overscroll-behavior-contain flex h-full min-h-0 min-w-0 touch-pan-y flex-col overflow-hidden bg-background">
+        {usePanelHeader ? (
+          <ChatPanelHeader
+            showIntermediateSteps={showIntermediateSteps}
+            onToggleIntermediateSteps={() =>
+              setShowIntermediateSteps((s) => !s)
+            }
+            onNewChat={panelHeaderProps.onNewChat}
+            onHistory={panelHeaderProps.onHistory}
+            expanded={panelHeaderProps.expanded}
+            onExpand={panelHeaderProps.onExpand}
+            onClose={panelHeaderProps.onClose}
+          />
+        ) : (
+          <ChatPanelHeader
+            showIntermediateSteps={showIntermediateSteps}
+            onToggleIntermediateSteps={() =>
+              setShowIntermediateSteps((s) => !s)
+            }
+            onNewChat={() => {}}
+            onHistory={() => {}}
+            expanded={false}
+            onExpand={() => {}}
+          />
+        )}
 
         <Messages
           chatId={id}

@@ -1,1 +1,1 @@
-"""Tools package: email_report, pdf_report."""
+"""Tools package: add new agent tools under tools/<name>/."""

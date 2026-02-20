@@ -300,7 +300,7 @@ function PureMultimodalInput({
             <PromptInputTextarea
               data-testid="multimodal-input"
               ref={textareaRef}
-              placeholder="Type in your question here.."
+              placeholder="Ask Garv"
               value={input}
               onChange={handleInput}
               minHeight={44}

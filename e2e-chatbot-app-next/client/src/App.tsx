@@ -6,8 +6,7 @@ import { DataStreamProvider } from '@/components/data-stream-provider';
 import { Toaster } from 'sonner';
 import RootLayout from '@/layouts/RootLayout';
 import ChatLayout from '@/layouts/ChatLayout';
-import NewChatPage from '@/pages/NewChatPage';
-import ChatPage from '@/pages/ChatPage';
+import HomePage from '@/pages/HomePage';
 
 function App() {
   return (
@@ -24,8 +23,8 @@ function App() {
             <Routes>
               <Route path="/" element={<RootLayout />}>
                 <Route element={<ChatLayout />}>
-                  <Route index element={<NewChatPage />} />
-                  <Route path="chat/:id" element={<ChatPage />} />
+                  <Route index element={<HomePage />} />
+                  <Route path="chat/:id" element={<HomePage />} />
                 </Route>
               </Route>
             </Routes>
