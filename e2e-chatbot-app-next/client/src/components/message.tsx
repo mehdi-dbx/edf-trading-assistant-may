@@ -3,6 +3,9 @@ import React, { memo, useState } from 'react';
 import { AnimatedAssistantIcon } from './animation-assistant-icon';
 import { Response } from './elements/response';
 import { MessageContent } from './elements/message';
+import { TurnaroundStartedCard } from './elements/turnaround-started-card';
+import { LiveTurnaroundChecklistCard } from './elements/live-turnaround-checklist';
+import { parseResponseBlocks, hasResponseBlocks } from '@/lib/response-blocks';
 import {
   Tool,
   ToolHeader,
@@ -201,6 +204,8 @@ const PurePreviewMessage = ({
               }
               if (mode === 'view') {
                 const text = joinMessagePartSegments(parts);
+                const sanitized = sanitizeText(text);
+                const useBlocks = hasResponseBlocks(sanitized);
                 return (
                   <MessageContent
                     key={key}
@@ -212,7 +217,40 @@ const PurePreviewMessage = ({
                         message.role === 'assistant',
                     })}
                   >
-                    <Response>{sanitizeText(text)}</Response>
+                    {useBlocks ? (
+                      <div className="flex flex-col gap-3">
+                        {parseResponseBlocks(sanitized).map((seg, i) => {
+                          if (seg.type === 'markdown') {
+                            return (
+                              <Response key={i}>{seg.content}</Response>
+                            );
+                          }
+                          if (seg.type === 'turnaround_started') {
+                            return (
+                              <TurnaroundStartedCard
+                                key={i}
+                                flight={seg.parsed.flight}
+                                etaMin={seg.parsed.etaMin}
+                                tobt={seg.parsed.tobt}
+                              />
+                            );
+                          }
+                          if (seg.type === 'live_turnaround_checklist') {
+                            return (
+                              <LiveTurnaroundChecklistCard
+                                key={i}
+                                flight={seg.parsed.flight}
+                                tasks={seg.parsed.tasks}
+                                readiness={seg.parsed.readiness}
+                              />
+                            );
+                          }
+                          return null;
+                        })}
+                      </div>
+                    ) : (
+                      <Response>{sanitized}</Response>
+                    )}
                   </MessageContent>
                 );
               }
