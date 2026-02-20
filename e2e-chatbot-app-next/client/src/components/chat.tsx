@@ -36,6 +36,7 @@ export type ChatPanelHeaderProps = {
   sendMessage?: (message: {
     role: 'user';
     parts: Array<{ type: 'text'; text: string }>;
+    metadata?: { source?: string };
   }) => void;
 };
 
@@ -312,7 +313,9 @@ export function Chat({
             expanded={panelHeaderProps.expanded}
             onExpand={panelHeaderProps.onExpand}
             onClose={panelHeaderProps.onClose}
-            sendMessage={sendMessage}
+            sendMessage={(msg) =>
+              sendMessage({ role: msg.role, parts: msg.parts })
+            }
           />
         ) : (
           <ChatPanelHeader

@@ -44,6 +44,7 @@ export function ChatPanelHeader({
   sendMessage?: (message: {
     role: 'user';
     parts: Array<{ type: 'text'; text: string }>;
+    metadata?: { source?: string };
   }) => void;
 }) {
   const [displayTime, setDisplayTime] = useState<string | null>(null);
@@ -77,6 +78,7 @@ export function ChatPanelHeader({
           sendMessage({
             role: 'user',
             parts: [{ type: 'text', text: CHECKLIST_FOR_CURRENT_TIME_MESSAGE }],
+            metadata: { source: 'system' },
           });
         }
       } else {

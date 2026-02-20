@@ -1,6 +1,6 @@
 import { PreviewMessage, AwaitingResponseMessage } from './message';
 import { Greeting } from './greeting';
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useMemo } from 'react';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { useMessages } from '@/hooks/use-messages';
@@ -8,6 +8,20 @@ import type { ChatMessage } from '@chat-template/core';
 import { useDataStream } from './data-stream-provider';
 import { Conversation, ConversationContent } from './elements/conversation';
 import { ArrowDownIcon } from 'lucide-react';
+import { getTextFromMessage } from '@/lib/utils';
+
+const CHECKLIST_TRIGGER_MESSAGE = 'Show the turnaround checklist';
+
+function isHiddenSystemMessage(message: ChatMessage): boolean {
+  if ((message.metadata as { source?: string } | undefined)?.source === 'system')
+    return true;
+  if (
+    message.role === 'user' &&
+    getTextFromMessage(message).trim() === CHECKLIST_TRIGGER_MESSAGE
+  )
+    return true;
+  return false;
+}
 
 interface MessagesProps {
   chatId: string;
@@ -60,6 +74,11 @@ function PureMessages({
     }
   }, [status, messagesContainerRef]);
 
+  const filteredMessages = useMemo(
+    () => messages.filter((m) => !isHiddenSystemMessage(m)),
+    [messages],
+  );
+
   return (
     <div
       ref={messagesContainerRef}
@@ -70,14 +89,14 @@ function PureMessages({
         <ConversationContent className="flex flex-col gap-4 px-2 py-4 md:gap-6 md:px-4">
           {messages.length === 0 && <Greeting />}
 
-          {messages.map((message, index) => (
+          {filteredMessages.map((message, index) => (
             <PreviewMessage
               key={message.id}
               chatId={chatId}
               message={message}
               allMessages={messages}
               isLoading={
-                status === 'streaming' && messages.length - 1 === index
+                status === 'streaming' && filteredMessages.length - 1 === index
               }
               setMessages={setMessages}
               addToolApprovalResponse={addToolApprovalResponse}
@@ -85,7 +104,7 @@ function PureMessages({
               regenerate={regenerate}
               isReadonly={isReadonly}
               requiresScrollPadding={
-                hasSentMessage && index === messages.length - 1
+                hasSentMessage && index === filteredMessages.length - 1
               }
               showIntermediateSteps={showIntermediateSteps}
             />
