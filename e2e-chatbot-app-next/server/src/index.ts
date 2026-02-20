@@ -54,6 +54,29 @@ app.get('/ping', (_req, res) => {
   res.status(200).send('pong');
 });
 
+// Dedicated route for stepping time back (register before /api/current-time so it matches first).
+app.get('/api/current-time/backward', async (_req, res) => {
+  const apiProxy = process.env.API_PROXY || '';
+  let base = apiProxy.replace(/\/invocations\/?$/, '') || 'http://127.0.0.1:8000';
+  if (base.startsWith('http://localhost:') || base.startsWith('https://localhost:')) {
+    base = base.replace('localhost', '127.0.0.1');
+  }
+  const url = `${base}/current-time/backward`;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      const text = await response.text();
+      console.error(`[current-time/backward] ${url} → ${response.status}`, text.slice(0, 200));
+      return res.status(response.status).json({ error: 'Backend error', details: text.slice(0, 200) });
+    }
+    const data = (await response.json()) as { currentTime: string };
+    return res.json(data);
+  } catch (err) {
+    console.error('[current-time/backward] fetch failed', url, err);
+    return res.status(502).json({ error: 'Backend unavailable' });
+  }
+});
+
 // Proxy to backend: simulated current time. ?advance=true moves queue; default peeks.
 app.get('/api/current-time', async (req, res) => {
   const apiProxy = process.env.API_PROXY || '';
@@ -63,8 +86,9 @@ app.get('/api/current-time', async (req, res) => {
     base = base.replace('localhost', '127.0.0.1');
   }
   const advance = req.query.advance === 'true' ? 'true' : 'false';
-  const url = `${base}/current-time?advance=${advance}`;
-  console.log('[current-time] proxy', advance, '->', url);
+  const backward = req.query.backward === 'true' ? 'true' : 'false';
+  const url = `${base}/current-time?advance=${advance}&backward=${backward}`;
+  console.log('[current-time] proxy', advance, backward, '->', url);
   try {
     const response = await fetch(url);
     if (!response.ok) {

@@ -7,6 +7,7 @@ import {
   Maximize2,
   Minimize2,
   X,
+  SkipBack,
   SkipForward,
 } from 'lucide-react';
 
@@ -75,6 +76,26 @@ export function ChatPanelHeader({
     }
   };
 
+  const backwardTime = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/current-time/backward');
+      const data = await res.json().catch(() => ({}));
+      const currentTime = (data as { currentTime?: string }).currentTime;
+      if (res.ok && typeof currentTime === 'string') {
+        setDisplayTime(currentTime);
+        setError(null);
+      } else {
+        setError((data as { error?: string }).error || `Error ${res.status}`);
+      }
+    } catch {
+      setError('Request failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Peek on mount so widget shows current simulated time without advancing
   useEffect(() => {
     fetchTime(false).catch(() => {});
@@ -87,6 +108,17 @@ export function ChatPanelHeader({
       </span>
       <div className="flex items-center gap-1">
         <div className="flex items-center gap-1.5 rounded-full border border-border/80 bg-muted/50 px-2.5 py-1.5">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6 shrink-0 rounded-full"
+            onClick={backwardTime}
+            disabled={loading}
+            aria-label="Step simulated time back"
+            title="Step simulated time back"
+          >
+            <SkipBack className="h-3.5 w-3.5 text-muted-foreground" />
+          </Button>
           <span
             className="min-w-10 font-mono text-xs tabular-nums text-muted-foreground"
             title={error ?? displayTime ?? 'Simulated time'}

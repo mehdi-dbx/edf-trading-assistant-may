@@ -17,11 +17,13 @@ _index = 0
 _lock = threading.Lock()
 
 
-def get_next_time(advance: bool = True) -> str:
-    """Return the current simulated time. If advance is True, move the queue forward first then return the new time (so widget/agent see the next time). If False, peek without advancing."""
+def get_next_time(advance: bool = True, backward: bool = False) -> str:
+    """Return the current simulated time. If backward is True, step queue back (with wrap) then return. If advance is True (and not backward), step forward then return. Else peek."""
     global _index
     with _lock:
-        if advance:
+        if backward:
+            _index = (_index - 1) % len(_TIME_QUEUE)
+        elif advance:
             _index += 1
         t = _TIME_QUEUE[_index % len(_TIME_QUEUE)]
     return t

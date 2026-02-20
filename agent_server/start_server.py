@@ -20,10 +20,22 @@ from tools.get_current_time import get_next_time  # noqa: E402
 
 @app.get("/current-time")
 def current_time(request: Request):
-    """Return simulated time. advance=true moves queue forward; advance=false (default) peeks."""
+    """Return simulated time. advance=true moves forward; backward=true moves back; else peeks."""
     advance = request.query_params.get("advance", "false").lower() == "true"
-    t = get_next_time(advance)
-    print(f"[current-time] advance={advance} -> {t}", flush=True)
+    backward = request.query_params.get("backward", "false").lower() == "true"
+    if backward:
+        t = get_next_time(advance=False, backward=True)
+    else:
+        t = get_next_time(advance)
+    print(f"[current-time] advance={advance} backward={backward} -> {t}", flush=True)
+    return {"currentTime": t}
+
+
+@app.get("/current-time/backward")
+def current_time_backward():
+    """Step simulated time backward and return new time (avoids query-param forwarding issues)."""
+    t = get_next_time(advance=False, backward=True)
+    print(f"[current-time/backward] -> {t}", flush=True)
     return {"currentTime": t}
 
 
