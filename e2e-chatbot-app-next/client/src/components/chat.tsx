@@ -33,6 +33,10 @@ export type ChatPanelHeaderProps = {
   expanded: boolean;
   onExpand: () => void;
   onClose?: () => void;
+  sendMessage?: (message: {
+    role: 'user';
+    parts: Array<{ type: 'text'; text: string }>;
+  }) => void;
 };
 
 export function Chat({
@@ -308,6 +312,7 @@ export function Chat({
             expanded={panelHeaderProps.expanded}
             onExpand={panelHeaderProps.onExpand}
             onClose={panelHeaderProps.onClose}
+            sendMessage={sendMessage}
           />
         ) : (
           <ChatPanelHeader

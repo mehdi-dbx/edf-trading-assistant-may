@@ -11,6 +11,8 @@ import {
   SkipForward,
 } from 'lucide-react';
 
+const CHECKLIST_FOR_CURRENT_TIME_MESSAGE = 'Show the turnaround checklist';
+
 function formatTime(iso: string): string {
   try {
     const d = new Date(iso);
@@ -30,6 +32,7 @@ export function ChatPanelHeader({
   expanded,
   onExpand,
   onClose,
+  sendMessage,
 }: {
   showIntermediateSteps: boolean;
   onToggleIntermediateSteps: () => void;
@@ -38,6 +41,10 @@ export function ChatPanelHeader({
   expanded: boolean;
   onExpand: () => void;
   onClose?: () => void;
+  sendMessage?: (message: {
+    role: 'user';
+    parts: Array<{ type: 'text'; text: string }>;
+  }) => void;
 }) {
   const [displayTime, setDisplayTime] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -66,6 +73,12 @@ export function ChatPanelHeader({
       if (res.ok && typeof currentTime === 'string') {
         setDisplayTime(currentTime);
         setError(null);
+        if (sendMessage) {
+          sendMessage({
+            role: 'user',
+            parts: [{ type: 'text', text: CHECKLIST_FOR_CURRENT_TIME_MESSAGE }],
+          });
+        }
       } else {
         setError((data as { error?: string }).error || `Error ${res.status}`);
       }
