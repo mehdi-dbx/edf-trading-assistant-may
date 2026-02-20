@@ -43,16 +43,28 @@ app.use(
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Log every request (so you can see if /api/current-time hits this server)
+app.use((req, _res, next) => {
+  console.log('[req]', req.method, req.url);
+  next();
+});
+
 // Health check endpoint (for Playwright tests)
 app.get('/ping', (_req, res) => {
   res.status(200).send('pong');
 });
 
-// Proxy to backend: simulated current time (advances queue on each call)
-app.get('/api/current-time', async (_req, res) => {
+// Proxy to backend: simulated current time. ?advance=true moves queue; default peeks.
+app.get('/api/current-time', async (req, res) => {
   const apiProxy = process.env.API_PROXY || '';
-  const base = apiProxy.replace(/\/invocations\/?$/, '') || 'http://localhost:8000';
-  const url = `${base}/current-time`;
+  let base = apiProxy.replace(/\/invocations\/?$/, '') || 'http://127.0.0.1:8000';
+  // Use 127.0.0.1 for localhost so Node can reach the backend reliably
+  if (base.startsWith('http://localhost:') || base.startsWith('https://localhost:')) {
+    base = base.replace('localhost', '127.0.0.1');
+  }
+  const advance = req.query.advance === 'true' ? 'true' : 'false';
+  const url = `${base}/current-time?advance=${advance}`;
+  console.log('[current-time] proxy', advance, '->', url);
   try {
     const response = await fetch(url);
     if (!response.ok) {
@@ -74,6 +86,13 @@ app.use('/api/history', historyRouter);
 app.use('/api/session', sessionRouter);
 app.use('/api/messages', messagesRouter);
 app.use('/api/config', configRouter);
+
+// In development, root is not served here — frontend runs on port 3000. Redirect so "Cannot GET /" doesn't happen.
+if (isDevelopment) {
+  app.get('/', (_req, res) => {
+    res.redirect(302, 'http://localhost:3000');
+  });
+}
 
 // Serve static files in production
 if (!isDevelopment) {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -42,14 +42,29 @@ export function ChatPanelHeader({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchTime = async (advance: boolean) => {
+    const q = advance ? 'advance=true' : 'advance=false';
+    const res = await fetch(`/api/current-time?${q}`);
+    const data = await res.json().catch(() => ({}));
+    const currentTime = (data as { currentTime?: string }).currentTime;
+    if (res.ok && typeof currentTime === 'string') {
+      setDisplayTime(currentTime);
+      setError(null);
+    } else {
+      setError((data as { error?: string }).error || `Error ${res.status}`);
+    }
+  };
+
   const advanceTime = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/current-time');
+      const res = await fetch('/api/current-time?advance=true');
       const data = await res.json().catch(() => ({}));
-      if (res.ok && typeof (data as { currentTime?: string }).currentTime === 'string') {
-        setDisplayTime((data as { currentTime: string }).currentTime);
+      const currentTime = (data as { currentTime?: string }).currentTime;
+      if (res.ok && typeof currentTime === 'string') {
+        setDisplayTime(currentTime);
+        setError(null);
       } else {
         setError((data as { error?: string }).error || `Error ${res.status}`);
       }
@@ -59,6 +74,11 @@ export function ChatPanelHeader({
       setLoading(false);
     }
   };
+
+  // Peek on mount so widget shows current simulated time without advancing
+  useEffect(() => {
+    fetchTime(false).catch(() => {});
+  }, []);
 
   return (
     <header className="flex shrink-0 items-center justify-between gap-2 border-b bg-background px-3 py-2">

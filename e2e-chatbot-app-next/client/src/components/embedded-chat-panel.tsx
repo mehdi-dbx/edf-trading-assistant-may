@@ -34,7 +34,7 @@ function fromV3Usage(
   };
 }
 
-const CHAT_PANEL_WIDTH = 420;
+const CHAT_PANEL_WIDTH = 525; // 420 + 25%
 
 export function EmbeddedChatPanel({
   chatId,

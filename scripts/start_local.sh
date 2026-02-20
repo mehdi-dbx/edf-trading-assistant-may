@@ -42,6 +42,16 @@ echo "Frontend: http://localhost:3000"
 echo "Stop with Ctrl+C"
 echo ""
 
+# Wait for a URL to return 200 (max 60s), so frontend doesn't hit Node before it's ready
+wait_for() {
+  local url="$1" name="$2" n=0 max=60
+  until curl -s -o /dev/null -w "%{http_code}" "$url" 2>/dev/null | grep -q 200; do
+    n=$((n + 1)); [[ $n -ge $max ]] && { echo "Timeout waiting for $name"; return 1; }
+    sleep 1
+  done
+  echo "$name ready"
+}
+
 # Build Node server if needed (avoids tsx IPC in restricted environments)
 if [[ ! -f e2e-chatbot-app-next/server/dist/index.mjs ]]; then
   (cd e2e-chatbot-app-next && npm run build:server) || true
@@ -49,13 +59,15 @@ fi
 
 # Start each process in a subshell and capture real PID (so monitor loop has correct PIDs)
 (uv run start-server --reload >> "$ROOT/backend.log" 2>&1 & echo $! > "$ROOT/.backend.pid"; wait) &
-sleep 5
+wait_for "http://127.0.0.1:8000/health" "Backend" || true
 BACKEND_PID=$(cat "$ROOT/.backend.pid" 2>/dev/null)
-(env CHAT_APP_PORT=3001 PORT=3001 bash -c 'cd e2e-chatbot-app-next && npm run dev:built --workspace=@databricks/chatbot-server' >> "$ROOT/node.log" 2>&1 & echo $! > "$ROOT/.node.pid"; wait) &
-sleep 4
+
+(env CHAT_APP_PORT=3001 PORT=3001 API_PROXY="$API_PROXY" bash -c 'cd e2e-chatbot-app-next && npm run dev:built --workspace=@databricks/chatbot-server' >> "$ROOT/node.log" 2>&1 & echo $! > "$ROOT/.node.pid"; wait) &
+wait_for "http://127.0.0.1:3001/ping" "Node API" || true
 NODE_PID=$(cat "$ROOT/.node.pid" 2>/dev/null)
+
 (bash -c 'cd e2e-chatbot-app-next && npm run dev:client' >> "$ROOT/frontend.log" 2>&1 & echo $! > "$ROOT/.frontend.pid"; wait) &
-sleep 6
+sleep 5
 FRONTEND_PID=$(cat "$ROOT/.frontend.pid" 2>/dev/null)
 
 while true; do

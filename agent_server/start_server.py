@@ -13,13 +13,18 @@ server = AgentServer("ResponsesAgent", enable_chat_proxy=True)
 # Define the app as a module level variable to enable multiple workers
 app = server.app  # noqa: F841
 
+from fastapi import Request
+
 from tools.get_current_time import get_next_time  # noqa: E402
 
 
 @app.get("/current-time")
-def current_time():
-    """Return the next simulated time from the queue (advances on each call)."""
-    return {"currentTime": get_next_time()}
+def current_time(request: Request):
+    """Return simulated time. advance=true moves queue forward; advance=false (default) peeks."""
+    advance = request.query_params.get("advance", "false").lower() == "true"
+    t = get_next_time(advance)
+    print(f"[current-time] advance={advance} -> {t}", flush=True)
+    return {"currentTime": t}
 
 
 setup_mlflow_git_based_version_tracking()
