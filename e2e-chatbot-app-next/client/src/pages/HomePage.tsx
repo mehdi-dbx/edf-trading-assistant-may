@@ -25,7 +25,8 @@ function atCounterCapsuleClass(value: string): string {
 function formatCell(cell: unknown, columnName: string): string {
   if (cell == null) return '—';
   const s = String(cell);
-  if (columnName.toLowerCase() === 'at_counter') return s.toLowerCase();
+  const col = columnName.toLowerCase();
+  if (col === 'at_counter' || col === 'delay_risk' || col === 'status') return s.toLowerCase();
   const isTimestampColumn = TIMESTAMP_COLUMNS.some((c) =>
     columnName.toLowerCase().includes(c.toLowerCase()),
   );
