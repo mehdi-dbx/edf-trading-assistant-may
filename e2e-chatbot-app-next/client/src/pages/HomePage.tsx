@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { RefreshCw } from 'lucide-react';
 
 const TIMESTAMP_COLUMNS = ['recorded_at', 'last_checked', 'departure_time', 'scheduled_date', 'event_timestamp'];
 
@@ -7,6 +8,15 @@ const TABLE_PASTELS: Record<string, string> = {
   flights: 'bg-sky-100 dark:bg-sky-900/30',
   checkin_agents: 'bg-emerald-100 dark:bg-emerald-900/30',
 };
+
+function atCounterCapsuleClass(value: string): string {
+  const v = value.toLowerCase();
+  if (v === 'active') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200';
+  if (v === 'away') return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200';
+  if (v === 'break') return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200';
+  if (v === 'available') return 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200';
+  return 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+}
 
 function formatCell(cell: unknown, columnName: string): string {
   if (cell == null) return '—';
@@ -108,9 +118,12 @@ function TableCard({ title, tableName }: { title: string; tableName: string }) {
           type="button"
           onClick={refetch}
           disabled={loading}
-          className="rounded px-1.5 py-0.5 text-xs text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+          aria-label="Refresh"
+          className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
         >
-          {loading ? 'Loading...' : 'Refresh'}
+          <RefreshCw
+            className={`size-3.5 ${loading ? 'animate-spin' : ''}`}
+          />
         </button>
       </div>
       <div className="overflow-x-auto p-3">
@@ -150,14 +163,35 @@ function TableCard({ title, tableName }: { title: string; tableName: string }) {
                     key={i}
                     className="border-b border-slate-100 dark:border-slate-800"
                   >
-                    {row.map((cell, j) => (
-                      <td
-                        key={j}
-                        className="px-2.5 py-1.5 text-muted-foreground"
-                      >
-                        {formatCell(cell, data.columns[j] ?? '')}
-                      </td>
-                    ))}
+                    {row.map((cell, j) => {
+                      const col = data.columns[j] ?? '';
+                      const colLower = col.toLowerCase();
+                      const display = formatCell(cell, col);
+                      const isAgentId = colLower === 'agent_id';
+                      const isAtCounter = colLower === 'at_counter';
+                      const isCapsule = isAgentId || isAtCounter;
+                      return (
+                        <td
+                          key={j}
+                          className="px-2.5 py-1.5 text-muted-foreground"
+                        >
+                          {isCapsule ? (
+                            <span
+                              className={[
+                                'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
+                                isAgentId
+                                  ? 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
+                                  : atCounterCapsuleClass(display),
+                              ].join(' ')}
+                            >
+                              {display}
+                            </span>
+                          ) : (
+                            display
+                          )}
+                        </td>
+                      );
+                    })}
                   </tr>
                 ))
               )}

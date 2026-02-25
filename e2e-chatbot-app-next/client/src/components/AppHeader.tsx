@@ -10,7 +10,7 @@ import { useSession } from '@/contexts/SessionContext';
 import { useTheme } from 'next-themes';
 import { Sparkles } from 'lucide-react';
 
-const CUSTOMER_NAME = 'London Heathrow Airport';
+const CUSTOMER_NAME = 'London Heathrow Airport Check-in Command Center';
 
 export function AppHeader() {
   const { session, loading } = useSession();
@@ -32,7 +32,7 @@ export function AppHeader() {
         </span>
       </div>
       <div className="flex flex-1 items-center justify-center px-4">
-        <span className="text-muted-foreground text-sm">
+        <span className="font-bold text-foreground text-lg">
           {CUSTOMER_NAME}
         </span>
       </div>
