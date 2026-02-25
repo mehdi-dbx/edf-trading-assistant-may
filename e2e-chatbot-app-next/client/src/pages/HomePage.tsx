@@ -9,6 +9,10 @@ const TABLE_PASTELS: Record<string, string> = {
   checkin_agents: 'bg-emerald-100 dark:bg-emerald-900/30',
 };
 
+function displayName(name: string): string {
+  return name.replace(/_/g, ' ');
+}
+
 function atCounterCapsuleClass(value: string): string {
   const v = value.toLowerCase();
   if (v === 'active') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200';
@@ -113,7 +117,7 @@ function TableCard({ title, tableName }: { title: string; tableName: string }) {
           TABLE_PASTELS[tableName] ?? 'bg-slate-50 dark:bg-slate-800/50',
         ].join(' ')}
       >
-        <h2 className="font-medium text-foreground text-xs">{title}</h2>
+        <h2 className="font-medium text-foreground text-xs">{displayName(title)}</h2>
         <button
           type="button"
           onClick={refetch}
@@ -142,7 +146,7 @@ function TableCard({ title, tableName }: { title: string; tableName: string }) {
                     key={col}
                     className="border-b border-slate-200 px-2.5 py-1.5 text-left font-medium text-foreground dark:border-slate-700"
                   >
-                    {col}
+                    {displayName(col)}
                   </th>
                 ))}
               </tr>
@@ -167,8 +171,8 @@ function TableCard({ title, tableName }: { title: string; tableName: string }) {
                       const col = data.columns[j] ?? '';
                       const colLower = col.toLowerCase();
                       const display = formatCell(cell, col);
-                      const isAgentId = colLower === 'agent_id';
-                      const isAtCounter = colLower === 'at_counter';
+                      const isAgentId = colLower === 'agent_id' || colLower === 'flight_number';
+                      const isAtCounter = colLower === 'at_counter' || colLower === 'delay_risk' || colLower === 'status';
                       const isCapsule = isAgentId || isAtCounter;
                       return (
                         <td

@@ -32,7 +32,7 @@ export function AppHeader() {
         </span>
       </div>
       <div className="flex flex-1 items-center justify-center px-4">
-        <span className="font-bold text-foreground text-lg">
+        <span className="font-bold text-muted-foreground text-lg">
           {CUSTOMER_NAME}
         </span>
       </div>
