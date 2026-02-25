@@ -9,6 +9,7 @@ import express, {
 } from 'express';
 import cors from 'cors';
 import path from 'node:path';
+import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { dirname } from 'node:path';
 import { chatRouter } from './routes/chat';
@@ -17,6 +18,7 @@ import { sessionRouter } from './routes/session';
 import { messagesRouter } from './routes/messages';
 import { configRouter } from './routes/config';
 import { tablesRouter } from './routes/tables';
+import { authMiddleware, requireAuth } from './middleware/auth';
 import { ChatSDKError } from '@chat-template/core/errors';
 
 // ESM-compatible __dirname
@@ -103,6 +105,33 @@ app.get('/api/current-time', async (req, res) => {
     console.error('[current-time] fetch failed', url, err);
     return res.status(502).json({ error: 'Backend unavailable' });
   }
+});
+
+// Reset demo state: runs scripts/reset_state.py (sequence of SQL scripts)
+app.post('/api/reset-state', authMiddleware, requireAuth, (req, res) => {
+  // Server lives at e2e-chatbot-app-next/server; project root is two levels up
+  const projectRoot = path.join(__dirname, '..', '..', '..');
+  const scriptPath = path.join(projectRoot, 'scripts', 'reset_state.py');
+  const proc = spawn('uv', ['run', 'python', scriptPath], {
+    cwd: projectRoot,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  let stdout = '';
+  let stderr = '';
+  proc.stdout?.on('data', (chunk) => { stdout += chunk.toString(); });
+  proc.stderr?.on('data', (chunk) => { stderr += chunk.toString(); });
+  proc.on('close', (code) => {
+    if (code === 0) {
+      res.json({ ok: true, message: 'State reset' });
+    } else {
+      console.error('[reset-state]', code, stderr);
+      res.status(502).json({ error: 'Reset failed', details: stderr.slice(0, 500) });
+    }
+  });
+  proc.on('error', (err) => {
+    console.error('[reset-state] spawn error', err);
+    res.status(502).json({ error: 'Reset failed', message: err.message });
+  });
 });
 
 // API routes

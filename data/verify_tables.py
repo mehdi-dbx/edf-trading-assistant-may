@@ -11,7 +11,6 @@ sys.path.insert(0, str(ROOT))
 os.chdir(ROOT)
 
 from dotenv import load_dotenv
-load_dotenv(ROOT / ".env", override=True)
 load_dotenv(ROOT / ".env.local", override=True)
 
 

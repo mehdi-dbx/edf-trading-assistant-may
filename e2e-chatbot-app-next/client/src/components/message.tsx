@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import React, { memo, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { AnimatedAssistantIcon } from './animation-assistant-icon';
 import { Response } from './elements/response';
 import { MessageContent } from './elements/message';
@@ -50,6 +50,15 @@ import { isCredentialErrorMessage } from '@/lib/oauth-error-utils';
 import { Streamdown } from 'streamdown';
 import { useApproval } from '@/hooks/use-approval';
 import { useSession } from '@/contexts/SessionContext';
+import { useTableRefresh } from '@/contexts/TableRefreshContext';
+
+function RefreshTableTrigger({ table }: { table: string }) {
+  const { refresh } = useTableRefresh();
+  useEffect(() => {
+    if (table) refresh(table);
+  }, [table, refresh]);
+  return null;
+}
 
 function getInitials(displayName: string, maxLetters = 2): string {
   const trimmed = displayName.trim();
@@ -318,6 +327,14 @@ const PurePreviewMessage = ({
                                 key={i}
                                 count={seg.parsed.count}
                                 flights={seg.parsed.flights}
+                              />
+                            );
+                          }
+                          if (seg.type === 'refresh_table') {
+                            return (
+                              <RefreshTableTrigger
+                                key={i}
+                                table={seg.parsed.table}
                               />
                             );
                           }

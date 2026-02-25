@@ -17,7 +17,6 @@ from dotenv import load_dotenv
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 os.chdir(ROOT)
-load_dotenv(ROOT / ".env", override=True)
 load_dotenv(ROOT / ".env.local", override=True)
 
 

@@ -73,6 +73,11 @@ export type ResponseSegment =
       type: 'checkin_followup';
       content: string;
       parsed: { question: string; actionId: string };
+    }
+  | {
+      type: 'refresh_table';
+      content: string;
+      parsed: { table: string };
     };
 
 const FENCE = '```';
@@ -86,6 +91,7 @@ const BLOCK_CHECKIN_UPDATE = 'checkin_update';
 const BLOCK_CHECKIN_PERFORMANCE_ISSUE = 'checkin_performance_issue';
 const BLOCK_CHECKIN_IMPACT = 'checkin_impact';
 const BLOCK_CHECKIN_FOLLOWUP = 'checkin_followup';
+const BLOCK_REFRESH_TABLE = 'refresh_table';
 
 /** Matches opening fence then optional whitespace/newline then block type (for detection). */
 const RE_TURNAROUND_STARTED = /```\s*turnaround_started/i;
@@ -98,6 +104,12 @@ const RE_CHECKIN_UPDATE = /```\s*checkin_update/i;
 const RE_CHECKIN_PERFORMANCE_ISSUE = /```\s*checkin_performance_issue/i;
 const RE_CHECKIN_IMPACT = /```\s*checkin_impact/i;
 const RE_CHECKIN_FOLLOWUP = /```\s*checkin_followup/i;
+const RE_REFRESH_TABLE = /```\s*refresh_table/i;
+
+function parseRefreshTable(inner: string): { table: string } {
+  const table = inner.trim().split(/\r?\n/)[0]?.trim() ?? '';
+  return { table };
+}
 
 function parseTurnaroundStarted(inner: string): {
   flight: string;
@@ -412,6 +424,13 @@ export function parseResponseBlocks(text: string): ResponseSegment[] {
       } catch {
         segments.push({ type: 'markdown', content: FENCE + BLOCK_CHECKIN_FOLLOWUP + '\n' + inner + FENCE });
       }
+    } else if (lang === BLOCK_REFRESH_TABLE) {
+      try {
+        const parsed = parseRefreshTable(inner);
+        segments.push({ type: 'refresh_table', content: inner, parsed });
+      } catch {
+        segments.push({ type: 'markdown', content: FENCE + BLOCK_REFRESH_TABLE + '\n' + inner + FENCE });
+      }
     } else {
       segments.push({
         type: 'markdown',
@@ -435,6 +454,7 @@ export function hasResponseBlocks(text: string): boolean {
     RE_CHECKIN_UPDATE.test(text) ||
     RE_CHECKIN_PERFORMANCE_ISSUE.test(text) ||
     RE_CHECKIN_IMPACT.test(text) ||
-    RE_CHECKIN_FOLLOWUP.test(text)
+    RE_CHECKIN_FOLLOWUP.test(text) ||
+    RE_REFRESH_TABLE.test(text)
   );
 }

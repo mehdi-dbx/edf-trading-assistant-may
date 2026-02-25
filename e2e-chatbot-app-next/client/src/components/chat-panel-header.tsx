@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { useTableRefresh } from '@/contexts/TableRefreshContext';
 import { Switch } from '@/components/ui/switch';
 import {
   PlusIcon,
@@ -9,19 +10,17 @@ import {
   X,
   SkipBack,
   SkipForward,
+  RotateCcw,
 } from 'lucide-react';
 
 const CHECKLIST_FOR_CURRENT_TIME_MESSAGE = 'Show the turnaround checklist';
 
 function formatTime(iso: string): string {
-  try {
-    const d = new Date(iso);
-    const h = d.getHours();
-    const m = d.getMinutes();
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-  } catch {
-    return iso;
+  const match = iso.match(/T(\d{1,2}):(\d{2})/);
+  if (match) {
+    return `${match[1].padStart(2, '0')}:${match[2]}`;
   }
+  return iso;
 }
 
 export function ChatPanelHeader({
@@ -47,9 +46,11 @@ export function ChatPanelHeader({
     metadata?: { source?: string };
   }) => void;
 }) {
+  const { refresh } = useTableRefresh();
   const [displayTime, setDisplayTime] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
 
   const fetchTime = async (advance: boolean) => {
     const q = advance ? 'advance=true' : 'advance=false';
@@ -116,6 +117,26 @@ export function ChatPanelHeader({
     fetchTime(false).catch(() => {});
   }, []);
 
+  const resetState = async () => {
+    setResetting(true);
+    try {
+      const res = await fetch('/api/reset-state', { method: 'POST', credentials: 'include' });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        refresh('checkin_metrics');
+        refresh('flights');
+        refresh('checkin_agents');
+      } else {
+        const details = (data as { details?: string }).details;
+        setError(details ? `Reset failed: ${details}` : (data as { error?: string }).error ?? 'Reset failed');
+      }
+    } catch {
+      setError('Reset failed');
+    } finally {
+      setResetting(false);
+    }
+  };
+
   return (
     <header className="flex shrink-0 items-center justify-between gap-2 border-b bg-background px-3 py-2">
       <span className="font-semibold tracking-tight text-purple-600 text-sm">
@@ -160,6 +181,17 @@ export function ChatPanelHeader({
             <SkipForward className="h-3.5 w-3.5 text-muted-foreground" />
           </Button>
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8"
+          onClick={resetState}
+          disabled={resetting}
+          aria-label="Reset state"
+          title="Reset demo state"
+        >
+          <RotateCcw className={`h-4 w-4 ${resetting ? 'animate-spin' : ''}`} />
+        </Button>
         <Button
           variant="ghost"
           size="icon"
