@@ -52,10 +52,8 @@ wait_for() {
   echo "$name ready"
 }
 
-# Build Node server if needed (avoids tsx IPC in restricted environments)
-if [[ ! -f e2e-chatbot-app-next/server/dist/index.mjs ]]; then
-  (cd e2e-chatbot-app-next && npm run build:server) || true
-fi
+# Build Node server (ensures latest routes, e.g. /api/tables)
+(cd e2e-chatbot-app-next && npm run build:server) || true
 
 # Start each process in a subshell and capture real PID (so monitor loop has correct PIDs)
 (uv run start-server --reload >> "$ROOT/backend.log" 2>&1 & echo $! > "$ROOT/.backend.pid"; wait) &

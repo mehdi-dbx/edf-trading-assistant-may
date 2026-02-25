@@ -10,7 +10,8 @@ const __dirname = path.dirname(__filename);
 const TEST_MODE = process.env.TEST_MODE;
 
 if (!TEST_MODE) {
-  dotenv.config({
-    path: path.resolve(__dirname, '../..', '.env'),
-  });
+  dotenv.config({ path: path.resolve(__dirname, '../..', '.env') });
+  // .env.local may be in e2e-chatbot-app-next or project root (amadeus-checkin)
+  dotenv.config({ path: path.resolve(__dirname, '../..', '.env.local') });
+  dotenv.config({ path: path.resolve(__dirname, '../../..', '.env.local') });
 }

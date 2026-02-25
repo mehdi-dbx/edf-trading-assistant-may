@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Chat } from '@/components/chat';
 import { SidebarHistory } from '@/components/sidebar-history';
@@ -34,7 +34,10 @@ function fromV3Usage(
   };
 }
 
-const CHAT_PANEL_WIDTH = 525; // 420 + 25%
+const CHAT_PANEL_WIDTH = 525;
+const CHAT_PANEL_MIN = 360;
+const CHAT_PANEL_MAX = 800;
+const CHAT_PANEL_WIDTH_KEY = 'chat-panel-width';
 
 export function EmbeddedChatPanel({
   chatId,
@@ -49,6 +52,43 @@ export function EmbeddedChatPanel({
   const [expanded, setExpanded] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [modelId, setModelId] = useState('chat-model');
+  const [panelWidth, setPanelWidth] = useState(() => {
+    if (typeof window === 'undefined') return CHAT_PANEL_WIDTH;
+    const saved = localStorage.getItem(CHAT_PANEL_WIDTH_KEY);
+    if (saved) {
+      const w = parseInt(saved, 10);
+      if (!Number.isNaN(w) && w >= CHAT_PANEL_MIN && w <= CHAT_PANEL_MAX) return w;
+    }
+    return CHAT_PANEL_WIDTH;
+  });
+  const widthRef = useRef(panelWidth);
+  widthRef.current = panelWidth;
+
+  const handleResizeStart = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    const startX = e.clientX;
+    const startWidth = panelWidth;
+
+    const onMove = (moveEvent: MouseEvent) => {
+      const delta = startX - moveEvent.clientX;
+      const next = Math.max(CHAT_PANEL_MIN, Math.min(CHAT_PANEL_MAX, startWidth + delta));
+      setPanelWidth(next);
+      widthRef.current = next;
+    };
+
+    const onUp = () => {
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      localStorage.setItem(CHAT_PANEL_WIDTH_KEY, String(widthRef.current));
+    };
+
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+  }, [panelWidth]);
 
   const isExistingChat = location.pathname.startsWith('/chat/');
   const { chatData, error } = useChatData(chatId, isExistingChat);
@@ -100,9 +140,19 @@ export function EmbeddedChatPanel({
       <div
         className={expanded
           ? 'fixed inset-0 z-40 flex flex-col border-l bg-background'
-          : 'flex h-full min-h-0 shrink-0 flex-col border-l bg-background overflow-hidden'}
-        style={expanded ? undefined : { width: CHAT_PANEL_WIDTH }}
+          : 'relative flex h-full min-h-0 shrink-0 flex-col border-l bg-background overflow-hidden'}
+        style={expanded ? undefined : { width: panelWidth }}
       >
+        {!expanded && (
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-valuenow={panelWidth}
+            tabIndex={0}
+            onMouseDown={handleResizeStart}
+            className="absolute left-0 top-0 z-10 h-full w-2 shrink-0 cursor-col-resize touch-none border-l border-transparent hover:border-border hover:bg-muted/50"
+          />
+        )}
         {showError && (
           <div className="flex flex-1 items-center justify-center p-4 text-center text-muted-foreground text-sm">
             {error}

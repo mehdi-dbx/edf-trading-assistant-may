@@ -18,8 +18,11 @@ from agent_server.utils import (
     get_databricks_host_from_env,
     process_agent_astream_events,
 )
+from tools.back_to_normal import back_to_normal
 from tools.get_current_time import get_current_time
 from tools.placeholder_tool import placeholder_tool
+from tools.update_checkin_agent import update_checkin_agent
+from tools.update_flight_risk import update_flight_risk
 
 # New same-domain tools: append to tools in init_agent and implement under tools/<name>/
 mlflow.langchain.autolog()
@@ -29,12 +32,12 @@ sp_workspace_client = WorkspaceClient()
 def init_mcp_client(workspace_client: WorkspaceClient) -> DatabricksMultiServerMCPClient:
     host_name = get_databricks_host_from_env()
     servers = []
-    genie_turnaround_id = os.environ.get("AMADEUS_GENIE_TURNAROUND", "").strip()
-    if genie_turnaround_id:
+    genie_checkin_id = os.environ.get("AMADEUS_GENIE_CHECKIN", "").strip()
+    if genie_checkin_id:
         servers.append(
             DatabricksMCPServer(
-                name="genie-turnaround",
-                url=f"{host_name}/api/2.0/mcp/genie/{genie_turnaround_id}",
+                name="genie-checkin",
+                url=f"{host_name}/api/2.0/mcp/genie/{genie_checkin_id}",
                 workspace_client=workspace_client,
             ),
         )
@@ -44,7 +47,7 @@ def init_mcp_client(workspace_client: WorkspaceClient) -> DatabricksMultiServerM
 async def init_agent(workspace_client: Optional[WorkspaceClient] = None):
     mcp_client = init_mcp_client(workspace_client or sp_workspace_client)
     mcp_tools = await mcp_client.get_tools()
-    tools = list(mcp_tools) + [get_current_time, placeholder_tool]
+    tools = list(mcp_tools) + [get_current_time, update_flight_risk, back_to_normal, update_checkin_agent, placeholder_tool]
     return create_agent(tools=tools, model=ChatDatabricks(endpoint="databricks-gpt-5-2"))
 
 

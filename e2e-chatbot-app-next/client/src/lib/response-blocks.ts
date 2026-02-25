@@ -1,6 +1,6 @@
 /**
  * Parses assistant message text for structured response blocks (turnaround_started,
- * live_turnaround_checklist) so the UI can render them with dedicated styled components.
+ * live_turnaround_checklist, checkin_*) so the UI can render them with dedicated styled components.
  * Block format: ```blockType\ncontent\n```
  */
 
@@ -19,15 +19,85 @@ export type ResponseSegment =
         tasks: Array<{ name: string; status: string }>;
         readiness: string;
       };
+    }
+  | {
+      type: 'checkin_root_cause';
+      content: string;
+      parsed: { zone: string; items: string[] };
+    }
+  | {
+      type: 'checkin_consequences';
+      content: string;
+      parsed: { items: string[] };
+    }
+  | {
+      type: 'checkin_recommended_action';
+      content: string;
+      parsed: { items: string[] };
+    }
+  | {
+      type: 'checkin_available_agents';
+      content: string;
+      parsed: { agents: Array<{ agentId: string; name: string; zone: string; counter: string; status: string }> };
+    }
+  | {
+      type: 'checkin_update';
+      content: string;
+      parsed: {
+        zone: string;
+        body: string;
+        flights: Array<{ number: string; status: 'monitoring' | 'resolved' }>;
+      };
+    }
+  | {
+      type: 'checkin_performance_issue';
+      content: string;
+      parsed: {
+        zone: string;
+        pctChange: string;
+        windowMins: string;
+        avgCheckin?: string;
+        baseline?: string;
+        timestamp?: string;
+      };
+    }
+  | {
+      type: 'checkin_impact';
+      content: string;
+      parsed: {
+        count: string;
+        flights: Array<{ number: string; departureMin: string }>;
+      };
+    }
+  | {
+      type: 'checkin_followup';
+      content: string;
+      parsed: { question: string; actionId: string };
     };
 
 const FENCE = '```';
 const BLOCK_TURNAROUND_STARTED = 'turnaround_started';
 const BLOCK_LIVE_CHECKLIST = 'live_turnaround_checklist';
+const BLOCK_CHECKIN_ROOT_CAUSE = 'checkin_root_cause';
+const BLOCK_CHECKIN_CONSEQUENCES = 'checkin_consequences';
+const BLOCK_CHECKIN_RECOMMENDED_ACTION = 'checkin_recommended_action';
+const BLOCK_CHECKIN_AVAILABLE_AGENTS = 'checkin_available_agents';
+const BLOCK_CHECKIN_UPDATE = 'checkin_update';
+const BLOCK_CHECKIN_PERFORMANCE_ISSUE = 'checkin_performance_issue';
+const BLOCK_CHECKIN_IMPACT = 'checkin_impact';
+const BLOCK_CHECKIN_FOLLOWUP = 'checkin_followup';
 
 /** Matches opening fence then optional whitespace/newline then block type (for detection). */
 const RE_TURNAROUND_STARTED = /```\s*turnaround_started/i;
 const RE_LIVE_CHECKLIST = /```\s*live_turnaround_checklist/i;
+const RE_CHECKIN_ROOT_CAUSE = /```\s*checkin_root_cause/i;
+const RE_CHECKIN_CONSEQUENCES = /```\s*checkin_consequences/i;
+const RE_CHECKIN_RECOMMENDED_ACTION = /```\s*checkin_recommended_action/i;
+const RE_CHECKIN_AVAILABLE_AGENTS = /```\s*checkin_available_agents/i;
+const RE_CHECKIN_UPDATE = /```\s*checkin_update/i;
+const RE_CHECKIN_PERFORMANCE_ISSUE = /```\s*checkin_performance_issue/i;
+const RE_CHECKIN_IMPACT = /```\s*checkin_impact/i;
+const RE_CHECKIN_FOLLOWUP = /```\s*checkin_followup/i;
 
 function parseTurnaroundStarted(inner: string): {
   flight: string;
@@ -88,6 +158,154 @@ function parseLiveTurnaroundChecklist(inner: string): {
   return { flight, tasks, readiness };
 }
 
+/** Parse checkin_root_cause: first line = zone, rest = bullet items (with or without - prefix). */
+function parseCheckinRootCause(inner: string): { zone: string; items: string[] } {
+  const lines = inner.trim().split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length === 0) return { zone: '', items: [] };
+  const zone = lines[0];
+  const items = lines.slice(1).map((l) => l.replace(/^-\s*/, '').trim()).filter(Boolean);
+  return { zone, items };
+}
+
+/** Parse checkin_consequences: each line = bullet item. */
+function parseCheckinConsequences(inner: string): { items: string[] } {
+  const lines = inner.trim().split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const items = lines.map((l) => l.replace(/^-\s*/, '').trim()).filter(Boolean);
+  return { items };
+}
+
+/** Parse checkin_recommended_action: each line = bullet item. */
+function parseCheckinRecommendedAction(inner: string): { items: string[] } {
+  const lines = inner.trim().split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const items = lines.map((l) => l.replace(/^-\s*/, '').trim()).filter(Boolean);
+  return { items };
+}
+
+/** Parse checkin_available_agents: each line = "agentId – name (zone, counter) — status". */
+function parseCheckinAvailableAgents(inner: string): {
+  agents: Array<{ agentId: string; name: string; zone: string; counter: string; status: string }>;
+} {
+  const lines = inner.trim().split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const agents: Array<{ agentId: string; name: string; zone: string; counter: string; status: string }> = [];
+  for (const line of lines) {
+    // Format: A02 – T. Nguyen (Zone B, counter B02) — BREAK or A02 - Name - Zone X, status
+    const dashMatch = line.match(/\s+[–-]\s+/);
+    if (!dashMatch) {
+      if (line.trim()) agents.push({ agentId: '', name: line.trim(), zone: '', counter: '', status: '' });
+      continue;
+    }
+    const dashIdx = line.indexOf(dashMatch[0]);
+    const agentId = line.slice(0, dashIdx).trim();
+    const rest = line.slice(dashIdx + dashMatch[0].length).trim();
+    const parenStart = rest.indexOf('(');
+    const parenEnd = rest.indexOf(')');
+    let name = rest;
+    let zone = '';
+    let counter = '';
+    let status = '';
+    if (parenStart >= 0 && parenEnd > parenStart) {
+      name = rest.slice(0, parenStart).trim();
+      const innerParen = rest.slice(parenStart + 1, parenEnd);
+      const zoneMatch = innerParen.match(/Zone\s+(\w+)/i);
+      const counterMatch = innerParen.match(/counter\s+(\w+)/i);
+      zone = zoneMatch?.[1] ?? '';
+      counter = counterMatch?.[1] ?? '';
+    }
+    const statusMatch = rest.match(/\s+[—–-]\s+/);
+    if (statusMatch) {
+      const statusSep = rest.indexOf(statusMatch[0]);
+      status = rest.slice(statusSep + statusMatch[0].length).trim();
+    }
+    if (agentId || name) agents.push({ agentId, name, zone, counter, status });
+  }
+  return { agents };
+}
+
+/** Parse checkin_update: line1=zone, line2=body, optional agent|name|zone, rest=flight|status. */
+function parseCheckinUpdate(inner: string): {
+  zone: string;
+  body: string;
+  agent?: { name: string; zone: string };
+  flights: Array<{ number: string; status: 'monitoring' | 'resolved' }>;
+} {
+  const lines = inner.trim().split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length === 0) return { zone: '', body: '', flights: [] };
+  const zone = lines[0];
+  const body = lines[1] ?? '';
+  let agent: { name: string; zone: string } | undefined;
+  const flights: Array<{ number: string; status: 'monitoring' | 'resolved' }> = [];
+  for (let i = 2; i < lines.length; i++) {
+    const line = lines[i];
+    if (line.toLowerCase().startsWith('agent|')) {
+      const parts = line.slice(6).split('|').map((p) => p.trim());
+      if (parts.length >= 2) agent = { name: parts[0], zone: parts[1] };
+      continue;
+    }
+    const pipeIdx = line.indexOf('|');
+    if (pipeIdx >= 0) {
+      const number = line.slice(0, pipeIdx).trim();
+      const statusRaw = line.slice(pipeIdx + 1).trim().toLowerCase();
+      const status = statusRaw === 'resolved' ? 'resolved' : 'monitoring';
+      if (number) flights.push({ number, status });
+    }
+  }
+  return { zone, body, agent, flights };
+}
+
+/** Parse checkin_performance_issue: line1=zone, line2=pctChange, line3=windowMins, optional line4=avgCheckin|baseline|timestamp. */
+function parseCheckinPerformanceIssue(inner: string): {
+  zone: string;
+  pctChange: string;
+  windowMins: string;
+  avgCheckin?: string;
+  baseline?: string;
+  timestamp?: string;
+} {
+  const lines = inner.trim().split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length < 3) return { zone: '', pctChange: '', windowMins: '' };
+  const [zone, pctChange, windowMins] = lines;
+  const fourth = lines[3];
+  let avgCheckin: string | undefined;
+  let baseline: string | undefined;
+  let timestamp: string | undefined;
+  if (fourth) {
+    const parts = fourth.split('|').map((p) => p.trim());
+    avgCheckin = parts[0] || undefined;
+    baseline = parts[1] || undefined;
+    timestamp = parts[2] || undefined;
+  }
+  return { zone, pctChange, windowMins, avgCheckin, baseline, timestamp };
+}
+
+/** Parse checkin_impact: line1=count, rest=flight|departureMin. */
+function parseCheckinImpact(inner: string): {
+  count: string;
+  flights: Array<{ number: string; departureMin: string }>;
+} {
+  const lines = inner.trim().split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (lines.length === 0) return { count: '0', flights: [] };
+  const count = lines[0];
+  const flights: Array<{ number: string; departureMin: string }> = [];
+  for (let i = 1; i < lines.length; i++) {
+    const line = lines[i];
+    const pipeIdx = line.indexOf('|');
+    if (pipeIdx >= 0) {
+      const number = line.slice(0, pipeIdx).trim();
+      const departureMin = line.slice(pipeIdx + 1).trim();
+      if (number) flights.push({ number, departureMin });
+    }
+  }
+  return { count, flights };
+}
+
+/** Parse checkin_followup: line1=actionId, line2=question (optional). */
+function parseCheckinFollowup(inner: string): { question: string; actionId: string } {
+  const lines = inner.trim().split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const actionId = lines[0] ?? '';
+  const question = lines[1] ?? '';
+  return { actionId, question };
+}
+
 /**
  * Splits message text into segments: markdown and structured blocks.
  * Recognises ```turnaround_started ... ``` and ```live_turnaround_checklist ... ```.
@@ -138,6 +356,62 @@ export function parseResponseBlocks(text: string): ResponseSegment[] {
       } catch {
         segments.push({ type: 'markdown', content: FENCE + BLOCK_LIVE_CHECKLIST + '\n' + inner + FENCE });
       }
+    } else if (lang === BLOCK_CHECKIN_ROOT_CAUSE) {
+      try {
+        const parsed = parseCheckinRootCause(inner);
+        segments.push({ type: 'checkin_root_cause', content: inner, parsed });
+      } catch {
+        segments.push({ type: 'markdown', content: FENCE + BLOCK_CHECKIN_ROOT_CAUSE + '\n' + inner + FENCE });
+      }
+    } else if (lang === BLOCK_CHECKIN_CONSEQUENCES) {
+      try {
+        const parsed = parseCheckinConsequences(inner);
+        segments.push({ type: 'checkin_consequences', content: inner, parsed });
+      } catch {
+        segments.push({ type: 'markdown', content: FENCE + BLOCK_CHECKIN_CONSEQUENCES + '\n' + inner + FENCE });
+      }
+    } else if (lang === BLOCK_CHECKIN_RECOMMENDED_ACTION) {
+      try {
+        const parsed = parseCheckinRecommendedAction(inner);
+        segments.push({ type: 'checkin_recommended_action', content: inner, parsed });
+      } catch {
+        segments.push({ type: 'markdown', content: FENCE + BLOCK_CHECKIN_RECOMMENDED_ACTION + '\n' + inner + FENCE });
+      }
+    } else if (lang === BLOCK_CHECKIN_AVAILABLE_AGENTS) {
+      try {
+        const parsed = parseCheckinAvailableAgents(inner);
+        segments.push({ type: 'checkin_available_agents', content: inner, parsed });
+      } catch {
+        segments.push({ type: 'markdown', content: FENCE + BLOCK_CHECKIN_AVAILABLE_AGENTS + '\n' + inner + FENCE });
+      }
+    } else if (lang === BLOCK_CHECKIN_UPDATE) {
+      try {
+        const parsed = parseCheckinUpdate(inner);
+        segments.push({ type: 'checkin_update', content: inner, parsed });
+      } catch {
+        segments.push({ type: 'markdown', content: FENCE + BLOCK_CHECKIN_UPDATE + '\n' + inner + FENCE });
+      }
+    } else if (lang === BLOCK_CHECKIN_PERFORMANCE_ISSUE) {
+      try {
+        const parsed = parseCheckinPerformanceIssue(inner);
+        segments.push({ type: 'checkin_performance_issue', content: inner, parsed });
+      } catch {
+        segments.push({ type: 'markdown', content: FENCE + BLOCK_CHECKIN_PERFORMANCE_ISSUE + '\n' + inner + FENCE });
+      }
+    } else if (lang === BLOCK_CHECKIN_IMPACT) {
+      try {
+        const parsed = parseCheckinImpact(inner);
+        segments.push({ type: 'checkin_impact', content: inner, parsed });
+      } catch {
+        segments.push({ type: 'markdown', content: FENCE + BLOCK_CHECKIN_IMPACT + '\n' + inner + FENCE });
+      }
+    } else if (lang === BLOCK_CHECKIN_FOLLOWUP) {
+      try {
+        const parsed = parseCheckinFollowup(inner);
+        segments.push({ type: 'checkin_followup', content: inner, parsed });
+      } catch {
+        segments.push({ type: 'markdown', content: FENCE + BLOCK_CHECKIN_FOLLOWUP + '\n' + inner + FENCE });
+      }
     } else {
       segments.push({
         type: 'markdown',
@@ -151,5 +425,16 @@ export function parseResponseBlocks(text: string): ResponseSegment[] {
 
 /** Returns true if text contains any structured block we handle. */
 export function hasResponseBlocks(text: string): boolean {
-  return RE_TURNAROUND_STARTED.test(text) || RE_LIVE_CHECKLIST.test(text);
+  return (
+    RE_TURNAROUND_STARTED.test(text) ||
+    RE_LIVE_CHECKLIST.test(text) ||
+    RE_CHECKIN_ROOT_CAUSE.test(text) ||
+    RE_CHECKIN_CONSEQUENCES.test(text) ||
+    RE_CHECKIN_RECOMMENDED_ACTION.test(text) ||
+    RE_CHECKIN_AVAILABLE_AGENTS.test(text) ||
+    RE_CHECKIN_UPDATE.test(text) ||
+    RE_CHECKIN_PERFORMANCE_ISSUE.test(text) ||
+    RE_CHECKIN_IMPACT.test(text) ||
+    RE_CHECKIN_FOLLOWUP.test(text)
+  );
 }

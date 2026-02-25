@@ -16,6 +16,7 @@ import { historyRouter } from './routes/history';
 import { sessionRouter } from './routes/session';
 import { messagesRouter } from './routes/messages';
 import { configRouter } from './routes/config';
+import { tablesRouter } from './routes/tables';
 import { ChatSDKError } from '@chat-template/core/errors';
 
 // ESM-compatible __dirname
@@ -110,6 +111,12 @@ app.use('/api/history', historyRouter);
 app.use('/api/session', sessionRouter);
 app.use('/api/messages', messagesRouter);
 app.use('/api/config', configRouter);
+app.use('/api/tables', tablesRouter);
+
+// 404 for unmatched API routes (return JSON, not HTML)
+app.use('/api', (_req, res) => {
+  res.status(404).json({ error: 'Not found', path: _req.path });
+});
 
 // In development, root is not served here — frontend runs on port 3000. Redirect so "Cannot GET /" doesn't happen.
 if (isDevelopment) {

@@ -5,6 +5,14 @@ import { Response } from './elements/response';
 import { MessageContent } from './elements/message';
 import { TurnaroundStartedCard } from './elements/turnaround-started-card';
 import { LiveTurnaroundChecklistCard } from './elements/live-turnaround-checklist';
+import { CheckinRootCauseCard } from './elements/checkin-root-cause-card';
+import { CheckinConsequencesCard } from './elements/checkin-consequences-card';
+import { CheckinRecommendedActionCard } from './elements/checkin-recommended-action-card';
+import { CheckinAvailableAgents } from './elements/checkin-available-agents';
+import { CheckinUpdateCard } from './elements/checkin-update-card';
+import { CheckinPerformanceIssueCard } from './elements/checkin-performance-issue-card';
+import { CheckinImpactCard } from './elements/checkin-impact-card';
+import { FollowUpActions } from './elements/follow-up-actions';
 import { parseResponseBlocks, hasResponseBlocks } from '@/lib/response-blocks';
 import {
   Tool,
@@ -64,6 +72,7 @@ const PurePreviewMessage = ({
   isReadonly,
   requiresScrollPadding,
   showIntermediateSteps,
+  isLastMessage,
 }: {
   chatId: string;
   message: ChatMessage;
@@ -76,6 +85,7 @@ const PurePreviewMessage = ({
   isReadonly: boolean;
   requiresScrollPadding: boolean;
   showIntermediateSteps: boolean;
+  isLastMessage: boolean;
 }) => {
   const [mode, setMode] = useState<'view' | 'edit'>('view');
   const [showErrors, setShowErrors] = useState(false);
@@ -211,7 +221,7 @@ const PurePreviewMessage = ({
                     key={key}
                     data-testid="message-content"
                     className={cn({
-                      'w-fit break-words rounded-2xl border px-3 py-2 text-right text-foreground bg-white dark:bg-background border-slate-200 dark:border-slate-700':
+                      'w-fit break-words rounded-tl-2xl rounded-tr-2xl rounded-bl-2xl rounded-br-lg border px-3 py-2 text-right text-foreground bg-[#EBF0F8] dark:bg-slate-800/60 border-slate-200 dark:border-slate-600':
                         message.role === 'user',
                       'bg-transparent px-0 py-0 text-left':
                         message.role === 'assistant',
@@ -242,6 +252,97 @@ const PurePreviewMessage = ({
                                 flight={seg.parsed.flight}
                                 tasks={seg.parsed.tasks}
                                 readiness={seg.parsed.readiness}
+                              />
+                            );
+                          }
+                          if (seg.type === 'checkin_root_cause') {
+                            return (
+                              <CheckinRootCauseCard
+                                key={i}
+                                zone={seg.parsed.zone}
+                                items={seg.parsed.items}
+                              />
+                            );
+                          }
+                          if (seg.type === 'checkin_consequences') {
+                            return (
+                              <CheckinConsequencesCard
+                                key={i}
+                                items={seg.parsed.items}
+                              />
+                            );
+                          }
+                          if (seg.type === 'checkin_recommended_action') {
+                            return (
+                              <CheckinRecommendedActionCard
+                                key={i}
+                                items={seg.parsed.items}
+                              />
+                            );
+                          }
+                          if (seg.type === 'checkin_available_agents') {
+                            return (
+                              <CheckinAvailableAgents
+                                key={i}
+                                agents={seg.parsed.agents}
+                              />
+                            );
+                          }
+                          if (seg.type === 'checkin_update') {
+                            return (
+                              <CheckinUpdateCard
+                                key={i}
+                                zone={seg.parsed.zone}
+                                body={seg.parsed.body}
+                                agent={seg.parsed.agent}
+                                flights={seg.parsed.flights}
+                              />
+                            );
+                          }
+                          if (seg.type === 'checkin_performance_issue') {
+                            return (
+                              <CheckinPerformanceIssueCard
+                                key={i}
+                                zone={seg.parsed.zone}
+                                pctChange={seg.parsed.pctChange}
+                                windowMins={seg.parsed.windowMins}
+                                avgCheckin={seg.parsed.avgCheckin}
+                                baseline={seg.parsed.baseline}
+                                timestamp={seg.parsed.timestamp}
+                              />
+                            );
+                          }
+                          if (seg.type === 'checkin_impact') {
+                            return (
+                              <CheckinImpactCard
+                                key={i}
+                                count={seg.parsed.count}
+                                flights={seg.parsed.flights}
+                              />
+                            );
+                          }
+                          if (seg.type === 'checkin_followup') {
+                            const showButtons =
+                              !isReadonly && !isLoading && isLastMessage;
+                            return (
+                              <FollowUpActions
+                                key={i}
+                                question={seg.parsed.question}
+                                onValidate={() =>
+                                  sendMessage({
+                                    role: 'user',
+                                    parts: [{ type: 'text', text: 'yes' }],
+                                    metadata: { source: 'followup' },
+                                  })
+                                }
+                                onCancel={() =>
+                                  sendMessage({
+                                    role: 'user',
+                                    parts: [{ type: 'text', text: 'no' }],
+                                    metadata: { source: 'followup' },
+                                  })
+                                }
+                                disabled={!showButtons}
                               />
                             );
                           }
@@ -462,6 +563,7 @@ export const PreviewMessage = memo(
       return false;
     if (prevProps.showIntermediateSteps !== nextProps.showIntermediateSteps)
       return false;
+    if (prevProps.isLastMessage !== nextProps.isLastMessage) return false;
     if (!equal(prevProps.message.parts, nextProps.message.parts)) return false;
 
     return true;

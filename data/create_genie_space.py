@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 """
-Create a Genie space with tables from AMADEUS_UNITY_CATALOG_SCHEMA.
+Create a Genie space named "AMADEUS CHECKIN" with all tables from AMADEUS_UNITY_CATALOG_SCHEMA.
 
-Modes (first arg):
-  checkin     — All tables, title "Amadeus Flight Check", writes AMADEUS_GENIE_CHECKIN (default).
-  turnaround  — Only flights + turnaround_events, title "Turnaround", writes AMADEUS_GENIE_TURNAROUND.
-
-Prints space_id to stdout. Updates .env.local with the corresponding env var.
+Prints space_id to stdout. Updates .env.local with AMADEUS_GENIE_CHECKIN.
 
 Requires: AMADEUS_UNITY_CATALOG_SCHEMA, DATABRICKS_WAREHOUSE_ID (or a warehouse in the workspace).
 """
@@ -24,23 +20,26 @@ os.chdir(ROOT)
 load_dotenv(ROOT / ".env", override=True)
 load_dotenv(ROOT / ".env.local", override=True)
 
-TURNAROUND_TABLES = {"flights", "turnaround_events"}
-
 
 def main():
-    mode = (sys.argv[1] if len(sys.argv) > 1 else "").strip().lower() or "checkin"
-    if mode not in ("checkin", "turnaround"):
-        print("Usage: python3 data/create_genie_space.py [checkin|turnaround]", file=sys.stderr)
-        sys.exit(1)
-
     spec = os.environ.get("AMADEUS_UNITY_CATALOG_SCHEMA") or ""
     if "." not in spec:
-        print("Set AMADEUS_UNITY_CATALOG_SCHEMA to catalog.schema", file=sys.stderr)
+        print("Set AMADEUS_UNITY_CATALOG_SCHEMA to catalog.schema in .env.local", file=sys.stderr)
         sys.exit(1)
     catalog, schema = spec.strip().split(".", 1)
 
     from databricks.sdk import WorkspaceClient
-    w = WorkspaceClient()
+    token = os.environ.get("DATABRICKS_TOKEN")
+    # Prefer token over profile to avoid databricks-cli auth when token is set
+    if token:
+        _profile = os.environ.pop("DATABRICKS_CONFIG_PROFILE", None)
+        try:
+            w = WorkspaceClient(host=os.environ.get("DATABRICKS_HOST"), token=token)
+        finally:
+            if _profile is not None:
+                os.environ["DATABRICKS_CONFIG_PROFILE"] = _profile
+    else:
+        w = WorkspaceClient()
 
     wh_id = os.environ.get("DATABRICKS_WAREHOUSE_ID") or next(iter(w.warehouses.list()), None)
     if not wh_id:
@@ -55,35 +54,19 @@ def main():
 
     table_identifiers = []
     for t in tables:
-        name = getattr(t, "name", None) or ""
-        if mode == "turnaround" and name not in TURNAROUND_TABLES:
-            continue
         full = getattr(t, "full_name", None) or f"{catalog}.{schema}.{t.name}"
         table_identifiers.append(full)
-
-    if mode == "turnaround" and len(table_identifiers) < 2:
-        print("Turnaround mode needs flights and turnaround_events. Run csv_to_delta.py first.", file=sys.stderr)
-        sys.exit(1)
 
     def gen_id():
         return uuid.uuid4().hex[:24] + "0" * 8
 
-    if mode == "turnaround":
-        title = "Turnaround"
-        description = "Flight prioritisation and turnaround coordination. Flights and turnaround_events in Unity Catalog."
-        sample_questions = [
-            {"id": gen_id(), "question": ["Rank inbound flights by buffer (tobt minus predicted_ready) ascending"]},
-            {"id": gen_id(), "question": ["Which flight has the tightest buffer today?"]},
-        ]
-        env_var = "AMADEUS_GENIE_TURNAROUND"
-    else:
-        title = "Amadeus Flight Check"
-        description = "Natural language exploration of check-in and flight performance data in Unity Catalog."
-        sample_questions = [
-            {"id": gen_id(), "question": ["What are total check-ins by airline?"]},
-            {"id": gen_id(), "question": ["Show load factor and SLA by airline"]},
-        ]
-        env_var = "AMADEUS_GENIE_CHECKIN"
+    title = "AMADEUS CHECKIN"
+    description = "Natural language exploration of check-in and flight performance data in Unity Catalog."
+    sample_questions = [
+        {"id": gen_id(), "question": ["What are total check-ins by airline?"]},
+        {"id": gen_id(), "question": ["Show load factor and SLA by airline"]},
+    ]
+    env_var = "AMADEUS_GENIE_CHECKIN"
 
     serialized = {
         "version": 2,

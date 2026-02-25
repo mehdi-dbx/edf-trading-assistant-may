@@ -17,7 +17,7 @@ function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
   const { chatHistoryEnabled } = useAppConfig();
   const suggestedActions = [
     'How can you help me?',
-    'Tell me something I might not know',
+    'Checkin-Performance',
   ];
 
   return (

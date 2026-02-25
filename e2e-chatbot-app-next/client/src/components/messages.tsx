@@ -15,6 +15,8 @@ const CHECKLIST_TRIGGER_MESSAGE = 'Show the turnaround checklist';
 function isHiddenSystemMessage(message: ChatMessage): boolean {
   if ((message.metadata as { source?: string } | undefined)?.source === 'system')
     return true;
+  if ((message.metadata as { source?: string } | undefined)?.source === 'followup')
+    return true;
   if (
     message.role === 'user' &&
     getTextFromMessage(message).trim() === CHECKLIST_TRIGGER_MESSAGE
@@ -107,6 +109,7 @@ function PureMessages({
                 hasSentMessage && index === filteredMessages.length - 1
               }
               showIntermediateSteps={showIntermediateSteps}
+              isLastMessage={index === filteredMessages.length - 1}
             />
           ))}
 
