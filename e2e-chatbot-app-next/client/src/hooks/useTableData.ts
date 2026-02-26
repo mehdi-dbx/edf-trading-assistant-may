@@ -1,14 +1,51 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 export type TableData = {
   columns: string[];
   rows: unknown[][];
 } | null;
 
+const KEY_COLUMN_BY_TABLE: Record<string, string> = {
+  checkin_agents: 'agent_id',
+  flights: 'flight_number',
+  checkin_metrics: 'zone',
+};
+
+export function getRowKey(row: unknown[], columns: string[], tableName: string): string {
+  const keyCol = KEY_COLUMN_BY_TABLE[tableName];
+  const idx = columns.findIndex((c) => c.toLowerCase() === keyCol?.toLowerCase());
+  if (idx >= 0 && row[idx] != null) return String(row[idx]);
+  return JSON.stringify(row);
+}
+
+function diffRows(
+  prevRows: unknown[][],
+  newRows: unknown[][],
+  columns: string[],
+  tableName: string,
+): Set<string> {
+  const changed = new Set<string>();
+  const prevByKey = new Map<string, unknown[]>();
+  for (const row of prevRows) {
+    const k = getRowKey(row, columns, tableName);
+    prevByKey.set(k, row);
+  }
+  for (const row of newRows) {
+    const k = getRowKey(row, columns, tableName);
+    const prev = prevByKey.get(k);
+    if (!prev || JSON.stringify(prev) !== JSON.stringify(row)) {
+      changed.add(k);
+    }
+  }
+  return changed;
+}
+
 export type TableState = {
   data: TableData;
   loading: boolean;
   error: string | null;
+  changedRowKeys: Set<string>;
+  setChangedRowKeys: React.Dispatch<React.SetStateAction<Set<string>>>;
 };
 
 export function useTableData(
@@ -18,11 +55,12 @@ export function useTableData(
   const [data, setData] = useState<TableData>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [changedRowKeys, setChangedRowKeys] = useState<Set<string>>(new Set());
+  const prevDataRef = useRef<{ tableName: string; data: TableData } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    setError(null);
     fetch(`/api/tables/${tableName}`, { credentials: 'include' })
       .then(async (res) => {
         const text = await res.text();
@@ -39,7 +77,17 @@ export function useTableData(
       })
       .then((body: { columns: string[]; rows: unknown[][] }) => {
         if (!cancelled) {
-          setData({ columns: body.columns, rows: body.rows });
+          const newData = { columns: body.columns, rows: body.rows };
+          const prev = prevDataRef.current;
+          if (prev?.tableName === tableName && prev?.data?.rows && prev.data.columns.length === body.columns.length) {
+            const changed = diffRows(prev.data.rows, body.rows, body.columns, tableName);
+            setChangedRowKeys(changed);
+          } else {
+            setChangedRowKeys(new Set());
+          }
+          prevDataRef.current = { tableName, data: newData };
+          setData(newData);
+          setError(null);
         }
       })
       .catch((err) => {
@@ -55,5 +103,5 @@ export function useTableData(
     };
   }, [tableName, refreshTrigger]);
 
-  return { data, loading, error };
+  return { data, loading, error, changedRowKeys, setChangedRowKeys };
 }

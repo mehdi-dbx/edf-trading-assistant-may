@@ -1,6 +1,7 @@
+import { useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';
 import { useTableRefresh } from '@/contexts/TableRefreshContext';
-import { useTableData } from '@/hooks/useTableData';
+import { useTableData, getRowKey } from '@/hooks/useTableData';
 import { MetricsOverview } from '@/components/MetricsOverview';
 
 const TIMESTAMP_COLUMNS = ['recorded_at', 'last_checked', 'departure_time', 'scheduled_date', 'event_timestamp'];
@@ -56,7 +57,14 @@ function formatCell(cell: unknown, columnName: string): string {
 function TableCard({ title, tableName }: { title: string; tableName: string }) {
   const { refreshKeys, refresh } = useTableRefresh();
   const refreshTrigger = refreshKeys[tableName] ?? 0;
-  const { data, loading, error } = useTableData(tableName, refreshTrigger);
+  const { data, loading, error, changedRowKeys, setChangedRowKeys } = useTableData(tableName, refreshTrigger);
+
+  useEffect(() => {
+    if (changedRowKeys.size > 0) {
+      const t = setTimeout(() => setChangedRowKeys(new Set()), 2000);
+      return () => clearTimeout(t);
+    }
+  }, [changedRowKeys.size, setChangedRowKeys]);
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
@@ -83,10 +91,10 @@ function TableCard({ title, tableName }: { title: string; tableName: string }) {
         {error && (
           <p className="text-xs text-red-600 dark:text-red-400">{error}</p>
         )}
-        {!error && loading && (
+        {!data && loading && (
           <p className="text-xs text-muted-foreground">Loading...</p>
         )}
-        {!error && !loading && data && (
+        {data && (
           <table className="w-full min-w-[360px] border-collapse text-xs">
             <thead>
               <tr>
@@ -111,10 +119,16 @@ function TableCard({ title, tableName }: { title: string; tableName: string }) {
                   </td>
                 </tr>
               ) : (
-                data.rows.map((row, i) => (
+                data.rows.map((row, i) => {
+                  const rowKey = getRowKey(row, data.columns, tableName);
+                  const isChanged = changedRowKeys.has(rowKey);
+                  return (
                   <tr
                     key={i}
-                    className="border-b border-slate-100 dark:border-slate-800"
+                    className={[
+                      'border-b border-slate-100 dark:border-slate-800',
+                      isChanged ? 'animate-row-flash' : '',
+                    ].filter(Boolean).join(' ')}
                   >
                     {row.map((cell, j) => {
                       const col = data.columns[j] ?? '';
@@ -146,7 +160,8 @@ function TableCard({ title, tableName }: { title: string; tableName: string }) {
                       );
                     })}
                   </tr>
-                ))
+                  );
+                })
               )}
             </tbody>
           </table>

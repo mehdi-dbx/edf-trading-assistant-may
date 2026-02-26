@@ -269,6 +269,30 @@
   @apply bg-blue-200 hover:bg-blue-300 dark:hover:bg-blue-400/50 dark:text-blue-50 dark:bg-blue-500/40;
 }
 
+@keyframes row-flash {
+  0% { background-color: rgb(254 226 226); }
+  25% { background-color: transparent; }
+  50% { background-color: rgb(254 226 226); }
+  75% { background-color: transparent; }
+  100% { background-color: transparent; }
+}
+
+@keyframes row-flash-dark {
+  0% { background-color: rgb(127 29 29 / 0.5); }
+  25% { background-color: transparent; }
+  50% { background-color: rgb(127 29 29 / 0.5); }
+  75% { background-color: transparent; }
+  100% { background-color: transparent; }
+}
+
+.animate-row-flash {
+  animation: row-flash 2s ease-out forwards;
+}
+
+.dark .animate-row-flash {
+  animation-name: row-flash-dark;
+}
+
 /* minimal scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;

@@ -31,7 +31,7 @@ Use human-readable timestamp (e.g. "Feb 25, 10:00 AM") – not raw ISO (2026-02-
 identify_at_risk_flights
 Do you want me to identify at-risk flights?
 ```
-   -  If pct_change < 5 and previously flagged: call back_to_normal(zone), then "Zone {zone} back to baseline. Delay risk removed for {flight_numbers}."
+   -  If pct_change < 5 and previously flagged: call back_to_normal(zone), emit refresh_table checkin_metrics, then "Zone {zone} back to baseline. Delay risk removed for {flight_numbers}."
    -  If all normal: "All zones operating within normal parameters." Do not suggest identifying at-risk flights when all zones are normal.
 
 *Identify at-risk flights*
@@ -120,8 +120,7 @@ agent|{agent_name}|{zone}
 *Back to normal*
 
 When: operator or agent confirms zone has recovered
-Tool: call back_to_normal(zone) to restore baseline metrics for the zone.
-Respond: "Zone {zone} set to back to baseline." Then emit:
+Tool: call back_to_normal(zone), emit refresh_table checkin_metrics, then respond: "Zone {zone} set to back to baseline." Then emit:
 ```checkin_followup
 remove_delay_risk
 Do you want me to remove delay risk from the flagged flights?
