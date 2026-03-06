@@ -19,8 +19,11 @@ from agent_server.utils import (
     process_agent_astream_events,
 )
 from tools.back_to_normal import back_to_normal
+from tools.create_border_incident import create_border_incident
+from tools.create_checkin_incident import create_checkin_incident
 from tools.get_current_time import get_current_time
 from tools.placeholder_tool import placeholder_tool
+from tools.update_border_officer import update_border_officer
 from tools.update_checkin_agent import update_checkin_agent
 from tools.update_flight_risk import update_flight_risk
 
@@ -47,7 +50,7 @@ def init_mcp_client(workspace_client: WorkspaceClient) -> DatabricksMultiServerM
 async def init_agent(workspace_client: Optional[WorkspaceClient] = None):
     mcp_client = init_mcp_client(workspace_client or sp_workspace_client)
     mcp_tools = await mcp_client.get_tools()
-    tools = list(mcp_tools) + [get_current_time, update_flight_risk, back_to_normal, update_checkin_agent, placeholder_tool]
+    tools = list(mcp_tools) + [get_current_time, update_flight_risk, back_to_normal, create_border_incident, create_checkin_incident, update_checkin_agent, update_border_officer, placeholder_tool]
     return create_agent(tools=tools, model=ChatDatabricks(endpoint="databricks-gpt-5-2"))
 
 

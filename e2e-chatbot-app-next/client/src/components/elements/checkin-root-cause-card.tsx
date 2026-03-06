@@ -5,7 +5,7 @@ export type CheckinRootCauseCardProps = {
   items: string[];
 };
 
-const BOLD_LABELS = ['Staffing state:', 'Likely driver:'];
+const BOLD_LABELS = ['Staffing state:', 'Border officers:', 'e-Gates:', 'Likely driver:'];
 
 function formatRootCauseItem(item: string) {
   const lower = item.toLowerCase();

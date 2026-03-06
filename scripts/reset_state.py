@@ -12,11 +12,13 @@ from dotenv import load_dotenv
 
 load_dotenv(ROOT / ".env.local", override=True)
 
-# Order: checkin_metrics, flights, checkin_agents (no cross-deps)
+# Order: checkin_metrics, flights, checkin_agents, border_officers, border_terminals (no cross-deps)
 SQL_SCRIPTS = [
     "data/create_checkin_metrics.sql",
     "data/create_flights.sql",
     "data/create_checkin_agents.sql",
+    "data/create_border_officers.sql",
+    "data/create_border_terminals.sql",
 ]
 
 

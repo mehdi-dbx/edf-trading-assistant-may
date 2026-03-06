@@ -12,4 +12,4 @@ USING DELTA;
 
 -- Insert anomaly into checkin_metrics
 INSERT INTO mc.`amadeus-checkin`.checkin_metrics VALUES
-('B', 6.25, 5.0, 25.0, 30, CAST('2026-02-25 10:00:00' AS TIMESTAMP_NTZ));
+('B', 5.10, 5.0, 2.0, 30, CAST('2026-02-25 10:00:00' AS TIMESTAMP_NTZ));

@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { authMiddleware, requireAuth } from '../middleware/auth';
 
-const ALLOWED_TABLES = ['checkin_metrics', 'flights', 'checkin_agents'] as const;
+const ALLOWED_TABLES = ['checkin_metrics', 'flights', 'checkin_agents', 'border_officers', 'border_terminals'] as const;
 
 export const tablesRouter = Router();
 tablesRouter.use(authMiddleware);
@@ -32,7 +32,12 @@ tablesRouter.get('/:tableName', requireAuth, async (req: Request, res: Response)
   const fullTable = schema.includes('-') || schema.includes(' ')
     ? `${catalog}.\`${schema}\`.${tableName}`
     : `${catalog}.${schema}.${tableName}`;
-  const statement = `SELECT * FROM ${fullTable}`;
+
+  // For checkin_metrics, show only latest entry per zone (by recorded_at)
+  const statement =
+    tableName === 'checkin_metrics'
+      ? `SELECT zone, avg_checkin_time_mins, baseline_mins, pct_change, window_mins, recorded_at FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY zone ORDER BY recorded_at DESC) AS _rn FROM ${fullTable}) sub WHERE _rn = 1`
+      : `SELECT * FROM ${fullTable}`;
 
   const url = `${host.replace(/\/$/, '')}/api/2.0/sql/statements`;
   try {

@@ -56,18 +56,18 @@ function ZoneValueCard({
     red: 'stroke-red-500 dark:stroke-red-400',
     teal: 'stroke-teal-500 dark:stroke-teal-400',
   };
-  const size = 72;
-  const strokeWidth = 6;
+  const size = 86;
+  const strokeWidth = 7;
   const r = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * r;
   const dashOffset = circumference - (arcPercent / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
+    <div className="flex flex-col items-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
       <span className={`mb-1 inline-flex rounded-full px-2 py-0.5 font-medium text-xs ${CAPSULE_CLASSES[capsuleColor]}`}>
         Zone {zone}
       </span>
-      <span className="mb-1.5 text-muted-foreground text-xs">{label}</span>
+      <span className="mb-1.5 font-semibold text-muted-foreground text-xs">{label}</span>
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
           <circle
@@ -95,7 +95,7 @@ function ZoneValueCard({
           className="absolute left-0 top-0 flex h-full w-full items-center justify-center"
           style={{ width: size, height: size }}
         >
-          <span className={`whitespace-nowrap font-bold text-sm leading-none ${colorClasses[color]}`}>{value}</span>
+          <span className={`whitespace-nowrap font-bold text-base leading-none ${colorClasses[color]}`}>{value}</span>
         </div>
       </div>
     </div>
@@ -129,19 +129,19 @@ function ZoneMetricCard({
     red: 'stroke-red-500 dark:stroke-red-400',
     teal: 'stroke-teal-500 dark:stroke-teal-400',
   };
-  const size = 72;
-  const strokeWidth = 6;
+  const size = 86;
+  const strokeWidth = 7;
   const r = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * r;
   const arcPercent = total > 0 ? Math.min(100, (count / total) * 100) : 0;
   const dashOffset = circumference - (arcPercent / 100) * circumference;
 
   return (
-    <div className="flex flex-col items-center rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
+    <div className="flex flex-col items-center rounded-lg border border-slate-200 bg-white px-4 py-2.5 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
       <span className={`mb-1 inline-flex rounded-full px-2 py-0.5 font-medium text-xs ${CAPSULE_CLASSES[capsuleColor]}`}>
         Zone {zone}
       </span>
-      <span className="mb-1.5 text-muted-foreground text-xs">{label}</span>
+      <span className="mb-1.5 font-semibold text-muted-foreground text-xs">{label}</span>
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
           <circle
@@ -169,7 +169,7 @@ function ZoneMetricCard({
           className="absolute left-0 top-0 flex h-full w-full items-center justify-center"
           style={{ width: size, height: size }}
         >
-          <span className={`whitespace-nowrap font-bold text-sm leading-none ${colorClasses[color]}`}>
+          <span className={`whitespace-nowrap font-bold text-base leading-none ${colorClasses[color]}`}>
             {total > 0 ? `${count}/${total}` : '—'}
           </span>
         </div>
@@ -266,7 +266,7 @@ export function MetricsOverview() {
   return (
     <div className="min-w-0 rounded-lg border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
       <h2 className="mb-2 font-medium text-foreground text-xs">Overview</h2>
-      <div className="flex min-w-0 flex-nowrap gap-4 overflow-x-auto">
+      <div className="flex min-w-0 flex-nowrap gap-5 overflow-x-auto">
         {zones.map((zone) => {
           const capColor = zoneCapsuleColor(zone);
           const mins = avgCheckinByZone[zone] ?? 0;

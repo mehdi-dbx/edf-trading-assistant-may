@@ -126,6 +126,8 @@ export function ChatPanelHeader({
         refresh('checkin_metrics');
         refresh('flights');
         refresh('checkin_agents');
+        refresh('border_officers');
+        refresh('border_terminals');
       } else {
         const details = (data as { details?: string }).details;
         setError(details ? `Reset failed: ${details}` : (data as { error?: string }).error ?? 'Reset failed');

@@ -9,6 +9,8 @@ const KEY_COLUMN_BY_TABLE: Record<string, string> = {
   checkin_agents: 'agent_id',
   flights: 'flight_number',
   checkin_metrics: 'zone',
+  border_officers: 'officer_id',
+  border_terminals: 'terminal_id',
 };
 
 export function getRowKey(row: unknown[], columns: string[], tableName: string): string {

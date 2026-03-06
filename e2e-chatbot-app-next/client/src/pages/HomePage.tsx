@@ -10,16 +10,26 @@ const TABLE_PASTELS: Record<string, string> = {
   checkin_metrics: 'bg-rose-100 dark:bg-rose-900/30',
   flights: 'bg-sky-100 dark:bg-sky-900/30',
   checkin_agents: 'bg-emerald-100 dark:bg-emerald-900/30',
+  border_officers: 'bg-violet-100 dark:bg-violet-900/30',
+  border_terminals: 'bg-indigo-100 dark:bg-indigo-900/30',
 };
 
 function displayName(name: string): string {
   return name.replace(/_/g, ' ');
 }
 
+function pctChangeCellClass(value: unknown): string {
+  const n = Number(value);
+  if (Number.isNaN(n)) return '';
+  if (n >= 20) return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200 font-medium';
+  if (n < 5) return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200';
+  return '';
+}
+
 function atCounterCapsuleClass(value: string): string {
   const v = value.toLowerCase();
-  if (v === 'active' || v === 'none') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200';
-  if (v === 'away' || v === 'at_risk') return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200';
+  if (v === 'active' || v === 'none' || v === 'operational') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200';
+  if (v === 'away' || v === 'at_risk' || v === 'out of service') return 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200';
   if (v === 'break') return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200';
   if (v === 'available') return 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200';
   return 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
@@ -29,7 +39,7 @@ function formatCell(cell: unknown, columnName: string): string {
   if (cell == null) return '—';
   const s = String(cell);
   const col = columnName.toLowerCase();
-  if (col === 'at_counter' || col === 'delay_risk' || col === 'status') return s.toLowerCase();
+  if (col === 'at_counter' || col === 'at_post' || col === 'delay_risk' || col === 'status') return s.toLowerCase();
   const isTimestampColumn = TIMESTAMP_COLUMNS.some((c) =>
     columnName.toLowerCase().includes(c.toLowerCase()),
   );
@@ -54,7 +64,7 @@ function formatCell(cell: unknown, columnName: string): string {
   return s;
 }
 
-function TableCard({ title, tableName }: { title: string; tableName: string }) {
+function TableCard({ title, tableName, compact }: { title: string; tableName: string; compact?: boolean }) {
   const { refreshKeys, refresh } = useTableRefresh();
   const refreshTrigger = refreshKeys[tableName] ?? 0;
   const { data, loading, error, changedRowKeys, setChangedRowKeys } = useTableData(tableName, refreshTrigger);
@@ -95,7 +105,7 @@ function TableCard({ title, tableName }: { title: string; tableName: string }) {
           <p className="text-xs text-muted-foreground">Loading...</p>
         )}
         {data && (
-          <table className="w-full min-w-[360px] border-collapse text-xs">
+          <table className={`w-full border-collapse text-xs ${compact ? 'min-w-[200px]' : 'min-w-[360px]'}`}>
             <thead>
               <tr>
                 {data.columns.map((col) => (
@@ -134,9 +144,11 @@ function TableCard({ title, tableName }: { title: string; tableName: string }) {
                       const col = data.columns[j] ?? '';
                       const colLower = col.toLowerCase();
                       const display = formatCell(cell, col);
-                      const isAgentId = colLower === 'agent_id' || colLower === 'flight_number';
-                      const isAtCounter = colLower === 'at_counter' || colLower === 'delay_risk' || colLower === 'status';
+                      const isAgentId = colLower === 'agent_id' || colLower === 'flight_number' || colLower === 'officer_id' || colLower === 'terminal_id';
+                      const isAtCounter = colLower === 'at_counter' || colLower === 'at_post' || colLower === 'delay_risk' || colLower === 'status';
                       const isCapsule = isAgentId || isAtCounter;
+                      const isPctChange = tableName === 'checkin_metrics' && colLower === 'pct_change';
+                      const pctClass = isPctChange ? pctChangeCellClass(cell) : '';
                       return (
                         <td
                           key={j}
@@ -151,6 +163,10 @@ function TableCard({ title, tableName }: { title: string; tableName: string }) {
                                   : atCounterCapsuleClass(display),
                               ].join(' ')}
                             >
+                              {display}
+                            </span>
+                          ) : isPctChange && pctClass ? (
+                            <span className={['inline-flex rounded-full px-2 py-0.5 text-xs font-medium', pctClass].join(' ')}>
                               {display}
                             </span>
                           ) : (
@@ -178,7 +194,17 @@ export default function HomePage() {
       <div className="flex flex-col gap-3">
         <TableCard title="checkin_metrics" tableName="checkin_metrics" />
         <TableCard title="flights" tableName="flights" />
-        <TableCard title="checkin_agents" tableName="checkin_agents" />
+        <div className="grid min-w-0 grid-cols-2 gap-3">
+          <div className="row-span-2 min-w-0">
+            <TableCard title="checkin_agents" tableName="checkin_agents" compact />
+          </div>
+          <div className="min-w-0">
+            <TableCard title="border_officers" tableName="border_officers" compact />
+          </div>
+          <div className="min-w-0">
+            <TableCard title="border_terminals" tableName="border_terminals" compact />
+          </div>
+        </div>
         <MetricsOverview />
       </div>
     </div>
