@@ -1,5 +1,7 @@
 # Amadeus Check-in Ops – Business Flow
 
+**Roles:** Manager (default) and Agent. Manager monitors, recommends, assigns; Agent receives staffing duties and confirms arrival.
+
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │                        AMADEUS CHECK-IN OPS FLOW                        │
@@ -37,8 +39,17 @@
   │ agent           │     │ officer off     │
   │ update_checkin_ │     │ break           │
   │ agent           │     │ update_border_  │
-  │                 │     │ officer         │
+  │ (+assigned_by   │     │ officer         │
+  │  → staffing_    │     │                 │
+  │  status=NEW)    │     │                 │
   └────────┬────────┘     └────────┬────────┘
+           │                       │
+           │  [Manager assigns]    │
+           │  → Agent gets toast   │
+           │  → "Go to Task"       │
+           │  → staffing_duty card │
+           │  → "Arrived" →        │
+           │  confirm_arrival     │
            │                       │
            └───────────┬───────────┘
                        │

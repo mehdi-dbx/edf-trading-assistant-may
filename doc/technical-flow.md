@@ -20,7 +20,9 @@
 │  POST /api/chat     │    │  → API_PROXY (8000/invocations) │    │  → Databricks SQL API       │
 │  POST /api/reset    │    │  → stream SSE to client         │    │  → SELECT * (or latest/zone)│
 │  GET /api/current-  │    └─────────────────────────────────┘    └─────────────────────────────┘
-│    time → 8000      │                      │                                    │
+│    time → 8000      │    GET /api/events/tasks (SSE)              │
+│  POST /api/events/  │    POST /api/events/task-created            │
+│    task-created     │    (staffing duty notifications)           │
 └─────────────────────┘                      │                                    │
         │                                    ▼                                    │
         │                    ┌───────────────────────────────────────────────────┐│
@@ -34,7 +36,8 @@
         │                    │  AGENT (LangChain, prompt/main.prompt)            ││
         │                    │  Tools: get_current_time, create_*_incident,      ││
         │                    │  back_to_normal, update_checkin_agent,            ││
-        │                    │  update_border_officer, update_flight_risk        ││
+        │                    │  update_border_officer, update_flight_risk,       │
+        │                    │  confirm_arrival                                  ││
         │                    │  MCP: Genie (AMADEUS_GENIE_CHECKIN)               ││
         │                    └───────────────────────────────────────────────────┘│
         │                                   │                                     │
@@ -69,12 +72,14 @@
 | tools/create_checkin_incident.py | Zone B anomaly |
 | tools/create_border_incident.py | Zone C anomaly |
 | tools/back_to_normal.py | Restore zone baseline |
-| tools/update_checkin_agent.py | CALL update_checkin_agent |
+| tools/update_checkin_agent.py | CALL update_checkin_agent (+ POST task-created when assigned_by_id) |
 | tools/update_border_officer.py | CALL update_border_officer |
+| tools/confirm_arrival.py | CALL confirm_arrival |
 | tools/update_flight_risk.py | CALL update_flight_risk |
 | tools/get_current_time.py | Simulated time queue |
 | data/create_*.sql | Table DDL + seed data |
 | data/update_*_procedure.sql | Stored procedures |
+| data/confirm_arrival_procedure.sql | confirm_arrival procedure |
 | data/create_genie_space.py | Create Genie space, set AMADEUS_GENIE_CHECKIN |
 | scripts/reset_state.py | Re-run create SQL scripts |
 | e2e-chatbot-app-next/server/src/routes/tables.ts | GET /api/tables → Databricks SQL |

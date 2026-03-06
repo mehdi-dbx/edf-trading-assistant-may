@@ -6,7 +6,7 @@ Purpose: empower a new Cursor instance to grasp what the project does and how it
 
 ## 1. Project Purpose
 
-AI Ops Advisor for airport check-in: chat with agent, dashboard tables, suggested actions. The agent detects anomalies (check-in or border control), recommends staff redeploy, executes operator decisions via tools, and refreshes the dashboard. Built on Databricks (Unity Catalog, Genie, SQL Warehouse), LangChain agent, and a React chat + dashboard UI.
+AI Ops Advisor for airport check-in: chat with agent, dashboard tables, suggested actions. Supports **Manager** and **Agent** roles: Manager monitors performance, recommends redeploy, assigns staffing duties; Agent receives duties, confirms arrival. The agent detects anomalies (check-in or border control), recommends staff redeploy, executes operator decisions via tools, and refreshes the dashboard. Built on Databricks (Unity Catalog, Genie, SQL Warehouse), LangChain agent, and a React chat + dashboard UI.
 
 ---
 
@@ -18,7 +18,7 @@ AI Ops Advisor for airport check-in: chat with agent, dashboard tables, suggeste
 | **data/** | `create_*.sql` (table DDL + seed), `update_*_procedure.sql` (stored procedures), `create_genie_space.py`, `run_sql.py`, `csv_to_delta.py`, `verify_tables.py` |
 | **prompt/** | `main.prompt` – agent system prompt, flow instructions, block formats, Genie query templates |
 | **scripts/** | `start_local.sh` (full stack), `reset_state.py` (re-run create SQL), `quickstart.py`, `start_app.py` |
-| **tools/** | Agent tools: `sql_executor.py`, `create_checkin_incident`, `create_border_incident`, `back_to_normal`, `update_checkin_agent`, `update_border_officer`, `update_flight_risk`, `get_current_time`, `placeholder_tool` |
+| **tools/** | Agent tools: `sql_executor.py`, `create_checkin_incident`, `create_border_incident`, `back_to_normal`, `update_checkin_agent`, `update_border_officer`, `update_flight_risk`, `confirm_arrival`, `get_current_time`, `placeholder_tool` |
 | **e2e-chatbot-app-next/** | Cloned template: client (Vite/React), server (Express), packages (auth, ai-sdk-providers, chat-template/core) |
 
 ---
@@ -47,6 +47,7 @@ AI Ops Advisor for airport check-in: chat with agent, dashboard tables, suggeste
 | `AMADEUS_UNITY_CATALOG_SCHEMA` | e.g. `mc.amadeus-checkin` (catalog.schema) |
 | `AMADEUS_GENIE_CHECKIN` | Genie space ID (from `python data/create_genie_space.py`) |
 | `API_PROXY` | `http://localhost:8000/invocations` (set by start_local.sh if unset) |
+| `TASK_EVENTS_URL` | Node server URL for staffing event webhook (default `http://127.0.0.1:3001`) |
 
 **start_local.sh:**
 
@@ -63,7 +64,7 @@ AI Ops Advisor for airport check-in: chat with agent, dashboard tables, suggeste
 
 **Layout:**
 
-- `ChatLayout` wraps `TableRefreshProvider`; contains `AppSidebar` + `SidebarInset` (Outlet) + `EmbeddedChatPanel` (right)
+- `ChatLayout` wraps `ChatSendMessageProvider`, `RoleProvider`, `TableRefreshProvider`; contains `TaskEventsListener`, `AppSidebar` + `SidebarInset` (Outlet) + `EmbeddedChatPanel` (right)
 - Routes: `/` and `/chat/:id` both render `HomePage` (dashboard + chat)
 - `HomePage`: TableCard grid (checkin_metrics, flights, checkin_agents, border_officers, border_terminals), MetricsOverview
 - Chat: `EmbeddedChatPanel` uses `@chat-template/core` + `myProvider` (Databricks AI SDK); streams from API_PROXY
@@ -84,6 +85,8 @@ AI Ops Advisor for airport check-in: chat with agent, dashboard tables, suggeste
 **Key files:**
 
 - `e2e-chatbot-app-next/client/src/contexts/TableRefreshContext.tsx`
+- `e2e-chatbot-app-next/client/src/contexts/RoleContext.tsx` (Manager/Agent dropdown)
+- `e2e-chatbot-app-next/client/src/contexts/ChatSendMessageContext.tsx` (registerSendMessage, sendCheckTasks)
 - `e2e-chatbot-app-next/client/src/hooks/useTableData.ts`
 - `e2e-chatbot-app-next/client/src/components/message.tsx` (RefreshTableTrigger)
 - `e2e-chatbot-app-next/server/src/routes/tables.ts`

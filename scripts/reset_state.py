@@ -20,6 +20,11 @@ SQL_SCRIPTS = [
     "data/create_border_officers.sql",
     "data/create_border_terminals.sql",
 ]
+# Procedures (run after tables; update_checkin_agent depends on checkin_agents)
+PROCEDURE_SCRIPTS = [
+    "data/update_checkin_agents_procedure.sql",
+    "data/confirm_arrival_procedure.sql",
+]
 
 
 def main() -> None:
@@ -32,7 +37,7 @@ def main() -> None:
     wh = os.environ.get("DATABRICKS_WAREHOUSE_ID") or next(iter(w.warehouses.list())).id
     wh_id = str(getattr(wh, "id", wh) or wh)
 
-    for rel_path in SQL_SCRIPTS:
+    for rel_path in SQL_SCRIPTS + PROCEDURE_SCRIPTS:
         path = ROOT / rel_path
         if not path.exists():
             print(f"Skip (not found): {path}", file=sys.stderr)

@@ -24,6 +24,7 @@ import { ChatTransport } from '../lib/ChatTransport';
 import type { ClientSession } from '@chat-template/auth';
 import { softNavigateToChatId } from '@/lib/navigation';
 import { useAppConfig } from '@/contexts/AppConfigContext';
+import { useOptionalChatSendMessage } from '@/contexts/ChatSendMessageContext';
 import { useChatData } from '@/hooks/useChatData';
 import { useLocation } from 'react-router-dom';
 
@@ -277,6 +278,32 @@ export function Chat({
       // Resume logic is handled exclusively in onFinish.
     },
   });
+
+  const chatSendContext = useOptionalChatSendMessage();
+  useEffect(() => {
+    if (!chatSendContext) return;
+    const fn = (msg: { role: 'user'; parts: Array<{ type: 'text'; text: string }>; metadata?: { source?: string } }) =>
+      sendMessage({ role: msg.role, parts: msg.parts, ...(msg.metadata && { metadata: msg.metadata }) });
+    chatSendContext.registerSendMessage(fn);
+    return () => chatSendContext.registerSendMessage(null);
+  }, [chatSendContext, sendMessage]);
+
+  useEffect(() => {
+    if (!chatSendContext) return;
+    const showStaffingDutyOnly = (zone: string, counter: string, assignedById: string) => {
+      const content = `\`\`\`staffing_duty\n${zone}|${counter}|${assignedById}\n\`\`\``;
+      setMessages([
+        {
+          id: generateUUID(),
+          role: 'assistant',
+          parts: [{ type: 'text', text: content }],
+          metadata: { createdAt: new Date().toISOString() },
+        },
+      ]);
+    };
+    chatSendContext.registerShowStaffingDutyOnly(showStaffingDutyOnly);
+    return () => chatSendContext.registerShowStaffingDutyOnly(null);
+  }, [chatSendContext, setMessages]);
 
   const [searchParams] = useSearchParams();
   const query = searchParams.get('query');

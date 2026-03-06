@@ -35,11 +35,19 @@ function atCounterCapsuleClass(value: string): string {
   return 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
 }
 
+function staffingStatusCapsuleClass(value: string): string {
+  const v = (value ?? '').toLowerCase();
+  if (v === 'new') return 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-200';
+  if (v === 'in_progress') return 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200';
+  if (v === 'completed') return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200';
+  return 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300';
+}
+
 function formatCell(cell: unknown, columnName: string): string {
   if (cell == null) return '—';
   const s = String(cell);
   const col = columnName.toLowerCase();
-  if (col === 'at_counter' || col === 'at_post' || col === 'delay_risk' || col === 'status') return s.toLowerCase();
+  if (col === 'at_counter' || col === 'at_post' || col === 'delay_risk' || col === 'status' || col === 'staffing_status') return s.toLowerCase();
   const isTimestampColumn = TIMESTAMP_COLUMNS.some((c) =>
     columnName.toLowerCase().includes(c.toLowerCase()),
   );
@@ -64,7 +72,7 @@ function formatCell(cell: unknown, columnName: string): string {
   return s;
 }
 
-function TableCard({ title, tableName, compact }: { title: string; tableName: string; compact?: boolean }) {
+function TableCard({ title, tableName, compact, id }: { title: string; tableName: string; compact?: boolean; id?: string }) {
   const { refreshKeys, refresh } = useTableRefresh();
   const refreshTrigger = refreshKeys[tableName] ?? 0;
   const { data, loading, error, changedRowKeys, setChangedRowKeys } = useTableData(tableName, refreshTrigger);
@@ -77,7 +85,7 @@ function TableCard({ title, tableName, compact }: { title: string; tableName: st
   }, [changedRowKeys.size, setChangedRowKeys]);
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
+    <div id={id} className="rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-900/50">
       <div
         className={[
           'flex items-center justify-between border-b border-slate-200 px-3 py-1.5 dark:border-slate-700',
@@ -146,7 +154,8 @@ function TableCard({ title, tableName, compact }: { title: string; tableName: st
                       const display = formatCell(cell, col);
                       const isAgentId = colLower === 'agent_id' || colLower === 'flight_number' || colLower === 'officer_id' || colLower === 'terminal_id';
                       const isAtCounter = colLower === 'at_counter' || colLower === 'at_post' || colLower === 'delay_risk' || colLower === 'status';
-                      const isCapsule = isAgentId || isAtCounter;
+                      const isStaffingStatus = colLower === 'staffing_status';
+                      const isCapsule = isAgentId || isAtCounter || isStaffingStatus;
                       const isPctChange = tableName === 'checkin_metrics' && colLower === 'pct_change';
                       const pctClass = isPctChange ? pctChangeCellClass(cell) : '';
                       return (
@@ -160,7 +169,9 @@ function TableCard({ title, tableName, compact }: { title: string; tableName: st
                                 'inline-flex rounded-full px-2 py-0.5 text-xs font-medium',
                                 isAgentId
                                   ? 'bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-300'
-                                  : atCounterCapsuleClass(display),
+                                  : isStaffingStatus
+                                    ? staffingStatusCapsuleClass(display)
+                                    : atCounterCapsuleClass(display),
                               ].join(' ')}
                             >
                               {display}
@@ -196,7 +207,7 @@ export default function HomePage() {
         <TableCard title="flights" tableName="flights" />
         <div className="grid min-w-0 grid-cols-2 gap-3">
           <div className="row-span-2 min-w-0">
-            <TableCard title="checkin_agents" tableName="checkin_agents" compact />
+            <TableCard id="checkin-agents-table" title="checkin_agents" tableName="checkin_agents" compact />
           </div>
           <div className="min-w-0">
             <TableCard title="border_officers" tableName="border_officers" compact />

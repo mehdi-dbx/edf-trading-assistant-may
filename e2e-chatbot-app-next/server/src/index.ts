@@ -134,6 +134,43 @@ app.post('/api/reset-state', authMiddleware, requireAuth, (req, res) => {
   });
 });
 
+// SSE: staffing/task events (clients subscribe, receive task_created when Manager assigns)
+const taskEventClients: Array<{ res: Response; assignedTo?: string }> = [];
+app.get('/api/events/tasks', (req, res) => {
+  const assignedTo = typeof req.query.assigned_to === 'string' ? req.query.assigned_to : undefined;
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.flushHeaders?.();
+  taskEventClients.push({ res, assignedTo });
+  res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
+  const heartbeat = setInterval(() => {
+    res.write(': heartbeat\n\n');
+  }, 30000);
+  res.on('close', () => {
+    clearInterval(heartbeat);
+    const idx = taskEventClients.findIndex((c) => c.res === res);
+    if (idx >= 0) taskEventClients.splice(idx, 1);
+  });
+});
+app.post('/api/events/task-created', (req, res) => {
+  const assignedToId = (req.body as { assigned_to_id?: string })?.assigned_to_id;
+  if (!assignedToId || typeof assignedToId !== 'string') {
+    return res.status(400).json({ error: 'assigned_to_id required' });
+  }
+  const payload = JSON.stringify({ type: 'task_created', assigned_to_id: assignedToId });
+  for (const { res: clientRes, assignedTo } of taskEventClients) {
+    if (!assignedTo || assignedTo === assignedToId) {
+      try {
+        clientRes.write(`data: ${payload}\n\n`);
+      } catch {
+        // client may have disconnected
+      }
+    }
+  }
+  res.status(204).send();
+});
+
 // API routes
 app.use('/api/chat', chatRouter);
 app.use('/api/history', historyRouter);

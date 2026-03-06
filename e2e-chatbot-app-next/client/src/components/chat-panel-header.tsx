@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
+import { useRole } from '@/contexts/RoleContext';
 import { useTableRefresh } from '@/contexts/TableRefreshContext';
 import { Switch } from '@/components/ui/switch';
 import {
@@ -47,6 +48,10 @@ export function ChatPanelHeader({
   }) => void;
 }) {
   const { refresh } = useTableRefresh();
+  const { role, setRole } = useRole();
+  const isInitialMount = useRef(true);
+  const sendMessageRef = useRef(sendMessage);
+  sendMessageRef.current = sendMessage;
   const [displayTime, setDisplayTime] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -117,6 +122,25 @@ export function ChatPanelHeader({
     fetchTime(false).catch(() => {});
   }, []);
 
+  // Send persona message to agent when user changes role (skip initial mount)
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    const fn = sendMessageRef.current;
+    if (!fn) return;
+    const personaMessage =
+      role === 'Agent'
+        ? 'Your current persona is now Check-in Agent A14'
+        : 'Your current persona is now Check-in Manager M01';
+    fn({
+      role: 'user',
+      parts: [{ type: 'text', text: personaMessage }],
+      metadata: { source: 'system' },
+    });
+  }, [role]);
+
   const resetState = async () => {
     setResetting(true);
     try {
@@ -140,11 +164,22 @@ export function ChatPanelHeader({
   };
 
   return (
-    <header className="flex shrink-0 items-center justify-between gap-2 border-b bg-background px-3 py-2">
-      <span className="font-semibold tracking-tight text-purple-600 text-sm">
-        Garv AI Ops Advisor
-      </span>
-      <div className="flex items-center gap-1">
+    <header className="flex shrink-0 items-center justify-between gap-2 border-b bg-background px-3 py-2 min-h-[44px]">
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="truncate font-semibold tracking-tight text-purple-600 text-sm">
+          Garv AI Ops Advisor
+        </span>
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value as 'Agent' | 'Manager')}
+          className="rounded-md border border-input bg-background px-2 py-1 text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Role"
+        >
+          <option value="Agent">Agent</option>
+          <option value="Manager">Manager</option>
+        </select>
+      </div>
+      <div className="flex shrink-0 flex-wrap items-center justify-end gap-1">
         <div className="flex items-center gap-1.5 rounded-full border border-border/80 bg-muted/50 px-2.5 py-1.5">
           <Button
             variant="ghost"

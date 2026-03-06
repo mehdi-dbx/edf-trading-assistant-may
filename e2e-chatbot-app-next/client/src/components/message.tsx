@@ -6,6 +6,7 @@ import { MessageContent } from './elements/message';
 import { TurnaroundStartedCard } from './elements/turnaround-started-card';
 import { LiveTurnaroundChecklistCard } from './elements/live-turnaround-checklist';
 import { CheckinRootCauseCard } from './elements/checkin-root-cause-card';
+import { StaffingDutyCard } from './elements/staffing-duty-card';
 import { CheckinConsequencesCard } from './elements/checkin-consequences-card';
 import { CheckinRecommendedActionCard } from './elements/checkin-recommended-action-card';
 import { CheckinAvailableAgents } from './elements/checkin-available-agents';
@@ -327,6 +328,17 @@ const PurePreviewMessage = ({
                                 key={i}
                                 count={seg.parsed.count}
                                 flights={seg.parsed.flights}
+                              />
+                            );
+                          }
+                          if (seg.type === 'staffing_duty') {
+                            return (
+                              <StaffingDutyCard
+                                key={i}
+                                zone={seg.parsed.zone}
+                                counter={seg.parsed.counter}
+                                assignedById={seg.parsed.assignedById}
+                                sendMessage={sendMessage}
                               />
                             );
                           }

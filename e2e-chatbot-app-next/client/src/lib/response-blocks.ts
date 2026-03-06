@@ -78,6 +78,11 @@ export type ResponseSegment =
       type: 'refresh_table';
       content: string;
       parsed: { table: string };
+    }
+  | {
+      type: 'staffing_duty';
+      content: string;
+      parsed: { zone: string; counter: string; assignedById: string };
     };
 
 const FENCE = '```';
@@ -92,6 +97,7 @@ const BLOCK_CHECKIN_PERFORMANCE_ISSUE = 'checkin_performance_issue';
 const BLOCK_CHECKIN_IMPACT = 'checkin_impact';
 const BLOCK_CHECKIN_FOLLOWUP = 'checkin_followup';
 const BLOCK_REFRESH_TABLE = 'refresh_table';
+const BLOCK_STAFFING_DUTY = 'staffing_duty';
 
 /** Matches opening fence then optional whitespace/newline then block type (for detection). */
 const RE_TURNAROUND_STARTED = /```\s*turnaround_started/i;
@@ -105,6 +111,7 @@ const RE_CHECKIN_PERFORMANCE_ISSUE = /```\s*checkin_performance_issue/i;
 const RE_CHECKIN_IMPACT = /```\s*checkin_impact/i;
 const RE_CHECKIN_FOLLOWUP = /```\s*checkin_followup/i;
 const RE_REFRESH_TABLE = /```\s*refresh_table/i;
+const RE_STAFFING_DUTY = /```\s*staffing_duty/i;
 
 function parseRefreshTable(inner: string): { table: string } {
   const table = inner.trim().split(/\r?\n/)[0]?.trim() ?? '';
@@ -310,6 +317,17 @@ function parseCheckinImpact(inner: string): {
   return { count, flights };
 }
 
+/** Parse staffing_duty: zone|counter|assigned_by_id. */
+function parseStaffingDuty(inner: string): { zone: string; counter: string; assignedById: string } {
+  const line = inner.trim().split(/\r?\n/)[0]?.trim() ?? '';
+  const parts = line.split('|').map((p) => p.trim());
+  return {
+    zone: parts[0] ?? '',
+    counter: parts[1] ?? '',
+    assignedById: parts[2] ?? '',
+  };
+}
+
 /** Parse checkin_followup: line1=actionId, line2=question (optional). */
 function parseCheckinFollowup(inner: string): { question: string; actionId: string } {
   const lines = inner.trim().split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
@@ -431,6 +449,13 @@ export function parseResponseBlocks(text: string): ResponseSegment[] {
       } catch {
         segments.push({ type: 'markdown', content: FENCE + BLOCK_REFRESH_TABLE + '\n' + inner + FENCE });
       }
+    } else if (lang === BLOCK_STAFFING_DUTY) {
+      try {
+        const parsed = parseStaffingDuty(inner);
+        segments.push({ type: 'staffing_duty', content: inner, parsed });
+      } catch {
+        segments.push({ type: 'markdown', content: FENCE + BLOCK_STAFFING_DUTY + '\n' + inner + FENCE });
+      }
     } else {
       segments.push({
         type: 'markdown',
@@ -455,6 +480,7 @@ export function hasResponseBlocks(text: string): boolean {
     RE_CHECKIN_PERFORMANCE_ISSUE.test(text) ||
     RE_CHECKIN_IMPACT.test(text) ||
     RE_CHECKIN_FOLLOWUP.test(text) ||
-    RE_REFRESH_TABLE.test(text)
+    RE_REFRESH_TABLE.test(text) ||
+    RE_STAFFING_DUTY.test(text)
   );
 }
