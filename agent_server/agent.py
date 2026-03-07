@@ -14,6 +14,7 @@ from mlflow.types.responses import (
     to_chat_completions_input,
 )
 
+from agent_server.genie_capture import wrap_for_genie_capture
 from agent_server.utils import (
     get_databricks_host_from_env,
     process_agent_astream_events,
@@ -51,7 +52,8 @@ def init_mcp_client(workspace_client: WorkspaceClient) -> DatabricksMultiServerM
 async def init_agent(workspace_client: Optional[WorkspaceClient] = None):
     mcp_client = init_mcp_client(workspace_client or sp_workspace_client)
     mcp_tools = await mcp_client.get_tools()
-    tools = list(mcp_tools) + [get_current_time, update_flight_risk, back_to_normal, create_border_incident, create_checkin_incident, update_checkin_agent, update_border_officer, confirm_arrival, placeholder_tool]
+    wrapped_tools = [wrap_for_genie_capture(t) for t in mcp_tools]
+    tools = list(wrapped_tools) + [get_current_time, update_flight_risk, back_to_normal, create_border_incident, create_checkin_incident, update_checkin_agent, update_border_officer, confirm_arrival, placeholder_tool]
     return create_agent(tools=tools, model=ChatDatabricks(endpoint="databricks-gpt-5-2"))
 
 

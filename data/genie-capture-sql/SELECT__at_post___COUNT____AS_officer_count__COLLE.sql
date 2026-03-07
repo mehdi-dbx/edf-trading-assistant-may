@@ -1,0 +1,1 @@
+SELECT `at_post`, COUNT(*) AS officer_count, COLLECT_LIST(`name`) AS officer_names FROM `mc`.`amadeus-checkin`.`border_officers` WHERE TRIM(UPPER(`zone`)) = 'ZONE B' AND `at_post` IN ('ACTIVE', 'AWAY', 'BREAK') GROUP BY `at_post`
