@@ -77,8 +77,8 @@
 | tools/confirm_arrival.py | CALL confirm_arrival |
 | tools/update_flight_risk.py | CALL update_flight_risk |
 | tools/get_current_time.py | Simulated time queue |
-| data/create_*.sql | Table DDL + seed data |
-| data/update_*_procedure.sql | Stored procedures |
+| data/init/create_*.sql | Table DDL + seed data |
+| data/proc/*_procedure.sql | Stored procedures |
 | data/confirm_arrival_procedure.sql | confirm_arrival procedure |
 | data/create_genie_space.py | Create Genie space, set AMADEUS_GENIE_CHECKIN |
 | scripts/reset_state.py | Re-run create SQL scripts |

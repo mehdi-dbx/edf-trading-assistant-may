@@ -15,7 +15,7 @@ AI Ops Advisor for airport check-in: chat with agent, dashboard tables, suggeste
 | Folder | Contents |
 | ------ | -------- |
 | **agent_server/** | `agent.py` (tools, MCP, prompt load), `start_server.py` (FastAPI, /current-time), `utils.py`, `evaluate_agent.py` |
-| **data/** | `create_*.sql` (table DDL + seed), `update_*_procedure.sql` (stored procedures), `create_genie_space.py`, `run_sql.py`, `csv_to_delta.py`, `verify_tables.py` |
+| **data/** | `init/create_*.sql` (table DDL + seed), `proc/*_procedure.sql` (stored procedures), `create_genie_space.py`, `run_sql.py`, `csv_to_delta.py`, `verify_tables.py` |
 | **prompt/** | `main.prompt` – agent system prompt, flow instructions, block formats, Genie query templates |
 | **scripts/** | `start_local.sh` (full stack), `reset_state.py` (re-run create SQL), `quickstart.py`, `start_app.py` |
 | **tools/** | Agent tools: `sql_executor.py`, `create_checkin_incident`, `create_border_incident`, `back_to_normal`, `update_checkin_agent`, `update_border_officer`, `update_flight_risk`, `confirm_arrival`, `get_current_time`, `placeholder_tool` |
@@ -97,7 +97,7 @@ AI Ops Advisor for airport check-in: chat with agent, dashboard tables, suggeste
 
 | Goal | Where to change |
 | ---- | --------------- |
-| New data | Add `create_*.sql` in data/, run via reset_state or run_sql; add to `ALLOWED_TABLES` in tables.ts; add `KEY_COLUMN_BY_TABLE` in useTableData.ts |
+| New data | Add `create_*.sql` in data/init/, procedures in data/proc/; run via reset_state or run_sql; add to `ALLOWED_TABLES` in tables.ts; add `KEY_COLUMN_BY_TABLE` in useTableData.ts |
 | New Genie | Create space with `create_genie_space.py`, add env var; optionally add MCP in agent.py |
 | New tools | Add `tools/foo.py`, register in agent.py, document in prompt |
 | New flows | Extend prompt with new triggers, tools, block formats |

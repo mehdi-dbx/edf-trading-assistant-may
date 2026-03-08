@@ -33,8 +33,9 @@ def _extract_query_from_args(args: Any) -> Optional[str]:
 
 def _sanitize_filename(query: str) -> str:
     s = re.sub(r"\s+", "_", query)
-    s = re.sub(r"[^\w\-]", "_", s).strip("_")
-    return s[:60] or "unnamed"
+    s = re.sub(r"[^\w\-]", "_", s)
+    s = re.sub(r"_+", "_", s).strip("_")
+    return s[:60].rstrip("_") or "unnamed"
 
 
 def _extract_sql_from_output(output: Any) -> list[str]:

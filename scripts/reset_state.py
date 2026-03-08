@@ -14,16 +14,16 @@ load_dotenv(ROOT / ".env.local", override=True)
 
 # Order: checkin_metrics, flights, checkin_agents, border_officers, border_terminals (no cross-deps)
 SQL_SCRIPTS = [
-    "data/create_checkin_metrics.sql",
-    "data/create_flights.sql",
-    "data/create_checkin_agents.sql",
-    "data/create_border_officers.sql",
-    "data/create_border_terminals.sql",
+    "data/init/create_checkin_metrics.sql",
+    "data/init/create_flights.sql",
+    "data/init/create_checkin_agents.sql",
+    "data/init/create_border_officers.sql",
+    "data/init/create_border_terminals.sql",
 ]
 # Procedures (run after tables; update_checkin_agent depends on checkin_agents)
 PROCEDURE_SCRIPTS = [
-    "data/update_checkin_agents_procedure.sql",
-    "data/confirm_arrival_procedure.sql",
+    "data/proc/update_checkin_agents_procedure.sql",
+    "data/proc/confirm_arrival_procedure.sql",
 ]
 
 

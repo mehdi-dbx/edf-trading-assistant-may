@@ -1,21 +1,21 @@
-# Checkpoint: genie-assets
+# Checkpoint: before table refresh UX
 
-Tag: `checkpoint-genie-assets`  
-Commit: `b9e71c4`
+Tag: `checkpoint-before-table-refresh-ux`  
+Commit: `2f3eb86`
 
 ## Return to this state
 
 **Checkout (detached HEAD):**
 ```bash
-git checkout checkpoint-genie-assets
+git checkout checkpoint-before-table-refresh-ux
 ```
 
-**Reset current branch to this state:**
+**Reset main branch to this state:**
 ```bash
-git reset --hard checkpoint-genie-assets
+git reset --hard checkpoint-before-table-refresh-ux
 ```
 
 **Push tag to GitHub (optional):**
 ```bash
-git push origin checkpoint-genie-assets
+git push origin checkpoint-before-table-refresh-ux
 ```
