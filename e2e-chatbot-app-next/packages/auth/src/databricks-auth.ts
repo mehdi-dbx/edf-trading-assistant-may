@@ -11,7 +11,7 @@ import { getHostUrl, getHostDomain } from '@chat-template/utils';
 // Types
 // ============================================================================
 
-export type AuthMethod = 'oauth' | 'cli' | 'none';
+export type AuthMethod = 'oauth' | 'pat' | 'cli' | 'none';
 export type UserType = 'regular'; // Simplified - no more guest users
 
 export interface AuthUser {
@@ -60,12 +60,31 @@ let cacheExpiry = 0;
 // ============================================================================
 
 /**
+ * Check if we should use PAT (Personal Access Token) authentication
+ */
+export function shouldUsePAT(): boolean {
+  const token = process.env.DATABRICKS_TOKEN;
+  try {
+    getHostDomain(); // Throws if DATABRICKS_HOST is not set
+    return !!token?.trim();
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Determine which authentication method to use
+ * PAT takes precedence over CLI when both are configured (PAT-only, no CLI)
  */
 export function getAuthMethod(): AuthMethod {
   // Check for OAuth (service principal) credentials
   if (shouldUseOAuth()) {
     return 'oauth';
+  }
+
+  // Check for PAT - prefer over CLI when both exist
+  if (shouldUsePAT()) {
+    return 'pat';
   }
 
   // Check for CLI-based authentication
@@ -118,6 +137,8 @@ export function getAuthMethodDescription(): string {
   switch (method) {
     case 'oauth':
       return 'OAuth (service principal)';
+    case 'pat':
+      return 'PAT (Personal Access Token)';
     case 'cli':
       return 'CLI-based OAuth U2M';
     case 'none':
@@ -372,11 +393,19 @@ export async function getDatabricksToken(): Promise<string> {
   switch (method) {
     case 'oauth':
       return getDatabricksOAuthToken();
+    case 'pat': {
+      const token = process.env.DATABRICKS_TOKEN?.trim();
+      if (!token) {
+        throw new Error('DATABRICKS_TOKEN is not set');
+      }
+      return Promise.resolve(token);
+    }
     case 'cli':
       return getDatabricksCliToken();
     case 'none':
       throw new Error(
         'No Databricks authentication configured. Please set one of:\n' +
+          '- DATABRICKS_TOKEN + DATABRICKS_HOST (PAT)\n' +
           '- DATABRICKS_CLIENT_ID + DATABRICKS_CLIENT_SECRET + DATABRICKS_HOST (OAuth)\n' +
           '- DATABRICKS_CONFIG_PROFILE or DATABRICKS_HOST (CLI auth - run "databricks auth login" first)',
       );
@@ -404,6 +433,15 @@ export async function getDatabaseUsername(): Promise<string> {
       }
       return pgUser;
     }
+
+    case 'pat':
+      // For PAT, use PAT_USER or fallback to system user
+      return (
+        process.env.PAT_USER ||
+        process.env.USER ||
+        process.env.USERNAME ||
+        'pat-user'
+      );
 
     case 'cli':
       // For CLI auth, use the current user's identity
@@ -438,12 +476,16 @@ async function getDatabricksCurrentUser(): Promise<any> {
 
   console.log('[getDatabricksCurrentUser] Cache miss - fetching from SCIM API');
 
-  // Determine auth method and handle CLI auth specially
+  // Determine auth method and get token
   const method = getAuthMethod();
   let hostUrl: string;
   let token: string;
 
-  if (method === 'cli') {
+  if (method === 'pat') {
+    hostUrl = getHostUrl();
+    token = await getDatabricksToken();
+    console.log('[getDatabricksCurrentUser] Using PAT for SCIM API');
+  } else if (method === 'cli') {
     // For CLI auth, we need to get user identity first to cache the host
     await getDatabricksUserIdentity(); // This will cache the host
 
@@ -453,14 +495,11 @@ async function getDatabricksCurrentUser(): Promise<any> {
         ? cliHostCache
         : `https://${cliHostCache}`;
     } else {
-      // Fallback to original method if CLI didn't provide host
       hostUrl = getHostUrl();
     }
 
-    // Get token (this will also use the cached host)
     token = await getDatabricksCliToken();
   } else {
-    // For OAuth, use the original method
     hostUrl = getHostUrl();
     token = await getDatabricksToken();
   }

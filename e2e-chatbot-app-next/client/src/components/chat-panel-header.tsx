@@ -166,7 +166,13 @@ export function ChatPanelHeader({
         </span>
         <select
           value={role}
-          onChange={(e) => setRole(e.target.value as 'Agent' | 'Manager')}
+          onChange={(e) => {
+            const newRole = e.target.value as 'Agent' | 'Manager';
+            if (newRole !== role) {
+              onNewChat();
+              setRole(newRole);
+            }
+          }}
           className="rounded-md border border-input bg-background px-2 py-1 text-muted-foreground text-xs focus:outline-none focus:ring-2 focus:ring-ring"
           aria-label="Role"
         >

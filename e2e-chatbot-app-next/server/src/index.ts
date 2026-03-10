@@ -154,11 +154,21 @@ app.get('/api/events/tasks', (req, res) => {
   });
 });
 app.post('/api/events/task-created', (req, res) => {
-  const assignedToId = (req.body as { assigned_to_id?: string })?.assigned_to_id;
+  const body = req.body as {
+    assigned_to_id?: string;
+    agent_name?: string;
+    manager_name?: string;
+  };
+  const assignedToId = body?.assigned_to_id;
   if (!assignedToId || typeof assignedToId !== 'string') {
     return res.status(400).json({ error: 'assigned_to_id required' });
   }
-  const payload = JSON.stringify({ type: 'task_created', assigned_to_id: assignedToId });
+  const payload = JSON.stringify({
+    type: 'task_created',
+    assigned_to_id: assignedToId,
+    agent_name: body.agent_name ?? assignedToId,
+    manager_name: body.manager_name ?? 'Check-in Manager',
+  });
   for (const { res: clientRes, assignedTo } of taskEventClients) {
     if (!assignedTo || assignedTo === assignedToId) {
       try {

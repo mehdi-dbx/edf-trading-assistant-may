@@ -8,7 +8,25 @@ import urllib.request
 from langchain_core.tools import tool
 
 from data.sql_utils import get_schema_qualified
-from tools.sql_executor import execute_statement, get_warehouse
+from tools.sql_executor import execute_query, execute_statement, get_warehouse
+
+# Manager ID -> display name for staffing duty notifications
+MANAGER_NAMES: dict[str, str] = {"M01": "J. Torres"}
+
+
+def _get_agent_name(agent_id: str) -> str:
+    """Look up agent name from checkin_agents. Returns agent_id if not found."""
+    w, wh_id = get_warehouse()
+    schema = get_schema_qualified()
+    a = agent_id.replace("'", "''")
+    stmt = f"SELECT name FROM {schema}.checkin_agents WHERE agent_id = '{a}' LIMIT 1"
+    try:
+        columns, rows = execute_query(w, wh_id, stmt)
+        if rows and len(rows[0]) > 0 and rows[0][0]:
+            return str(rows[0][0])
+    except Exception:
+        pass
+    return agent_id
 
 
 @tool
@@ -32,12 +50,18 @@ def update_checkin_agent(
     try:
         execute_statement(w, wh_id, stmt)
         if assigned_by_id:
+            agent_name = _get_agent_name(agent_id)
+            manager_name = MANAGER_NAMES.get(assigned_by_id, assigned_by_id)
             base = os.environ.get("TASK_EVENTS_URL", "http://127.0.0.1:3001")
             url = f"{base.rstrip('/')}/api/events/task-created"
             try:
                 req = urllib.request.Request(
                     url,
-                    data=json.dumps({"assigned_to_id": agent_id}).encode(),
+                    data=json.dumps({
+                        "assigned_to_id": agent_id,
+                        "agent_name": agent_name,
+                        "manager_name": manager_name,
+                    }).encode(),
                     headers={"Content-Type": "application/json"},
                     method="POST",
                 )

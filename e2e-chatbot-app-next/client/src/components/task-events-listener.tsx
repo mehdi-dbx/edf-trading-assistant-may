@@ -16,11 +16,13 @@ export function TaskEventsListener() {
 
   useTaskEvents(
     agentId ?? null,
-    () => {
+    (payload) => {
       refresh('checkin_agents');
       toast.custom(
         (id) => (
           <TaskNotificationToast
+            agentName={payload.agent_name}
+            managerName={payload.manager_name}
             onGoToTask={() => {
               toast.dismiss(id);
               if (agentId) {

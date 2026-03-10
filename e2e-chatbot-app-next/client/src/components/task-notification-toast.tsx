@@ -1,10 +1,24 @@
 import { Bell } from 'lucide-react';
 
 interface TaskNotificationToastProps {
+  agentName?: string;
+  managerName?: string;
   onGoToTask: () => void;
 }
 
-export function TaskNotificationToast({ onGoToTask }: TaskNotificationToastProps) {
+/** Extract surname from "M. Hassan" -> "Hassan" (last word). */
+function agentDisplayName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/);
+  return parts.length > 1 ? parts[parts.length - 1]! : fullName;
+}
+
+export function TaskNotificationToast({
+  agentName,
+  managerName = 'Check-in Manager',
+  onGoToTask,
+}: TaskNotificationToastProps) {
+  const managerDisplay =
+    managerName === 'Check-in Manager' ? 'Check-in Manager' : `Check-in Manager ${managerName}`;
   return (
     <div
       data-testid="toast"
@@ -17,7 +31,16 @@ export function TaskNotificationToast({ onGoToTask }: TaskNotificationToastProps
         New Staffing Duty!
       </h3>
       <p className="mb-4 text-center text-sm text-slate-700 dark:text-slate-300">
-        You have been assigned a new staffing duty by <strong>Check-in Manager</strong>.
+        {agentName ? (
+          <>
+            <strong>{agentDisplayName(agentName)}</strong>, you have been assigned a new staffing
+            duty by <strong>{managerDisplay}</strong>.
+          </>
+        ) : (
+          <>
+            You have been assigned a new staffing duty by <strong>{managerDisplay}</strong>.
+          </>
+        )}
       </p>
       <button
         type="button"
