@@ -32,6 +32,7 @@ def main() -> None:
     from databricks.sdk.service.sql import ExecuteStatementRequestOnWaitTimeout
 
     from data.csv_to_delta import _wait_for_statement
+    from data.sql_utils import substitute_schema
 
     w = WorkspaceClient()
     wh = os.environ.get("DATABRICKS_WAREHOUSE_ID") or next(iter(w.warehouses.list())).id
@@ -42,7 +43,7 @@ def main() -> None:
         if not path.exists():
             print(f"Skip (not found): {path}", file=sys.stderr)
             continue
-        content = path.read_text().strip()
+        content = substitute_schema(path.read_text().strip())
         if "CALL " in content:
             create, call = content.split("CALL ", 1)
             stmts = [create.strip(), "CALL " + call.strip()]

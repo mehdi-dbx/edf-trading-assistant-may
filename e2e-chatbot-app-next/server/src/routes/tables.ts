@@ -7,7 +7,8 @@ export const tablesRouter = Router();
 tablesRouter.use(authMiddleware);
 
 /**
- * GET /api/tables/:tableName - Fetch table data from Databricks Delta
+ * GET /api/tables/:tableName - Proxy to backend /tables/:tableName
+ * Backend has Databricks auth; avoids DATABRICKS_* env in Node (not available when deployed).
  * Returns { columns: string[], rows: any[][] }
  */
 tablesRouter.get('/:tableName', requireAuth, async (req: Request, res: Response) => {
@@ -16,93 +17,29 @@ tablesRouter.get('/:tableName', requireAuth, async (req: Request, res: Response)
     return res.status(400).json({ error: 'Table not allowed', allowed: [...ALLOWED_TABLES] });
   }
 
-  const host = process.env.DATABRICKS_HOST;
-  const token = process.env.DATABRICKS_TOKEN;
-  const warehouseId = process.env.DATABRICKS_WAREHOUSE_ID;
-  const schemaSpec = process.env.AMADEUS_UNITY_CATALOG_SCHEMA;
-
-  if (!host || !token || !warehouseId || !schemaSpec || !schemaSpec.includes('.')) {
-    return res.status(502).json({
-      error: 'Databricks not configured',
-      message: 'Missing DATABRICKS_HOST, DATABRICKS_TOKEN, DATABRICKS_WAREHOUSE_ID, or AMADEUS_UNITY_CATALOG_SCHEMA',
-    });
+  const apiProxy = process.env.API_PROXY || '';
+  let base = apiProxy.replace(/\/invocations\/?$/, '') || 'http://127.0.0.1:8000';
+  if (base.startsWith('http://localhost:') || base.startsWith('https://localhost:')) {
+    base = base.replace('localhost', '127.0.0.1');
   }
+  const url = `${base}/tables/${tableName}`;
 
-  const [catalog, schema] = schemaSpec.trim().split('.', 2);
-  const fullTable = schema.includes('-') || schema.includes(' ')
-    ? `${catalog}.\`${schema}\`.${tableName}`
-    : `${catalog}.${schema}.${tableName}`;
-
-  // For checkin_metrics, show only latest entry per zone (by recorded_at)
-  const statement =
-    tableName === 'checkin_metrics'
-      ? `SELECT zone, avg_checkin_time_mins, baseline_mins, pct_change, window_mins, recorded_at FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY zone ORDER BY recorded_at DESC) AS _rn FROM ${fullTable}) sub WHERE _rn = 1`
-      : `SELECT * FROM ${fullTable}`;
-
-  const url = `${host.replace(/\/$/, '')}/api/2.0/sql/statements`;
   try {
-    const execRes = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        warehouse_id: warehouseId,
-        statement,
-        wait_timeout: '30s',
-        format: 'JSON_ARRAY',
-      }),
-    });
-
-    const respText = await execRes.text();
-    if (!execRes.ok) {
-      console.error('[tables] Databricks API error', execRes.status, respText.slice(0, 300));
-      return res.status(502).json({
-        error: 'Databricks unavailable',
-        details: respText.slice(0, 200),
+    const response = await fetch(url);
+    const data = (await response.json()) as { columns?: string[]; rows?: unknown[][]; detail?: string };
+    if (!response.ok) {
+      const msg = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail ?? data);
+      console.error('[tables] backend error', response.status, msg.slice(0, 200));
+      return res.status(response.status).json({
+        error: 'Backend tables error',
+        details: msg.slice(0, 200),
       });
     }
-
-    let data: {
-      status?: { state?: string; error?: { message?: string } };
-      manifest?: { schema?: { columns?: Array<{ name?: string }> } };
-      result?: { data_array?: unknown[][] };
-      statement_id?: string;
-    };
-    try {
-      data = JSON.parse(respText) as typeof data;
-    } catch (parseErr) {
-      console.error('[tables] Databricks response not JSON', respText.slice(0, 200));
-      return res.status(502).json({
-        error: 'Databricks returned invalid response',
-        details: respText.slice(0, 200),
-      });
-    }
-
-    const state = data.status?.state;
-    if (state === 'FAILED' || state === 'CANCELED') {
-      const msg = data.status?.error?.message ?? state;
-      return res.status(502).json({ error: 'Query failed', details: msg });
-    }
-
-    if (state !== 'SUCCEEDED' && state !== 'CLOSED') {
-      return res.status(502).json({
-        error: 'Query did not complete',
-        state,
-        message: 'Statement may still be running. Try again.',
-      });
-    }
-
-    const columns =
-      data.manifest?.schema?.columns?.map((c) => c.name ?? '') ?? [];
-    const rows = (data.result?.data_array ?? []) as unknown[][];
-
-    return res.json({ columns, rows });
+    return res.json({ columns: data.columns ?? [], rows: data.rows ?? [] });
   } catch (err) {
-    console.error('[tables] fetch error', err);
+    console.error('[tables] fetch error', url, err);
     return res.status(502).json({
-      error: 'Databricks unavailable',
+      error: 'Backend unavailable',
       message: err instanceof Error ? err.message : 'Unknown error',
     });
   }

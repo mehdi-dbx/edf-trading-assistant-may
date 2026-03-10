@@ -49,7 +49,6 @@ export function ChatPanelHeader({
 }) {
   const { refresh } = useTableRefresh();
   const { role, setRole } = useRole();
-  const isInitialMount = useRef(true);
   const sendMessageRef = useRef(sendMessage);
   sendMessageRef.current = sendMessage;
   const [displayTime, setDisplayTime] = useState<string | null>(null);
@@ -122,12 +121,8 @@ export function ChatPanelHeader({
     fetchTime(false).catch(() => {});
   }, []);
 
-  // Send persona message to agent when user changes role (skip initial mount)
+  // Send persona message to agent on mount and when user changes role
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
     const fn = sendMessageRef.current;
     if (!fn) return;
     const personaMessage =

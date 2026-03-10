@@ -84,7 +84,10 @@ async def init_agent(workspace_client: Optional[WorkspaceClient] = None):
         confirm_arrival,
         placeholder_tool,
     ]
-    return create_agent(tools=tools, model=ChatDatabricks(endpoint="databricks-gpt-5-2"))
+    endpoint = os.environ.get("AGENT_MODEL_ENDPOINT", "").strip()
+    if not endpoint:
+        raise ValueError("AGENT_MODEL_ENDPOINT must be set (e.g. claude-sonnet-4-6, databricks-gpt-5-2)")
+    return create_agent(tools=tools, model=ChatDatabricks(endpoint=endpoint))
 
 
 @invoke()

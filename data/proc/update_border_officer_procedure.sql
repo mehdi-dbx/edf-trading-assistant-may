@@ -1,4 +1,4 @@
-CREATE OR REPLACE PROCEDURE mc.`amadeus-checkin`.update_border_officer(
+CREATE OR REPLACE PROCEDURE __SCHEMA_QUALIFIED__.update_border_officer(
   IN officer_id_param STRING,
   IN at_post_param STRING
 )
@@ -6,7 +6,7 @@ LANGUAGE SQL
 SQL SECURITY INVOKER
 AS 
 BEGIN
-  UPDATE mc.`amadeus-checkin`.border_officers
+  UPDATE __SCHEMA_QUALIFIED__.border_officers
   SET at_post = at_post_param
   WHERE officer_id = officer_id_param;
 
@@ -14,4 +14,4 @@ BEGIN
 END;
 
 
---CALL mc.`amadeus-checkin`.update_border_officer('O03', 'ACTIVE');
+--CALL __SCHEMA_QUALIFIED__.update_border_officer('O03', 'ACTIVE');

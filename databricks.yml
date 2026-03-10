@@ -19,11 +19,23 @@ resources:
           experiment:
             experiment_id: "${resources.experiments.agent_langgraph_experiment.id}"
             permission: 'CAN_MANAGE'
+        - name: 'sql_warehouse'
+          sql_warehouse:
+            id: 'f9738bf02b7d1c4f'
+            permission: 'CAN_USE'
+        - name: 'genie_checkin'
+          genie_space:
+            name: 'AMADEUS CHECKIN'
+            space_id: '01f11afee6f211559a00ef8d9c36d468'
+            permission: 'CAN_RUN'
+        - name: 'serving_endpoint'
+          serving_endpoint:
+            name: 'claude-sonnet-4-6'
+            permission: 'CAN_QUERY'
 
 targets:
   dev:
     mode: development
-    default: true
     # workspace:
     #   host: https://...
 
@@ -35,3 +47,15 @@ targets:
       apps:
         agent_langgraph:
           name: agent-langgraph
+
+  # Default target: agent-airops-checkin (DBX_APP_NAME in .env.local)
+  # Use: databricks bundle deploy  (no -t needed) or ./deploy/deploy.sh
+  airops-checkin:
+    mode: production
+    default: true
+    workspace:
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/airops-checkin
+    resources:
+      apps:
+        agent_langgraph:
+          name: agent-airops-checkin

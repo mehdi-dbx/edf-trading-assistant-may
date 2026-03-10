@@ -1,4 +1,4 @@
-"""Agent tool to redeploy check-in agents via mc.`amadeus-checkin`.update_checkin_agent procedure."""
+"""Agent tool to redeploy check-in agents via update_checkin_agent procedure."""
 
 import json
 import logging
@@ -7,6 +7,7 @@ import urllib.request
 
 from langchain_core.tools import tool
 
+from data.sql_utils import get_schema_qualified
 from tools.sql_executor import execute_statement, get_warehouse
 
 
@@ -26,7 +27,8 @@ def update_checkin_agent(
     c = counter.replace("'", "''")
     ac = at_counter.replace("'", "''")
     ab = f"'{assigned_by_id.replace(chr(39), chr(39) * 2)}'" if assigned_by_id else "NULL"
-    stmt = f"CALL mc.`amadeus-checkin`.update_checkin_agent('{a}', '{z}', '{c}', '{ac}', {ab})"
+    schema = get_schema_qualified()
+    stmt = f"CALL {schema}.update_checkin_agent('{a}', '{z}', '{c}', '{ac}', {ab})"
     try:
         execute_statement(w, wh_id, stmt)
         if assigned_by_id:

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Run a SQL file. Usage: python data/run_sql.py <path/to/file.sql>"""
+"""Run a SQL file. Substitutes __SCHEMA_QUALIFIED__ and __VOLUME_PATH__ from AMADEUS_UNITY_CATALOG_SCHEMA.
+Usage: python data/run_sql.py <path/to/file.sql>"""
 import os
 import sys
 from pathlib import Path
@@ -13,6 +14,7 @@ load_dotenv(ROOT / ".env.local", override=True)
 
 from databricks.sdk import WorkspaceClient
 from data.csv_to_delta import _wait_for_statement
+from data.sql_utils import substitute_schema
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -27,7 +29,7 @@ if __name__ == "__main__":
     w = WorkspaceClient()
     wh = os.environ.get("DATABRICKS_WAREHOUSE_ID") or next(iter(w.warehouses.list())).id
     wh_id = str(getattr(wh, "id", wh) or wh)
-    content = path.read_text().strip()
+    content = substitute_schema(path.read_text().strip())
 
     if "CALL " in content:
         create, call = content.split("CALL ", 1)

@@ -1,2 +1,2 @@
 -- Border terminals: lists each terminal with status plus a total row per status showing count. Params: {zone}
-SELECT `terminal_id`, `status`, NULL AS `terminal_count` FROM mc.`amadeus-checkin`.`border_terminals` WHERE `zone` = '{zone}' UNION ALL SELECT 'TOTAL' AS `terminal_id`, `status`, COUNT(*) AS `terminal_count` FROM mc.`amadeus-checkin`.`border_terminals` WHERE `zone` = '{zone}' GROUP BY `status`
+SELECT `terminal_id`, `status`, NULL AS `terminal_count` FROM __SCHEMA_QUALIFIED__.`border_terminals` WHERE `zone` = '{zone}' UNION ALL SELECT 'TOTAL' AS `terminal_id`, `status`, COUNT(*) AS `terminal_count` FROM __SCHEMA_QUALIFIED__.`border_terminals` WHERE `zone` = '{zone}' GROUP BY `status`

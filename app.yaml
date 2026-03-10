@@ -10,7 +10,17 @@ env:
     value: "http://localhost:8000/invocations"
   - name: CHAT_APP_PORT
     value: "3000"
+  - name: TASK_EVENTS_URL
+    value: "http://127.0.0.1:3000"
   - name: CHAT_PROXY_TIMEOUT_SECONDS
     value: "300"
   - name: MLFLOW_EXPERIMENT_ID
     valueFrom: "experiment"
+  # Model endpoint for agent (must match serving_endpoint in databricks.yml)
+  - name: AGENT_MODEL_ENDPOINT
+    value: "claude-sonnet-4-6"
+  # Required for backend /tables endpoint (UC schema)
+  - name: AMADEUS_UNITY_CATALOG_SCHEMA
+    value: "amadeus.checkin"
+  - name: DATABRICKS_WAREHOUSE_ID
+    value: "f9738bf02b7d1c4f"

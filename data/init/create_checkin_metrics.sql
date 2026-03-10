@@ -1,6 +1,4 @@
-DROP TABLE IF EXISTS mc.`amadeus-checkin`.checkin_metrics;
-
-CREATE TABLE mc.`amadeus-checkin`.checkin_metrics (
+CREATE OR REPLACE TABLE __SCHEMA_QUALIFIED__.checkin_metrics (
     zone STRING,
     avg_checkin_time_mins DOUBLE,
     baseline_mins DOUBLE,
@@ -11,5 +9,5 @@ CREATE TABLE mc.`amadeus-checkin`.checkin_metrics (
 USING DELTA;
 
 -- Insert anomaly into checkin_metrics
-INSERT INTO mc.`amadeus-checkin`.checkin_metrics VALUES
+INSERT INTO __SCHEMA_QUALIFIED__.checkin_metrics VALUES
 ('B', 5.10, 5.0, 2.0, 30, CAST('2026-02-25 10:00:00' AS TIMESTAMP_NTZ));

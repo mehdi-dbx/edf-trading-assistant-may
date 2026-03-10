@@ -4,6 +4,7 @@ from pathlib import Path
 
 from langchain_core.tools import tool
 
+from data.sql_utils import substitute_schema
 from tools.sql_executor import execute_query, format_query_result, get_warehouse, _escape_sql_string
 
 _FUNC_DIR = Path(__file__).resolve().parents[1] / "data" / "func"
@@ -13,7 +14,7 @@ _FUNC_DIR = Path(__file__).resolve().parents[1] / "data" / "func"
 def query_staffing_duties(agent_id: str) -> str:
     """Staffing duties: lists rows from checkin_agents where agent has staffing_status NEW (zone, counter, assigned_by_id, assigned_at). agent_id: e.g. 'A10'."""
     w, wh_id = get_warehouse()
-    sql = (_FUNC_DIR / "staffing_duties.sql").read_text().strip()
+    sql = substitute_schema((_FUNC_DIR / "staffing_duties.sql").read_text().strip())
     stmt = sql.replace("{agent_id}", _escape_sql_string(agent_id))
     try:
         columns, rows = execute_query(w, wh_id, stmt)

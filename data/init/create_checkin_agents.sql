@@ -1,6 +1,4 @@
-DROP TABLE IF EXISTS mc.`amadeus-checkin`.checkin_agents;
-
-CREATE TABLE mc.`amadeus-checkin`.checkin_agents (
+CREATE OR REPLACE TABLE __SCHEMA_QUALIFIED__.checkin_agents (
     agent_id STRING,
     name STRING,
     zone STRING,
@@ -14,7 +12,7 @@ CREATE TABLE mc.`amadeus-checkin`.checkin_agents (
 USING DELTA
 TBLPROPERTIES (delta.enableChangeDataFeed = true);
 
-INSERT INTO mc.`amadeus-checkin`.checkin_agents VALUES
+INSERT INTO __SCHEMA_QUALIFIED__.checkin_agents VALUES
 ('A14', 'M. Hassan', 'C', 'C04', 'AVAILABLE', '2026-02-25T10:00:00.000', NULL, NULL, NULL),
 ('A10', 'R. Singh',  'C', 'C03', 'ACTIVE', '2026-02-25T10:00:00.000', NULL, NULL, NULL),
 ('A13', 'J. Parker', 'C', 'C05', 'ACTIVE', '2026-02-25T10:00:00.000', NULL, NULL, NULL),

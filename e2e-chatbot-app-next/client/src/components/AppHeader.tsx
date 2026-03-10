@@ -10,7 +10,7 @@ import { useSession } from '@/contexts/SessionContext';
 import { useTheme } from 'next-themes';
 import { Sparkles } from 'lucide-react';
 
-const CUSTOMER_NAME = 'London Heathrow Airport Check-in Command Center';
+const CUSTOMER_NAME = 'Airport Check-in Command Center';
 
 export function AppHeader() {
   const { session, loading } = useSession();
