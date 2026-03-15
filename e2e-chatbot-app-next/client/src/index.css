@@ -288,6 +288,88 @@ button.voice-mic-listening:hover {
   background: rgba(127, 29, 29, 0.45) !important;
 }
 
+/* Chat loading indicator: bouncing dots + rotating status */
+@keyframes chat-dot-bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.chat-loading-dot {
+  animation: chat-dot-bounce 1.4s ease-in-out infinite both;
+}
+
+.chat-loading-dot:nth-child(1) { animation-delay: 0s; }
+.chat-loading-dot:nth-child(2) { animation-delay: 0.16s; }
+.chat-loading-dot:nth-child(3) { animation-delay: 0.32s; }
+
+@keyframes chat-status-shimmer {
+  0% { background-position: 200% 50%; }
+  100% { background-position: -200% 50%; }
+}
+
+@keyframes chat-status-glow {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.35); }
+}
+
+.chat-loading-status {
+  color: var(--muted-foreground);
+  /* Shimmer: gradient sweep + brightness pulse (both run in phrase classes) */
+  background: linear-gradient(
+    90deg,
+    var(--muted-foreground) 0%,
+    var(--muted-foreground) 25%,
+    var(--foreground) 50%,
+    var(--muted-foreground) 75%,
+    var(--muted-foreground) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Cycle through 3 status phrases, 7s each (21s total). Include shimmer so it's not overridden. */
+@keyframes chat-status-cycle-1 {
+  0%, 33.33% { opacity: 1; }
+  33.34%, 100% { opacity: 0; }
+}
+
+@keyframes chat-status-cycle-2 {
+  0%, 33.33% { opacity: 0; }
+  33.34%, 66.66% { opacity: 1; }
+  66.67%, 100% { opacity: 0; }
+}
+
+@keyframes chat-status-cycle-3 {
+  0%, 66.66% { opacity: 0; }
+  66.67%, 100% { opacity: 1; }
+}
+
+.chat-status-phrase-1 {
+  animation:
+    chat-status-shimmer 2s ease-in-out infinite,
+    chat-status-glow 1.5s ease-in-out infinite,
+    chat-status-cycle-1 21s ease-in-out infinite;
+}
+.chat-status-phrase-2 {
+  animation:
+    chat-status-shimmer 2s ease-in-out infinite,
+    chat-status-glow 1.5s ease-in-out infinite,
+    chat-status-cycle-2 21s ease-in-out infinite;
+}
+.chat-status-phrase-3 {
+  animation:
+    chat-status-shimmer 2s ease-in-out infinite,
+    chat-status-glow 1.5s ease-in-out infinite,
+    chat-status-cycle-3 21s ease-in-out infinite;
+}
+
+/* Tool-specific message (single phrase) also gets shimmer + glow */
+.chat-loading-status:not([class*="chat-status-phrase"]) {
+  animation: chat-status-shimmer 2s ease-in-out infinite, chat-status-glow 1.5s ease-in-out infinite;
+}
+
 @keyframes voice-bar {
   0%, 100% { height: 8px; }
   50% { height: 20px; }

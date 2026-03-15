@@ -161,29 +161,45 @@ export const Tool = ToolContainer;
 type ToolHeaderProps = {
   type: ToolUIPart['type'] | string;
   state: ToolState;
+  statusMessage?: string | null;
   className?: string;
 };
+
+const RUNNING_STATES = new Set<ToolState>([
+  'input-streaming',
+  'input-available',
+  'approval-requested',
+]);
 
 export const ToolHeader = ({
   className,
   type,
   state,
+  statusMessage,
   ...props
-}: ToolHeaderProps) => (
-  <CollapsibleTrigger
-    className={cn(
-      'flex w-full min-w-0 items-center justify-between gap-2 p-3',
-      className,
-    )}
-    {...props}
-  >
-    <div className="flex min-w-0 flex-1 items-center gap-2">
-      <WrenchIcon className="size-4 shrink-0 text-muted-foreground" />
-      <span className="truncate font-medium text-sm">{type}</span>
-    </div>
-    <div className="flex shrink-0 items-center gap-2">
-      <ToolStatusBadge state={state} />
-      <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
-    </div>
-  </CollapsibleTrigger>
-);
+}: ToolHeaderProps) => {
+  const showStatus = statusMessage && RUNNING_STATES.has(state);
+  return (
+    <CollapsibleTrigger
+      className={cn(
+        'flex w-full min-w-0 items-center justify-between gap-2 p-3',
+        className,
+      )}
+      {...props}
+    >
+      <div className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+        <div className="flex min-w-0 items-center gap-2">
+          <WrenchIcon className="size-4 shrink-0 text-muted-foreground" />
+          <span className="truncate font-medium text-sm">{type}</span>
+        </div>
+        {showStatus && (
+          <span className="text-muted-foreground text-xs">{statusMessage}</span>
+        )}
+      </div>
+      <div className="flex shrink-0 items-center gap-2">
+        <ToolStatusBadge state={state} />
+        <ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+      </div>
+    </CollapsibleTrigger>
+  );
+};

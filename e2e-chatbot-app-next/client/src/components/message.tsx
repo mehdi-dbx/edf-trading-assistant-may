@@ -48,6 +48,7 @@ import {
   joinMessagePartSegments,
 } from './databricks-message-part-transformers';
 import { MessageError } from './message-error';
+import { ChatLoadingIndicator, getActiveToolMessage, getToolMessage } from './chat-loading-indicator';
 import { MessageOAuthError } from './message-oauth-error';
 import { isCredentialErrorMessage } from '@/lib/oauth-error-utils';
 import { Streamdown } from 'streamdown';
@@ -535,6 +536,7 @@ const PurePreviewMessage = ({
                   <ToolHeader
                     type={toolName}
                     state={effectiveState}
+                    statusMessage={getToolMessage(toolName)}
                   />
                   <ToolContent>
                     <ToolInput input={input} />
@@ -590,6 +592,18 @@ const PurePreviewMessage = ({
             }
           })}
 
+          {message.role === 'assistant' &&
+            isLoading &&
+            !message.parts.some(
+              (p) => p.type === 'text' && (p as { text?: string }).text?.trim()
+            ) && (
+              <div className="mt-1">
+                <ChatLoadingIndicator
+                  activeToolMessage={getActiveToolMessage(message)}
+                />
+              </div>
+            )}
+
           {!isReadonly && !hasOnlyErrors && (
             <MessageActions
               key={`action-${message.id}`}
@@ -643,7 +657,11 @@ export const PreviewMessage = memo(
   },
 );
 
-export const AwaitingResponseMessage = () => {
+export const AwaitingResponseMessage = ({
+  activeToolMessage,
+}: {
+  activeToolMessage?: string | null;
+} = {}) => {
   const role = 'assistant';
 
   return (
@@ -656,34 +674,11 @@ export const AwaitingResponseMessage = () => {
         <AnimatedAssistantIcon size={14} isLoading={false} muted={true} />
 
         <div className="flex w-full flex-col gap-2 md:gap-4">
-          <div className="p-0 text-muted-foreground text-sm">
-            <LoadingText>Thinking...</LoadingText>
+          <div className="p-0">
+            <ChatLoadingIndicator activeToolMessage={activeToolMessage} />
           </div>
         </div>
       </div>
     </div>
-  );
-};
-
-const LoadingText = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <motion.div
-      animate={{ backgroundPosition: ['100% 50%', '-100% 50%'] }}
-      transition={{
-        duration: 1.5,
-        repeat: Number.POSITIVE_INFINITY,
-        ease: 'linear',
-      }}
-      style={{
-        background:
-          'linear-gradient(90deg, hsl(var(--muted-foreground)) 0%, hsl(var(--muted-foreground)) 35%, hsl(var(--foreground)) 50%, hsl(var(--muted-foreground)) 65%, hsl(var(--muted-foreground)) 100%)',
-        backgroundSize: '200% 100%',
-        WebkitBackgroundClip: 'text',
-        backgroundClip: 'text',
-      }}
-      className="flex items-center text-transparent"
-    >
-      {children}
-    </motion.div>
   );
 };
