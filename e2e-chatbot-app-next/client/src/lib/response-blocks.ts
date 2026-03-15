@@ -75,6 +75,14 @@ export type ResponseSegment =
       parsed: { question: string; actionId: string };
     }
   | {
+      type: 'checkin_root_cause_actions';
+      content: string;
+      parsed: {
+        agents: Array<{ agentId: string; name: string; zone: string; counter: string; status: string }>;
+        actions: Array<{ actionId: string; question: string }>;
+      };
+    }
+  | {
       type: 'refresh_table';
       content: string;
       parsed: { table: string };
@@ -83,6 +91,11 @@ export type ResponseSegment =
       type: 'staffing_duty';
       content: string;
       parsed: { zone: string; counter: string; assignedById: string };
+    }
+  | {
+      type: 'knowledge_base';
+      content: string;
+      parsed: { header: string; items: string[]; footer?: string };
     };
 
 const FENCE = '```';
@@ -96,8 +109,10 @@ const BLOCK_CHECKIN_UPDATE = 'checkin_update';
 const BLOCK_CHECKIN_PERFORMANCE_ISSUE = 'checkin_performance_issue';
 const BLOCK_CHECKIN_IMPACT = 'checkin_impact';
 const BLOCK_CHECKIN_FOLLOWUP = 'checkin_followup';
+const BLOCK_CHECKIN_ROOT_CAUSE_ACTIONS = 'checkin_root_cause_actions';
 const BLOCK_REFRESH_TABLE = 'refresh_table';
 const BLOCK_STAFFING_DUTY = 'staffing_duty';
+const BLOCK_KNOWLEDGE_BASE = 'knowledge_base';
 
 /** Matches opening fence then optional whitespace/newline then block type (for detection). */
 const RE_TURNAROUND_STARTED = /```\s*turnaround_started/i;
@@ -110,8 +125,10 @@ const RE_CHECKIN_UPDATE = /```\s*checkin_update/i;
 const RE_CHECKIN_PERFORMANCE_ISSUE = /```\s*checkin_performance_issue/i;
 const RE_CHECKIN_IMPACT = /```\s*checkin_impact/i;
 const RE_CHECKIN_FOLLOWUP = /```\s*checkin_followup/i;
+const RE_CHECKIN_ROOT_CAUSE_ACTIONS = /```\s*checkin_root_cause_actions/i;
 const RE_REFRESH_TABLE = /```\s*refresh_table/i;
 const RE_STAFFING_DUTY = /```\s*staffing_duty/i;
+const RE_KNOWLEDGE_BASE = /```\s*knowledge_base/i;
 
 function parseRefreshTable(inner: string): { table: string } {
   const table = inner.trim().split(/\r?\n/)[0]?.trim() ?? '';
@@ -317,6 +334,55 @@ function parseCheckinImpact(inner: string): {
   return { count, flights };
 }
 
+/** Parse knowledge_base: header, bullet items, optional --- divider, optional footer. */
+function parseKnowledgeBase(inner: string): {
+  header: string;
+  items: string[];
+  footer?: string;
+} {
+  const lines = inner.trim().split(/\r?\n/).map((l) => l.trim());
+  const headerLines: string[] = [];
+  const items: string[] = [];
+  let footer = '';
+  let phase: 'header' | 'items' | 'footer' = 'header';
+
+  for (const line of lines) {
+    if (line === '---') {
+      phase = 'footer';
+      continue;
+    }
+    if (phase === 'header') {
+      if (line.startsWith('- ')) {
+        phase = 'items';
+        items.push(line.slice(2).trim());
+      } else {
+        headerLines.push(line);
+      }
+      continue;
+    }
+    if (phase === 'items') {
+      if (line.startsWith('- ')) {
+        items.push(line.slice(2).trim());
+      } else if (line === '---') {
+        seenDivider = true;
+        phase = 'footer';
+      } else if (line) {
+        items.push(line);
+      }
+      continue;
+    }
+    if (phase === 'footer' && line) {
+      footer += (footer ? '\n' : '') + line;
+    }
+  }
+
+  return {
+    header: headerLines.join(' ').trim(),
+    items,
+    footer: footer.trim() || undefined,
+  };
+}
+
 /** Parse staffing_duty: zone|counter|assigned_by_id. */
 function parseStaffingDuty(inner: string): { zone: string; counter: string; assignedById: string } {
   const line = inner.trim().split(/\r?\n/)[0]?.trim() ?? '';
@@ -334,6 +400,28 @@ function parseCheckinFollowup(inner: string): { question: string; actionId: stri
   const actionId = lines[0] ?? '';
   const question = lines[1] ?? '';
   return { actionId, question };
+}
+
+/** Parse checkin_root_cause_actions: ---agents--- section + ---actions--- section. */
+function parseCheckinRootCauseActions(inner: string): {
+  agents: Array<{ agentId: string; name: string; zone: string; counter: string; status: string }>;
+  actions: Array<{ actionId: string; question: string }>;
+} {
+  const agentsSection = inner.split(/---actions---/i)[0] ?? '';
+  const actionsSection = inner.split(/---actions---/i)[1] ?? '';
+  const agentsInner = agentsSection.replace(/---agents---/i, '').trim();
+  const agents = agentsInner ? parseCheckinAvailableAgents(agentsInner).agents : [];
+  const actionLines = actionsSection.trim().split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  const actions: Array<{ actionId: string; question: string }> = [];
+  for (const line of actionLines) {
+    const pipeIdx = line.indexOf('|');
+    if (pipeIdx >= 0) {
+      const actionId = line.slice(0, pipeIdx).trim();
+      const question = line.slice(pipeIdx + 1).trim();
+      if (actionId) actions.push({ actionId, question });
+    }
+  }
+  return { agents, actions };
 }
 
 /**
@@ -442,6 +530,13 @@ export function parseResponseBlocks(text: string): ResponseSegment[] {
       } catch {
         segments.push({ type: 'markdown', content: FENCE + BLOCK_CHECKIN_FOLLOWUP + '\n' + inner + FENCE });
       }
+    } else if (lang === BLOCK_CHECKIN_ROOT_CAUSE_ACTIONS) {
+      try {
+        const parsed = parseCheckinRootCauseActions(inner);
+        segments.push({ type: 'checkin_root_cause_actions', content: inner, parsed });
+      } catch {
+        segments.push({ type: 'markdown', content: FENCE + BLOCK_CHECKIN_ROOT_CAUSE_ACTIONS + '\n' + inner + FENCE });
+      }
     } else if (lang === BLOCK_REFRESH_TABLE) {
       try {
         const parsed = parseRefreshTable(inner);
@@ -455,6 +550,13 @@ export function parseResponseBlocks(text: string): ResponseSegment[] {
         segments.push({ type: 'staffing_duty', content: inner, parsed });
       } catch {
         segments.push({ type: 'markdown', content: FENCE + BLOCK_STAFFING_DUTY + '\n' + inner + FENCE });
+      }
+    } else if (lang === BLOCK_KNOWLEDGE_BASE) {
+      try {
+        const parsed = parseKnowledgeBase(inner);
+        segments.push({ type: 'knowledge_base', content: inner, parsed });
+      } catch {
+        segments.push({ type: 'markdown', content: FENCE + BLOCK_KNOWLEDGE_BASE + '\n' + inner + FENCE });
       }
     } else {
       segments.push({
@@ -480,7 +582,9 @@ export function hasResponseBlocks(text: string): boolean {
     RE_CHECKIN_PERFORMANCE_ISSUE.test(text) ||
     RE_CHECKIN_IMPACT.test(text) ||
     RE_CHECKIN_FOLLOWUP.test(text) ||
+    RE_CHECKIN_ROOT_CAUSE_ACTIONS.test(text) ||
     RE_REFRESH_TABLE.test(text) ||
-    RE_STAFFING_DUTY.test(text)
+    RE_STAFFING_DUTY.test(text) ||
+    RE_KNOWLEDGE_BASE.test(text)
   );
 }

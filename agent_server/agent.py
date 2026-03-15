@@ -101,10 +101,12 @@ async def non_streaming(request: ResponsesAgentRequest) -> ResponsesAgentRespons
 
 
 def _load_system_prompt() -> str:
-    path = Path(__file__).resolve().parents[1] / "prompt" / "main.prompt"
-    if path.exists():
-        return path.read_text(encoding="utf-8").strip()
-    return ""
+    base = Path(__file__).resolve().parents[1] / "prompt"
+    main_path = base / "main.prompt"
+    kb_path = base / "knowledge.base"
+    content = main_path.read_text(encoding="utf-8").strip() if main_path.exists() else ""
+    kb_content = kb_path.read_text(encoding="utf-8").strip() if kb_path.exists() else ""
+    return content.replace("{{KNOWLEDGE_BASE}}", kb_content)
 
 
 @stream()

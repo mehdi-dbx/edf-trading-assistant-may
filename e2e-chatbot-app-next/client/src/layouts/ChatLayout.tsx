@@ -7,6 +7,7 @@ import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { TaskEventsListener } from '@/components/task-events-listener';
 import { ChatSendMessageProvider } from '@/contexts/ChatSendMessageContext';
 import { RoleProvider } from '@/contexts/RoleContext';
+import { TaskNotificationProvider } from '@/contexts/TaskNotificationContext';
 import { useSession } from '@/contexts/SessionContext';
 import { TableRefreshProvider } from '@/contexts/TableRefreshContext';
 import { generateUUID } from '@/lib/utils';
@@ -57,8 +58,9 @@ export default function ChatLayout() {
     <SidebarProvider defaultOpen={sidebarDefaultOpen}>
       <ChatSendMessageProvider>
         <RoleProvider>
-          <TableRefreshProvider>
-            <TaskEventsListener />
+          <TaskNotificationProvider>
+            <TableRefreshProvider>
+              <TaskEventsListener />
             <div className="flex h-svh w-full flex-col overflow-hidden">
           <AppHeader />
           <div className="flex min-h-0 min-w-0 flex-1 w-full overflow-hidden">
@@ -72,7 +74,8 @@ export default function ChatLayout() {
             <EmbeddedChatPanel chatId={chatId} onNewChat={onNewChat} />
           </div>
             </div>
-          </TableRefreshProvider>
+            </TableRefreshProvider>
+          </TaskNotificationProvider>
         </RoleProvider>
       </ChatSendMessageProvider>
     </SidebarProvider>

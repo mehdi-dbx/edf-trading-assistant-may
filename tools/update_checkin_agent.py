@@ -33,16 +33,17 @@ def _get_agent_name(agent_id: str) -> str:
 def update_checkin_agent(
     agent_id: str,
     zone: str,
-    counter: str,
     at_counter: str,
+    counter: str | None = None,
     assigned_by_id: str | None = None,
 ) -> str:
     """Redeploy an agent to a zone/counter. Call when operator confirms redeploying an available agent (e.g. from root cause analysis recommendations).
-    agent_id: e.g. 'A14'. zone: e.g. 'B'. counter: e.g. 'B08'. at_counter: ACTIVE, AWAY, BREAK, or AVAILABLE. assigned_by_id: Manager ID when creating staffing duty (e.g. 'M01'), omit for non-Manager redeploys."""
+    agent_id: e.g. 'A14'. zone: e.g. 'B'. counter: e.g. 'B08'; omit or leave empty to use {zone}01. at_counter: ACTIVE, AWAY, BREAK, or AVAILABLE. assigned_by_id: Manager ID when creating staffing duty (e.g. 'M01'), omit for non-Manager redeploys."""
     w, wh_id = get_warehouse()
+    resolved_counter = counter or f"{zone}01"
     a = agent_id.replace("'", "''")
     z = zone.replace("'", "''")
-    c = counter.replace("'", "''")
+    c = resolved_counter.replace("'", "''")
     ac = at_counter.replace("'", "''")
     ab = f"'{assigned_by_id.replace(chr(39), chr(39) * 2)}'" if assigned_by_id else "NULL"
     schema = get_schema_qualified()
@@ -68,6 +69,6 @@ def update_checkin_agent(
                 urllib.request.urlopen(req, timeout=5)
             except Exception as e:
                 logging.getLogger(__name__).warning("task_created webhook failed: %s", e)
-        return f"Redeployed {agent_id} to Zone {zone}, counter {counter}, {at_counter}."
+        return f"Redeployed {agent_id} to Zone {zone}, counter {resolved_counter}, {at_counter}."
     except RuntimeError as e:
         return f"Error: {e}"

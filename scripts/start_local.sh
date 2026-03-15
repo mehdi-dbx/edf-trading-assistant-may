@@ -11,8 +11,9 @@ if [[ ! -d e2e-chatbot-app-next ]]; then
 fi
 
 # Free ports 8000, 3000, 3001 if in use (e.g. previous run)
+# Only kill LISTEN processes, not clients (e.g. Firefox with localhost:3000 open)
 for port in 8000 3000 3001; do
-  pid=$(lsof -ti :$port 2>/dev/null) || true
+  pid=$(lsof -ti :$port -sTCP:LISTEN 2>/dev/null) || true
   [[ -n "$pid" ]] && kill $pid 2>/dev/null || true
 done
 sleep 1
@@ -55,12 +56,15 @@ wait_for() {
 # Build Node server (ensures latest routes, e.g. /api/tables)
 (cd e2e-chatbot-app-next && npm run build:server) || true
 
+# Verify backend imports before starting (fail fast on SyntaxError etc.)
+uv run python -c "from agent_server.start_server import app" || { echo "Backend import failed. Check backend.log or run: uv run start-server"; exit 1; }
+
 # Start each process simply, capture the subshell PID
 uv run start-server --reload >> "$ROOT/backend.log" 2>&1 &
 BACKEND_PID=$!
 wait_for "http://127.0.0.1:8000/health" "Backend" || true
 
-env CHAT_APP_PORT=3001 PORT=3001 API_PROXY="$API_PROXY" \
+env CHAT_APP_PORT=3001 PORT=3001 API_PROXY="$API_PROXY" LOG_SSE_EVENTS="${LOG_SSE_EVENTS:-true}" \
   bash -c 'cd e2e-chatbot-app-next && npm run dev:built --workspace=@databricks/chatbot-server' \
   >> "$ROOT/node.log" 2>&1 &
 NODE_PID=$!

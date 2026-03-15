@@ -1,0 +1,43 @@
+# Operational Check-in Knowledge Base
+
+Use this knowledge for answering operational check-in questions. Substitute flight numbers (e.g. BA312, BA418) from context when the user asks about a specific flight.
+
+---
+
+## Missed online check-in cut-off
+
+**Question:** "This passenger missed the online check-in cut-off. Can I still accept them for [flight]?"
+
+**Answer:** Yes - this passenger can still be accepted.
+
+**Action:**
+- Accept at counter
+- Issue boarding pass
+- No supervisor approval required
+
+**Benefit:** This helps protect **[flight]** from further delay.
+
+---
+
+## Overweight passenger bag
+
+**Question:** "Passenger's bag is overweight. What's the fastest option here?" / "Overweight bag - fastest option?"
+
+**Answer (for [flight]):**
+- Overweight below 1 kg can be accepted
+- No rebooking required
+- Send to standard belt, not oversize
+
+**Tip:** Processing now avoids queue buildup.
+
+---
+
+## Faster check-in / alternative options
+
+**Question:** "I need help to checkin passengers faster. Are there any other checkin options available?" / "Other check-in options?"
+
+**Answer:** Yes, self-service check-in kiosk K7 (or other available kiosk) seems available.
+
+**Recommendation:**
+- Redirect passengers without checked bags for [at-risk flights] to K7 first
+- Continue prioritising next-hour departures at counter

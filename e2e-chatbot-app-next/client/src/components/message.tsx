@@ -14,6 +14,8 @@ import { CheckinUpdateCard } from './elements/checkin-update-card';
 import { CheckinPerformanceIssueCard } from './elements/checkin-performance-issue-card';
 import { CheckinImpactCard } from './elements/checkin-impact-card';
 import { FollowUpActions } from './elements/follow-up-actions';
+import { CheckinRootCauseActionsCard } from './elements/checkin-root-cause-actions-card';
+import { KnowledgeBaseCard } from './elements/knowledge-base-card';
 import { parseResponseBlocks, hasResponseBlocks } from '@/lib/response-blocks';
 import {
   Tool,
@@ -331,6 +333,16 @@ const PurePreviewMessage = ({
                               />
                             );
                           }
+                          if (seg.type === 'knowledge_base') {
+                            return (
+                              <KnowledgeBaseCard
+                                key={i}
+                                header={seg.parsed.header}
+                                items={seg.parsed.items}
+                                footer={seg.parsed.footer}
+                              />
+                            );
+                          }
                           if (seg.type === 'staffing_duty') {
                             return (
                               <StaffingDutyCard
@@ -350,9 +362,34 @@ const PurePreviewMessage = ({
                               />
                             );
                           }
+                          if (seg.type === 'checkin_root_cause_actions') {
+                            const showButtons =
+                              !isReadonly && !isLoading && isLastMessage;
+                            return (
+                              <CheckinRootCauseActionsCard
+                                key={i}
+                                agents={seg.parsed.agents}
+                                actions={seg.parsed.actions}
+                                onConfirm={(selectedActionIds) =>
+                                  sendMessage({
+                                    role: 'user',
+                                    parts: [
+                                      {
+                                        type: 'text',
+                                        text: `yes (actions: ${selectedActionIds.join(', ')})`,
+                                      },
+                                    ],
+                                    metadata: { source: 'followup' },
+                                  })
+                                }
+                                disabled={!showButtons}
+                              />
+                            );
+                          }
                           if (seg.type === 'checkin_followup') {
                             const showButtons =
                               !isReadonly && !isLoading && isLastMessage;
+                            const actionId = seg.parsed.actionId ?? '';
                             return (
                               <FollowUpActions
                                 key={i}
@@ -360,7 +397,14 @@ const PurePreviewMessage = ({
                                 onValidate={() =>
                                   sendMessage({
                                     role: 'user',
-                                    parts: [{ type: 'text', text: 'yes' }],
+                                    parts: [
+                                      {
+                                        type: 'text',
+                                        text: actionId
+                                          ? `yes (action: ${actionId})`
+                                          : 'yes',
+                                      },
+                                    ],
                                     metadata: { source: 'followup' },
                                   })
                                 }

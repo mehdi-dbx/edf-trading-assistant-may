@@ -40,6 +40,9 @@ fi
 echo "Validating bundle..."
 databricks bundle validate -t "$TARGET"
 
+# Verify backend imports before deploying (fail fast on SyntaxError etc.)
+uv run python -c "from agent_server.start_server import app" || { echo "Backend import failed. Fix before deploying."; exit 1; }
+
 echo "Deploying (bundle uploads source and links to app)..."
 databricks bundle deploy -t "$TARGET"
 

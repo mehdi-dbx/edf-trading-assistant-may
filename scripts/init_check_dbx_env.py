@@ -590,6 +590,107 @@ def verify_mlflow() -> tuple[bool, str]:
         return False, str(e)
 
 
+def verify_app_grants() -> tuple[bool, list[str]]:
+    """Verify all grants from run_all_grants.sh are effective for the app service principal.
+    Returns (ok, list of issue messages).
+    """
+    from tools.sql_executor import execute_query, get_warehouse
+
+    app_name = os.environ.get("DBX_APP_NAME", "agent-airops-checkin").strip()
+    spec = os.environ.get("AMADEUS_UNITY_CATALOG_SCHEMA", "").strip()
+    wh_id = os.environ.get("DATABRICKS_WAREHOUSE_ID", "").strip()
+
+    issues: list[str] = []
+
+    if "." not in spec:
+        return False, ["AMADEUS_UNITY_CATALOG_SCHEMA not set (need catalog.schema)"]
+    catalog, schema_name = spec.split(".", 1)
+
+    try:
+        from databricks.sdk import WorkspaceClient
+        w = WorkspaceClient()
+        w_client, wh_id_sql = get_warehouse()
+
+        # Get app service principal ID
+        try:
+            app = w.apps.get(name=app_name)
+        except Exception as e:
+            return False, [f"App '{app_name}' not found: {e}"]
+
+        sp_id = getattr(app, "service_principal_client_id", None) or getattr(
+            app, "oauth2_app_client_id", None
+        )
+        if not sp_id:
+            return False, [f"App '{app_name}' has no service_principal_client_id"]
+
+        # 1. Check UC catalog/schema/table privileges (run_all_grants: grant_app_tables)
+        table_priv_sql = f"""
+        SELECT table_name, privilege_type
+        FROM `{catalog}`.information_schema.table_privileges
+        WHERE table_schema = '{schema_name}' AND grantee = '{sp_id}'
+        """
+        try:
+            _, table_rows = execute_query(w_client, wh_id_sql, table_priv_sql)
+        except Exception as e:
+            issues.append(f"UC table privileges: could not verify ({e})")
+        else:
+            granted_tables = {
+                r[0]
+                for r in table_rows
+                if r[1] and ("SELECT" in r[1] or "ALL PRIVILEGES" in r[1])
+            }
+            for t in TABLES_TO_VERIFY:
+                if t not in granted_tables:
+                    issues.append(f"Table {t}: app has no SELECT/ALL_PRIVILEGES")
+            if not table_rows and TABLES_TO_VERIFY:
+                issues.append("UC tables: app has no table privileges")
+
+        # 2. Check UC routine privileges (run_all_grants: grant_app_functions)
+        routine_priv_sql = f"""
+        SELECT routine_name, privilege_type
+        FROM `{catalog}`.information_schema.routine_privileges
+        WHERE routine_schema = '{schema_name}' AND grantee = '{sp_id}'
+        """
+        try:
+            _, routine_rows = execute_query(w_client, wh_id_sql, routine_priv_sql)
+        except Exception as e:
+            issues.append(f"UC routine privileges: could not verify ({e})")
+        else:
+            has_execute = any(r[1] and "EXECUTE" in r[1] for r in routine_rows)
+            if not has_execute:
+                issues.append("UC routines: app has no EXECUTE on procedures")
+
+        # 3. Check warehouse CAN_USE (run_all_grants: authorize_warehouse_for_app)
+        if not wh_id:
+            issues.append("DATABRICKS_WAREHOUSE_ID not set")
+        else:
+            try:
+                perm = w.permissions.get(
+                    request_object_type="warehouses",
+                    request_object_id=wh_id,
+                )
+                acl = getattr(perm, "access_control_list", []) or []
+                has_can_use = False
+                for entry in acl:
+                    plevel = str(getattr(entry, "permission_level", "") or "")
+                    if "CAN_USE" not in plevel.upper():
+                        continue
+                    sp_name = str(getattr(entry, "service_principal_name", "") or "")
+                    sp_id_attr = str(getattr(entry, "service_principal_id", "") or "")
+                    if sp_id in (sp_name, sp_id_attr) or sp_id in sp_name:
+                        has_can_use = True
+                        break
+                if not has_can_use:
+                    issues.append(f"Warehouse {wh_id}: app has no CAN_USE")
+            except Exception as e:
+                issues.append(f"Warehouse permissions: could not verify ({e})")
+
+        return len(issues) == 0, issues
+
+    except Exception as e:
+        return False, [str(e)]
+
+
 def load_env_for_key(key: str, value: str) -> None:
     os.environ[key] = value
 
@@ -872,12 +973,24 @@ def run_check_only() -> None:
     if not ok:
         all_ok = False
 
+    section("App grants (run_all_grants)")
+    grants_ok, grants_issues = verify_app_grants()
+    grants_failed = not grants_ok
+    if grants_ok:
+        app_name = os.environ.get("DBX_APP_NAME", "agent-airops-checkin").strip()
+        print(f"  {OK} UC tables, routines, warehouse {C}({app_name}){W}")
+    else:
+        for issue in grants_issues:
+            print(f"  {FAIL} {issue}")
+        all_ok = False
+
     section("Summary")
     if all_ok:
         print(f"  {OK} {G}All resources OK{W}\n")
     else:
         print(f"  {FAIL} {R}Some checks failed{W}\n")
         assets_created = False
+        grants_applied = False
         if uc_failed:
             try:
                 raw = input(f"  {C}Create project assets now? [y/N]: {W}").strip().lower()
@@ -895,7 +1008,23 @@ def run_check_only() -> None:
                         abort_step()
             except (EOFError, KeyboardInterrupt):
                 print(f"  {DIM}Skipped{W}\n")
-        if not assets_created:
+        if grants_failed:
+            try:
+                raw = input(f"  {C}Run apply grants (run_all_grants.sh)? [y/N]: {W}").strip().lower()
+                if raw in ("y", "yes"):
+                    print(f"  {B}Applying grants ...{W}\n")
+                    rc = subprocess.call(
+                        ["bash", str(ROOT / "deploy" / "grant" / "run_all_grants.sh")],
+                        cwd=ROOT,
+                    )
+                    if rc == 0:
+                        print(f"\n  {OK} {G}Grants applied. Re-run --check to verify.{W}\n")
+                        grants_applied = True
+                    else:
+                        print(f"\n  {FAIL} Grants script exited with {rc}{W}\n")
+            except (EOFError, KeyboardInterrupt):
+                print(f"  {DIM}Skipped{W}\n")
+        if not assets_created and not grants_applied:
             print(FIX_FIRST_MSG)
         sys.exit(1)
 
@@ -972,6 +1101,10 @@ def main() -> None:
 
     section("Done")
     print(f"  {OK} {G}Configuration saved to {ENV_FILE}{W}\n")
+    grants_ok, grants_issues = verify_app_grants()
+    if not grants_ok:
+        print(f"  {WARN} App grants: {', '.join(grants_issues)}{W}")
+        print(f"  {DIM}Run: ./deploy/grant/run_all_grants.sh{W}\n")
     print(f"  {BOLD}{G}╔════════════════════════════════════╗{W}")
     print(f"  {BOLD}{G}║  {OK} You're All Set!{W}                 {BOLD}{G}║{W}")
     print(f"  {BOLD}{G}╚════════════════════════════════════╝{W}\n")

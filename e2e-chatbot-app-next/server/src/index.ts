@@ -143,6 +143,9 @@ app.get('/api/events/tasks', (req, res) => {
   res.setHeader('Connection', 'keep-alive');
   res.flushHeaders?.();
   taskEventClients.push({ res, assignedTo });
+  console.log(
+    `[task-events] SSE client connected assigned_to=${assignedTo ?? 'any'} total=${taskEventClients.length}`,
+  );
   res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
   const heartbeat = setInterval(() => {
     res.write(': heartbeat\n\n');
@@ -151,6 +154,7 @@ app.get('/api/events/tasks', (req, res) => {
     clearInterval(heartbeat);
     const idx = taskEventClients.findIndex((c) => c.res === res);
     if (idx >= 0) taskEventClients.splice(idx, 1);
+    console.log(`[task-events] SSE client disconnected total=${taskEventClients.length}`);
   });
 });
 app.post('/api/events/task-created', (req, res) => {
@@ -169,15 +173,20 @@ app.post('/api/events/task-created', (req, res) => {
     agent_name: body.agent_name ?? assignedToId,
     manager_name: body.manager_name ?? 'Check-in Manager',
   });
+  let sent = 0;
   for (const { res: clientRes, assignedTo } of taskEventClients) {
     if (!assignedTo || assignedTo === assignedToId) {
       try {
         clientRes.write(`data: ${payload}\n\n`);
-      } catch {
-        // client may have disconnected
+        sent++;
+      } catch (e) {
+        console.warn('[task-events] Failed to write to client:', e);
       }
     }
   }
+  console.log(
+    `[task-events] task_created assigned_to_id=${assignedToId} clients=${taskEventClients.length} sent=${sent}`,
+  );
   res.status(204).send();
 });
 

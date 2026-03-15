@@ -2,6 +2,8 @@ command: ["uv", "run", "start-app"]
 # databricks apps listen by default on port 8000
 
 env:
+  - name: LOG_SSE_EVENTS
+    value: "true"
   - name: MLFLOW_TRACKING_URI
     value: "databricks"
   - name: MLFLOW_REGISTRY_URI

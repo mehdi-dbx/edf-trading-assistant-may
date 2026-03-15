@@ -222,8 +222,9 @@ sketch
 **/.env.local
 .env.local
 .env*.local
+.env.local.e2
 
 # start_local.sh runtime PID files
 .backend.pid
 .frontend.pid
-.node.pid
+.node.pid.env.local.e2

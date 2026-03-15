@@ -73,7 +73,7 @@ export function Chat({
   const { chatHistoryEnabled } = useAppConfig();
 
   const [input, setInput] = useState<string>('');
-  const [showIntermediateSteps, setShowIntermediateSteps] = useState(true);
+  const [showIntermediateSteps, setShowIntermediateSteps] = useState(false);
   const [_usage, setUsage] = useState<LanguageModelUsage | undefined>(
     initialLastContext,
   );
