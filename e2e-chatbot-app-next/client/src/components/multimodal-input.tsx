@@ -23,7 +23,15 @@ import {
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowDown, ArrowRight, Paperclip, StopCircleIcon } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowRight,
+  Loader2,
+  Mic,
+  Paperclip,
+  Square,
+  StopCircleIcon,
+} from 'lucide-react';
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import type { VisibilityType } from './visibility-selector';
 import type { Attachment, ChatMessage } from '@chat-template/core';
@@ -104,45 +112,119 @@ function PureMultimodalInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
-  const submitForm = useCallback(() => {
-    softNavigateToChatId(chatId, chatHistoryEnabled);
+  type RecordingState = 'idle' | 'recording' | 'transcribing';
+  const [recordingState, setRecordingState] = useState<RecordingState>('idle');
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const mimeTypeRef = useRef<string>('audio/webm');
 
-    sendMessage({
-      role: 'user',
-      parts: [
-        ...attachments.map((attachment) => ({
-          type: 'file' as const,
-          url: attachment.url,
-          name: attachment.name,
-          mediaType: attachment.contentType,
-        })),
-        {
-          type: 'text',
-          text: input,
-        },
-      ],
+  const submitForm = useCallback(
+    (overrideText?: string) => {
+      const text = overrideText ?? input;
+      softNavigateToChatId(chatId, chatHistoryEnabled);
+
+      sendMessage({
+        role: 'user',
+        parts: [
+          ...attachments.map((attachment) => ({
+            type: 'file' as const,
+            url: attachment.url,
+            name: attachment.name,
+            mediaType: attachment.contentType,
+          })),
+          {
+            type: 'text',
+            text,
+          },
+        ],
+      });
+
+      setAttachments([]);
+      setLocalStorageInput('');
+      resetHeight();
+      setInput('');
+
+      if (width && width > 768) {
+        textareaRef.current?.focus();
+      }
+    },
+    [
+      input,
+      setInput,
+      attachments,
+      sendMessage,
+      setAttachments,
+      setLocalStorageInput,
+      width,
+      chatId,
+      chatHistoryEnabled,
+      resetHeight,
+    ],
+  );
+
+  const transcribe = useCallback(async (blob: Blob): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', blob, 'recording.webm');
+    const res = await fetch('/api/audio/transcribe', {
+      method: 'POST',
+      body: formData,
     });
-
-    setAttachments([]);
-    setLocalStorageInput('');
-    resetHeight();
-    setInput('');
-
-    if (width && width > 768) {
-      textareaRef.current?.focus();
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error((data as { error?: string }).error || 'Transcription failed');
     }
-  }, [
-    input,
-    setInput,
-    attachments,
-    sendMessage,
-    setAttachments,
-    setLocalStorageInput,
-    width,
-    chatId,
-    chatHistoryEnabled,
-    resetHeight,
-  ]);
+    const { text } = (await res.json()) as { text: string };
+    return text;
+  }, []);
+
+  const startRecording = useCallback(async () => {
+    try {
+      console.log('[voice] Recording started');
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      chunksRef.current = [];
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4';
+      mimeTypeRef.current = mimeType;
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      mediaRecorder.start();
+      setRecordingState('recording');
+    } catch (err) {
+      console.error('[voice] Microphone access denied', err);
+      toast.error('Microphone access denied');
+    }
+  }, []);
+
+  const stopRecording = useCallback(() => {
+    const mr = mediaRecorderRef.current;
+    const stream = streamRef.current;
+    if (!mr || mr.state !== 'recording') return;
+    mr.stop();
+    stream?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    mediaRecorderRef.current = null;
+
+    mr.onstop = async () => {
+      setRecordingState('transcribing');
+      const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current });
+      console.log('[voice] Recording stopped, transcribing, blob size=', blob.size);
+      try {
+        const text = await transcribe(blob);
+        console.log('[voice] Transcription success, length=', text.length);
+        setRecordingState('idle');
+        if (text.trim()) submitForm(text);
+        else console.log('[voice] Empty transcription, not submitting');
+      } catch (err) {
+        console.error('[voice] Transcription failed', err);
+        toast.error('Transcription failed');
+        setRecordingState('idle');
+      }
+    };
+  }, [transcribe, submitForm]);
 
   const uploadFile = useCallback(async (file: File) => {
     const formData = new FormData();
@@ -321,6 +403,36 @@ function PureMultimodalInput({
           >
             <Paperclip className="h-4 w-4 text-muted-foreground" />
           </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-8 shrink-0"
+            disabled={
+              status !== 'ready' ||
+              uploadQueue.length > 0 ||
+              recordingState === 'transcribing'
+            }
+            onClick={() => {
+              if (recordingState === 'idle') startRecording();
+              else if (recordingState === 'recording') stopRecording();
+            }}
+            aria-label={
+              recordingState === 'recording'
+                ? 'Stop recording'
+                : recordingState === 'transcribing'
+                  ? 'Transcribing...'
+                  : 'Record voice message'
+            }
+          >
+            {recordingState === 'transcribing' ? (
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            ) : recordingState === 'recording' ? (
+              <Square className="h-4 w-4 text-muted-foreground" />
+            ) : (
+              <Mic className="h-4 w-4 text-muted-foreground" />
+            )}
+          </Button>
           {status === 'submitted' || status === 'streaming' ? (
             <StopButton stop={stop} setMessages={setMessages} />
           ) : (
@@ -339,18 +451,15 @@ function PureMultimodalInput({
   );
 }
 
-export const MultimodalInput = memo(
-  PureMultimodalInput,
-  (prevProps, nextProps) => {
-    if (prevProps.input !== nextProps.input) return false;
-    if (prevProps.status !== nextProps.status) return false;
-    if (!equal(prevProps.attachments, nextProps.attachments)) return false;
-    if (prevProps.selectedVisibilityType !== nextProps.selectedVisibilityType)
-      return false;
+export const MultimodalInput = memo(PureMultimodalInput, (prevProps, nextProps) => {
+  if (prevProps.input !== nextProps.input) return false;
+  if (prevProps.status !== nextProps.status) return false;
+  if (!equal(prevProps.attachments, nextProps.attachments)) return false;
+  if (prevProps.selectedVisibilityType !== nextProps.selectedVisibilityType)
+    return false;
 
-    return true;
-  },
-);
+  return true;
+});
 
 function PureStopButton({
   stop,

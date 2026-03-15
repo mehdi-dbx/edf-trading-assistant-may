@@ -18,8 +18,11 @@ import { sessionRouter } from './routes/session';
 import { messagesRouter } from './routes/messages';
 import { configRouter } from './routes/config';
 import { tablesRouter } from './routes/tables';
+import multer from 'multer';
 import { authMiddleware, requireAuth } from './middleware/auth';
 import { ChatSDKError } from '@chat-template/core/errors';
+
+const upload = multer({ storage: multer.memoryStorage() });
 
 // ESM-compatible __dirname
 const __filename = fileURLToPath(import.meta.url);
@@ -188,6 +191,44 @@ app.post('/api/events/task-created', (req, res) => {
     `[task-events] task_created assigned_to_id=${assignedToId} clients=${taskEventClients.length} sent=${sent}`,
   );
   res.status(204).send();
+});
+
+// Audio transcription via OpenAI Whisper (proxies to keep API key server-side)
+app.post('/api/audio/transcribe', upload.single('file'), async (req, res) => {
+  const file = req.file;
+  if (!file) {
+    return res.status(400).json({ error: 'file required' });
+  }
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    return res.status(503).json({ error: 'OPENAI_API_KEY not configured' });
+  }
+  const formData = new FormData();
+  formData.append(
+    'file',
+    new Blob([file.buffer], { type: file.mimetype || 'audio/webm' }),
+    file.originalname || 'recording.webm',
+  );
+  formData.append('model', 'whisper-1');
+  try {
+    console.log('[audio/transcribe] request received, size=', file.size, 'bytes');
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${apiKey}` },
+      body: formData,
+    });
+    if (!response.ok) {
+      const err = await response.text();
+      console.error('[audio/transcribe] OpenAI error', response.status, err.slice(0, 200));
+      return res.status(response.status).json({ error: err });
+    }
+    const { text } = (await response.json()) as { text: string };
+    console.log('[audio/transcribe] success, text length=', text.length);
+    res.json({ text });
+  } catch (err) {
+    console.error('[audio/transcribe]', err);
+    res.status(502).json({ error: 'Transcription failed' });
+  }
 });
 
 // API routes
