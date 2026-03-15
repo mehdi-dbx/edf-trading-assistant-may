@@ -29,9 +29,9 @@ import {
   Loader2,
   Mic,
   Paperclip,
-  Square,
-  StopCircleIcon,
+  X,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { useScrollToBottom } from '@/hooks/use-scroll-to-bottom';
 import type { VisibilityType } from './visibility-selector';
 import type { Attachment, ChatMessage } from '@chat-template/core';
@@ -112,8 +112,9 @@ function PureMultimodalInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
-  type RecordingState = 'idle' | 'recording' | 'transcribing';
-  const [recordingState, setRecordingState] = useState<RecordingState>('idle');
+  type VoiceState = 'idle' | 'listening' | 'processing';
+  const [voiceState, setVoiceState] = useState<VoiceState>('idle');
+  const isSpeaking = status === 'streaming';
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const chunksRef = useRef<Blob[]>([]);
@@ -192,7 +193,7 @@ function PureMultimodalInput({
         if (e.data.size > 0) chunksRef.current.push(e.data);
       };
       mediaRecorder.start();
-      setRecordingState('recording');
+      setVoiceState('listening');
     } catch (err) {
       console.error('[voice] Microphone access denied', err);
       toast.error('Microphone access denied');
@@ -209,22 +210,33 @@ function PureMultimodalInput({
     mediaRecorderRef.current = null;
 
     mr.onstop = async () => {
-      setRecordingState('transcribing');
+      setVoiceState('processing');
       const blob = new Blob(chunksRef.current, { type: mimeTypeRef.current });
       console.log('[voice] Recording stopped, transcribing, blob size=', blob.size);
       try {
         const text = await transcribe(blob);
         console.log('[voice] Transcription success, length=', text.length);
-        setRecordingState('idle');
+        setVoiceState('idle');
         if (text.trim()) submitForm(text);
         else console.log('[voice] Empty transcription, not submitting');
       } catch (err) {
         console.error('[voice] Transcription failed', err);
         toast.error('Transcription failed');
-        setRecordingState('idle');
+        setVoiceState('idle');
       }
     };
   }, [transcribe, submitForm]);
+
+  const abortRecording = useCallback(() => {
+    const mr = mediaRecorderRef.current;
+    const stream = streamRef.current;
+    if (!mr || mr.state !== 'recording') return;
+    mr.onstop = () => setVoiceState('idle');
+    mr.stop();
+    stream?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    mediaRecorderRef.current = null;
+  }, []);
 
   const uploadFile = useCallback(async (file: File) => {
     const formData = new FormData();
@@ -378,8 +390,9 @@ function PureMultimodalInput({
           </div>
         )}
         <div className="flex items-center gap-2">
-          <div className="min-w-0 flex-1">
-            <PromptInputTextarea
+          <div className="min-w-0 flex-1 flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <PromptInputTextarea
               data-testid="multimodal-input"
               ref={textareaRef}
               placeholder="Ask Garv"
@@ -392,6 +405,24 @@ function PureMultimodalInput({
               rows={1}
               autoFocus
             />
+            </div>
+            {voiceState === 'listening' && (
+              <div
+                className="flex min-w-8 items-center justify-center gap-1 h-8 shrink-0 overflow-visible"
+                aria-hidden
+              >
+                {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                  <div
+                    key={i}
+                    className="min-w-[2px] w-0.5 rounded-full bg-muted-foreground/60"
+                    style={{
+                      animation: 'voice-bar 1.2s ease-in-out infinite',
+                      animationDelay: `${i * 0.1}s`,
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
           <Button
             type="button"
@@ -403,38 +434,62 @@ function PureMultimodalInput({
           >
             <Paperclip className="h-4 w-4 text-muted-foreground" />
           </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-8 shrink-0"
-            disabled={
-              status !== 'ready' ||
-              uploadQueue.length > 0 ||
-              recordingState === 'transcribing'
-            }
-            onClick={() => {
-              if (recordingState === 'idle') startRecording();
-              else if (recordingState === 'recording') stopRecording();
-            }}
-            aria-label={
-              recordingState === 'recording'
-                ? 'Stop recording'
-                : recordingState === 'transcribing'
+          {voiceState === 'listening' ? (
+            <button
+              type="button"
+              className="voice-mic-listening flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border-none text-muted-foreground shadow-[0_0_4px_8px_rgba(254,226,226,0.5)] transition-colors hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0 disabled:pointer-events-none disabled:opacity-50 dark:shadow-[0_0_4px_10px_rgba(127,29,29,0.4)] [&_svg]:size-4"
+              style={{ WebkitAppearance: 'none', appearance: 'none' }}
+              disabled={false}
+              onClick={stopRecording}
+              aria-label="Stop recording"
+            >
+              <Mic className="h-4 w-4 text-muted-foreground" />
+            </button>
+          ) : (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-8 shrink-0"
+              disabled={
+                status !== 'ready' ||
+                uploadQueue.length > 0 ||
+                voiceState === 'processing'
+              }
+              onClick={startRecording}
+              aria-label={
+                voiceState === 'processing'
                   ? 'Transcribing...'
                   : 'Record voice message'
-            }
-          >
-            {recordingState === 'transcribing' ? (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            ) : recordingState === 'recording' ? (
-              <Square className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <Mic className="h-4 w-4 text-muted-foreground" />
-            )}
-          </Button>
-          {status === 'submitted' || status === 'streaming' ? (
-            <StopButton stop={stop} setMessages={setMessages} />
+              }
+            >
+              {voiceState === 'processing' ? (
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              ) : (
+                <Mic className="h-4 w-4 text-muted-foreground" />
+              )}
+            </Button>
+          )}
+          {(voiceState === 'listening' ||
+            status === 'submitted' ||
+            status === 'streaming') ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-7 shrink-0 text-muted-foreground hover:text-foreground hover:bg-muted/80"
+              aria-label="Cancel"
+              data-testid="cancel-button"
+              onClick={() => {
+                if (voiceState === 'listening') abortRecording();
+                else {
+                  stop();
+                  setMessages((messages) => messages);
+                }
+              }}
+            >
+              <X className="size-3.5" />
+            </Button>
           ) : (
             <PromptInputSubmit
               data-testid="send-button"
@@ -461,26 +516,3 @@ export const MultimodalInput = memo(PureMultimodalInput, (prevProps, nextProps) 
   return true;
 });
 
-function PureStopButton({
-  stop,
-  setMessages,
-}: {
-  stop: () => void;
-  setMessages: UseChatHelpers<ChatMessage>['setMessages'];
-}) {
-  return (
-    <Button
-      data-testid="stop-button"
-      className="size-7 rounded-full bg-foreground p-1 text-background transition-colors duration-200 hover:bg-foreground/90 disabled:bg-muted disabled:text-muted-foreground"
-      onClick={(event) => {
-        event.preventDefault();
-        stop();
-        setMessages((messages) => messages);
-      }}
-    >
-      <StopCircleIcon size={14} />
-    </Button>
-  );
-}
-
-const StopButton = memo(PureStopButton);

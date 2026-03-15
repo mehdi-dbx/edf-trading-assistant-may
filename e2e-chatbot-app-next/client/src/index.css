@@ -269,6 +269,30 @@
   @apply bg-blue-200 hover:bg-blue-300 dark:hover:bg-blue-400/50 dark:text-blue-50 dark:bg-blue-500/40;
 }
 
+/* Mic button tint only when listening (clicked) - back to normal when idle */
+button.voice-mic-listening {
+  background: rgba(254, 226, 226, 0.5) !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+}
+
+button.voice-mic-listening:hover {
+  background: rgba(254, 226, 226, 0.65) !important;
+}
+
+.dark button.voice-mic-listening {
+  background: rgba(127, 29, 29, 0.3) !important;
+}
+
+.dark button.voice-mic-listening:hover {
+  background: rgba(127, 29, 29, 0.45) !important;
+}
+
+@keyframes voice-bar {
+  0%, 100% { height: 8px; }
+  50% { height: 20px; }
+}
+
 @keyframes row-flash {
   0% { background-color: rgb(254 226 226); }
   25% { background-color: transparent; }

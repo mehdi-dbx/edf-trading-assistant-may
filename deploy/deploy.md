@@ -139,6 +139,15 @@ env:
 | `MLFLOW_EXPERIMENT_ID` | For agent tracing |
 | `TASK_EVENTS_URL` | Node API URL for task notifications (local: `http://127.0.0.1:3001`) |
 | `API_PROXY` | Agent invocations URL (e.g. `http://localhost:8000/invocations`) |
+| `OPENAI_API_KEY` | For voice transcription (Whisper). Local only; deployed app uses Databricks secret. |
+
+**Voice transcription (deployed app):** The app needs `OPENAI_API_KEY` for Whisper. Run before first deploy:
+
+```bash
+./deploy/setup_openai_secret.sh
+```
+
+This reads `OPENAI_API_KEY` from `.env.local` and stores it in Databricks secret scope `amadeus-checkin`, key `openai-api-key`. Deploy.sh runs it automatically if the key is set.
 
 ---
 

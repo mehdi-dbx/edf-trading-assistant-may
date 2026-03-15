@@ -25,6 +25,11 @@ echo ""
 # Sync databricks.yml from .env.local (warehouse, genie, endpoint, app name)
 uv run python deploy/sync_databricks_yml_from_env.py 2>/dev/null || true
 
+# Ensure OpenAI secret exists for voice transcription (reads OPENAI_API_KEY from .env.local)
+if [ -n "${OPENAI_API_KEY:-}" ]; then
+  ./deploy/setup_openai_secret.sh 2>/dev/null || echo "Warning: setup_openai_secret.sh failed (voice transcription may not work)"
+fi
+
 # If app exists but isn't bound to bundle, bind it first
 case "$TARGET" in
   airops-checkin) APP_NAME="agent-airops-checkin" ;;

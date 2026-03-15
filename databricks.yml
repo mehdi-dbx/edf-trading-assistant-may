@@ -32,6 +32,11 @@ resources:
           serving_endpoint:
             name: 'claude-sonnet-4-6'
             permission: 'CAN_QUERY'
+        - name: 'openai_api_key'
+          secret:
+            scope: 'amadeus-checkin'
+            key: 'openai-api-key'
+            permission: 'READ'
 
 targets:
   dev:

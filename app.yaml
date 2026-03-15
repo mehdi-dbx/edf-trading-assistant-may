@@ -26,3 +26,6 @@ env:
     value: "amadeus.checkin"
   - name: DATABRICKS_WAREHOUSE_ID
     value: "f9738bf02b7d1c4f"
+  # OpenAI Whisper for voice transcription (secret from scope amadeus-checkin, key openai-api-key)
+  - name: OPENAI_API_KEY
+    valueFrom: openai_api_key
