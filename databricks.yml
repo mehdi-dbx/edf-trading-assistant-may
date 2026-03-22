@@ -21,17 +21,18 @@ resources:
             permission: 'CAN_MANAGE'
         - name: 'sql_warehouse'
           sql_warehouse:
-            id: 'f9738bf02b7d1c4f'
+            id: 'f96bf82f247a1f42'
             permission: 'CAN_USE'
         - name: 'serving_endpoint'
           serving_endpoint:
             name: 'claude-sonnet-4-6'
             permission: 'CAN_QUERY'
-        - name: 'openai_api_key'
-          secret:
-            scope: 'template'
-            key: 'openai-api-key'
-            permission: 'READ'
+        # OpenAI secret for voice: add OPENAI_API_KEY to .env.local, run ./deploy/setup_openai_secret.sh, then uncomment:
+        # - name: 'openai_api_key'
+        #   secret:
+        #     scope: 'template'
+        #     key: 'openai-api-key'
+        #     permission: 'READ'
 
         # --- KA endpoints (from data/ka.list) ---
         - name: 'ka_00138eb9'
@@ -94,10 +95,7 @@ resources:
           serving_endpoint:
             name: 'ka-daa7c012-endpoint'
             permission: 'CAN_QUERY'
-        - name: 'ka_ee88f235'
-          serving_endpoint:
-            name: 'ka-ee88f235-endpoint'
-            permission: 'CAN_QUERY'
+        # ka_ee88f235 removed: app resource limit 20 (had 21)
         # --- end KA endpoints ---
         - name: 'genie_trading'
           genie_space:
@@ -130,4 +128,4 @@ targets:
     resources:
       apps:
         agent_langgraph:
-          name: agent-langgraph
+          name: agent-edf-trading

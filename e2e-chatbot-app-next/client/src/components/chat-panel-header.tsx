@@ -3,13 +3,21 @@ import { Button } from '@/components/ui/button';
 import { useTableRefresh } from '@/contexts/TableRefreshContext';
 import { Switch } from '@/components/ui/switch';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
   PlusIcon,
   HistoryIcon,
   Maximize2,
   Minimize2,
   X,
   RotateCcw,
+  List,
 } from 'lucide-react';
+import { SUGGESTED_QUESTIONS } from '@/lib/suggested-questions';
 
 export function ChatPanelHeader({
   showIntermediateSteps,
@@ -19,6 +27,7 @@ export function ChatPanelHeader({
   expanded,
   onExpand,
   onClose,
+  sendMessage,
 }: {
   showIntermediateSteps: boolean;
   onToggleIntermediateSteps: () => void;
@@ -83,6 +92,41 @@ export function ChatPanelHeader({
         >
           <HistoryIcon className="h-4 w-4" />
         </Button>
+        {sendMessage && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                aria-label="Suggested questions"
+                title="Suggested questions"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              side="bottom"
+              className="max-h-[min(50vh,400px)] min-w-[280px] max-w-md overflow-y-auto"
+            >
+              {SUGGESTED_QUESTIONS.map((q) => (
+                <DropdownMenuItem
+                  key={q}
+                  className="cursor-pointer whitespace-normal py-2"
+                  onSelect={() => {
+                    sendMessage({
+                      role: 'user',
+                      parts: [{ type: 'text', text: q }],
+                    });
+                  }}
+                >
+                  {q}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
         <Switch
           checked={showIntermediateSteps}
           onCheckedChange={onToggleIntermediateSteps}

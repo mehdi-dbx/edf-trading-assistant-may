@@ -23,9 +23,9 @@ env:
     value: "claude-sonnet-4-6"
   # Required for backend /tables endpoint (UC schema)
   - name: UNITY_CATALOG_SCHEMA
-    value: "mc.template"
+    value: "edf.chatbot"
   - name: DATABRICKS_WAREHOUSE_ID
-    value: "f9738bf02b7d1c4f"
-  # OpenAI Whisper for voice transcription (secret from scope template, key openai-api-key)
-  - name: OPENAI_API_KEY
-    valueFrom: openai_api_key
+    value: "f96bf82f247a1f42"
+  # OpenAI Whisper for voice: run ./deploy/setup_openai_secret.sh and uncomment openai_api_key in databricks.yml
+  # - name: OPENAI_API_KEY
+  #   valueFrom: openai_api_key

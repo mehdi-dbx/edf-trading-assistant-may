@@ -6,6 +6,7 @@ import type { ChatMessage } from '@chat-template/core';
 import { Suggestion } from './elements/suggestion';
 import { softNavigateToChatId } from '@/lib/navigation';
 import { useAppConfig } from '@/contexts/AppConfigContext';
+import { SUGGESTED_QUESTIONS } from '@/lib/suggested-questions';
 
 interface SuggestedActionsProps {
   chatId: string;
@@ -15,22 +16,13 @@ interface SuggestedActionsProps {
 
 function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
   const { chatHistoryEnabled } = useAppConfig();
-  const suggestedActions = [
-    'Give me the weather forecast for the next 15 days?',
-    'What are the weather risks to the PJM region given all of the information you have available?',
-    'What was the weather like in January 2025 for PJM?',
-    'When was the last time we saw a cold January?',
-    'How has the forecast for March 10th trended over the last several days?',
-    'How have the teleconnections been trending and what are the risks/implications on the current forecasts?',
-    'Critique the current forecast and highlight any issues or biases in the approach',
-  ];
 
   return (
     <div
       data-testid="suggested-actions"
       className="grid w-full gap-2 sm:grid-cols-2"
     >
-      {suggestedActions.map((suggestedAction, index) => (
+      {SUGGESTED_QUESTIONS.map((suggestedAction, index) => (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
