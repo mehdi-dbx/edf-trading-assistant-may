@@ -4,8 +4,8 @@
 Usage:
   uv run python deploy/grant/grant_app_functions.py [APP_NAME] [--schema SCHEMA]
 
-  APP_NAME: Databricks app name (default: agent-airops-checkin)
-  --schema: Catalog.schema (default: from AMADEUS_UNITY_CATALOG_SCHEMA or mc.amadeus-checkin)
+  APP_NAME: Databricks app name (default: agent-langgraph)
+  --schema: Catalog.schema (default: from UNITY_CATALOG_SCHEMA or edf.template)
 """
 import argparse
 import os
@@ -21,18 +21,18 @@ load_dotenv(ROOT / ".env.local")
 from databricks.sdk import WorkspaceClient
 from tools.sql_executor import execute_statement, execute_query, get_warehouse
 
-DEFAULT_SCHEMA = os.environ.get("AMADEUS_UNITY_CATALOG_SCHEMA", "mc.amadeus-checkin")
+DEFAULT_SCHEMA = os.environ.get("UNITY_CATALOG_SCHEMA", "edf.template")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Grant EXECUTE on UC functions and procedures to app service principal"
     )
-    parser.add_argument("app_name", nargs="?", default="agent-airops-checkin", help="Databricks app name")
+    parser.add_argument("app_name", nargs="?", default="agent-langgraph", help="Databricks app name")
     parser.add_argument(
         "--schema",
         default=DEFAULT_SCHEMA,
-        help=f"Catalog.schema (default: {DEFAULT_SCHEMA} or AMADEUS_UNITY_CATALOG_SCHEMA)",
+        help=f"Catalog.schema (default: {DEFAULT_SCHEMA} or UNITY_CATALOG_SCHEMA)",
     )
     args = parser.parse_args()
 
@@ -53,7 +53,7 @@ def main() -> int:
     print(f"Granting EXECUTE to app service principal: {app.service_principal_name} ({sp_id})")
 
     w_client, wh_id = get_warehouse()
-    catalog, schema = args.schema.split(".", 1) if "." in args.schema else ("mc", "amadeus-checkin")
+    catalog, schema = args.schema.split(".", 1) if "." in args.schema else ("edf", "template")
 
     # List routines (functions and procedures) from INFORMATION_SCHEMA
     routines_sql = f"""

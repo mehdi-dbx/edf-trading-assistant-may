@@ -149,7 +149,7 @@ def query_<name>(...params...) -> str:
 
 ### Step 5: Register Tools in agent.py
 
-Import each `query_*` tool and add to the `tools` list in `init_agent()` (alongside existing tools like `get_current_time`, `update_flight_risk`, etc.).
+Import each `query_*` tool and add to the `tools` list in `init_agent()` (alongside existing tools like `update_flight_risk`, etc.).
 
 **Reference:** `{REF}/agent_server/agent.py` (lines 28–76)
 
@@ -163,7 +163,7 @@ In `prompt/main.prompt`:
 2. **Replace each Genie instruction** with the corresponding tool:
    - Border Control Performance: `query_checkin_performance_metrics(zone)` or `query_checkin_performance_metrics()`
    - Check-in Performance: same
-   - Identify at-risk flights: `get_current_time(advance=True)`, parse time, add 60 min, then `query_flights_at_risk(zone, time_start, time_end)`
+   - Identify at-risk flights: parse current time, add 60 min, then `query_flights_at_risk(zone, time_start, time_end)`
    - Root cause data sources: `query_checkin_agent_staffing(zone)`, `query_available_agents_for_redeployment(zone)`, `query_border_officer_staffing(zone)`, `query_egate_availability(zone)`
    - LIST DUTIES (Agent persona): `query_staffing_duties(agent_id)` — requires `func/staffing_duties.sql` (SELECT zone, counter, assigned_by_id, assigned_at FROM checkin_agents WHERE agent_id = '{agent_id}' AND staffing_status = 'NEW') and `query_staffing_duties` tool
 

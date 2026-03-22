@@ -22,10 +22,10 @@ env:
   - name: AGENT_MODEL_ENDPOINT
     value: "claude-sonnet-4-6"
   # Required for backend /tables endpoint (UC schema)
-  - name: AMADEUS_UNITY_CATALOG_SCHEMA
-    value: "amadeus.checkin"
+  - name: UNITY_CATALOG_SCHEMA
+    value: "mc.template"
   - name: DATABRICKS_WAREHOUSE_ID
     value: "f9738bf02b7d1c4f"
-  # OpenAI Whisper for voice transcription (secret from scope amadeus-checkin, key openai-api-key)
+  # OpenAI Whisper for voice transcription (secret from scope template, key openai-api-key)
   - name: OPENAI_API_KEY
     valueFrom: openai_api_key

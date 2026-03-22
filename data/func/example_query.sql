@@ -1,0 +1,1 @@
+SELECT * FROM __SCHEMA_QUALIFIED__.example_data;

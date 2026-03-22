@@ -8,7 +8,7 @@ set -e
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-SCOPE="amadeus-checkin"
+SCOPE="template"
 KEY="openai-api-key"
 
 # Check if secret already exists (scope may not exist yet)

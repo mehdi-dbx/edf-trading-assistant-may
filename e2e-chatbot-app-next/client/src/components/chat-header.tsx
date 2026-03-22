@@ -15,7 +15,7 @@ import {
 import { Bell, MessageCircle, PlusIcon, HistoryIcon } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
-const DEFAULT_TITLE = 'Generate check-in performance reports for airlines';
+const DEFAULT_TITLE = 'Chat with your assistant';
 
 export function ChatHeader({
   pageTitle,
@@ -47,12 +47,11 @@ export function ChatHeader({
         <div className="flex items-center gap-3">
           <SidebarToggle />
           <div className="flex items-center gap-1">
-            <span className="font-semibold tracking-tight text-blue-600">
-              AMADEUS
-            </span>
-            <span className="font-semibold tracking-tight text-purple-600">
-              GARV
-            </span>
+            <img
+              src="https://api.the-trackr.com/companies/logo/edf-trading"
+              alt="EDF Trading"
+              className="h-7 w-auto object-contain"
+            />
           </div>
         </div>
         <div className="flex items-center gap-2">

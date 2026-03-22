@@ -14,11 +14,9 @@ function agentDisplayName(fullName: string): string {
 
 export function TaskNotificationToast({
   agentName,
-  managerName = 'Check-in Manager',
+  managerName = 'Manager',
   onGoToTask,
 }: TaskNotificationToastProps) {
-  const managerDisplay =
-    managerName === 'Check-in Manager' ? 'Check-in Manager' : `Check-in Manager ${managerName}`;
   return (
     <div
       data-testid="toast"
@@ -28,17 +26,17 @@ export function TaskNotificationToast({
         <Bell className="size-6 text-white" />
       </div>
       <h3 className="mb-2 text-center font-bold text-slate-900 dark:text-slate-100">
-        New Staffing Duty!
+        New Task
       </h3>
       <p className="mb-4 text-center text-sm text-slate-700 dark:text-slate-300">
         {agentName ? (
           <>
-            <strong>{agentDisplayName(agentName)}</strong>, you have been assigned a new staffing
-            duty by <strong>{managerDisplay}</strong>.
+            <strong>{agentDisplayName(agentName)}</strong>, you have been assigned a new task by{' '}
+            <strong>{managerName}</strong>.
           </>
         ) : (
           <>
-            You have been assigned a new staffing duty by <strong>{managerDisplay}</strong>.
+            You have been assigned a new task by <strong>{managerName}</strong>.
           </>
         )}
       </p>

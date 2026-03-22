@@ -1,0 +1,9 @@
+CREATE OR REPLACE TABLE __SCHEMA_QUALIFIED__.example_data (
+    id STRING,
+    value STRING,
+    updated_at TIMESTAMP_NTZ
+)
+USING DELTA;
+
+INSERT INTO __SCHEMA_QUALIFIED__.example_data VALUES
+('1', 'Template example', CAST('2026-01-01 00:00:00' AS TIMESTAMP_NTZ));

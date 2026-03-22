@@ -7,7 +7,7 @@
 #   - UC functions/procedures (EXECUTE) via grant_app_functions.py
 #   - SQL warehouse (CAN_USE) via authorize_warehouse_for_app.py
 #
-# Uses DBX_APP_NAME and AMADEUS_UNITY_CATALOG_SCHEMA from .env.local by default.
+# Uses DBX_APP_NAME and UNITY_CATALOG_SCHEMA from .env.local by default.
 set -e
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
@@ -15,8 +15,8 @@ cd "$ROOT"
 
 [ -f "$ROOT/.env.local" ] && set -a && source "$ROOT/.env.local" && set +a
 
-APP_NAME="${1:-${DBX_APP_NAME:-agent-airops-checkin}}"
-SCHEMA="${AMADEUS_UNITY_CATALOG_SCHEMA:-mc.amadeus-checkin}"
+APP_NAME="${1:-${DBX_APP_NAME:-agent-langgraph}}"
+SCHEMA="${UNITY_CATALOG_SCHEMA:-edf.template}"
 
 echo "Running all grants for app: $APP_NAME (schema: $SCHEMA)"
 echo ""

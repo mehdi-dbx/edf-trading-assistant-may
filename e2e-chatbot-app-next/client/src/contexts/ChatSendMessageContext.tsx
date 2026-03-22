@@ -47,38 +47,13 @@ export function ChatSendMessageProvider({ children }: { children: ReactNode }) {
     if (send) {
       send({
         role: 'user',
-        parts: [{ type: 'text', text: 'What are my assigned staffing duties?' }],
+        parts: [{ type: 'text', text: 'What can you help me with?' }],
       });
     }
   }, []);
 
-  const showStaffingDutyOnly = useCallback(async (agentId: string) => {
-    const show = showStaffingDutyOnlyRef.current;
-    if (!show) return;
-    try {
-      const res = await fetch('/api/tables/checkin_agents', { credentials: 'include' });
-      if (!res.ok) return;
-      const body = await res.json();
-      const { columns, rows } = body as { columns: string[]; rows: unknown[][] };
-      const agentIdx = columns.findIndex((c) => c.toLowerCase() === 'agent_id');
-      const zoneIdx = columns.findIndex((c) => c.toLowerCase() === 'zone');
-      const counterIdx = columns.findIndex((c) => c.toLowerCase() === 'counter');
-      const statusIdx = columns.findIndex((c) => c.toLowerCase() === 'staffing_status');
-      const assignedByIdx = columns.findIndex((c) => c.toLowerCase() === 'assigned_by_id');
-      if (agentIdx < 0 || zoneIdx < 0 || counterIdx < 0 || statusIdx < 0) return;
-      const row = rows.find(
-        (r) =>
-          String(r[agentIdx]) === agentId &&
-          String(r[statusIdx] ?? '').toUpperCase() === 'NEW',
-      );
-      if (!row) return;
-      const zone = String(row[zoneIdx] ?? '');
-      const counter = String(row[counterIdx] ?? '');
-      const assignedById = assignedByIdx >= 0 ? String(row[assignedByIdx] ?? '') : '';
-      show(zone, counter, assignedById);
-    } catch {
-      /* ignore */
-    }
+  const showStaffingDutyOnly = useCallback(async (_agentId: string) => {
+    // Template: no staffing duty flow. Override in domain-specific apps.
   }, []);
 
   const value: ChatSendMessageContextValue = {

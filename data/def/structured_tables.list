@@ -1,0 +1,17 @@
+# Structured tables
+# From data/html/EDF_data_dictionary_light.html
+# Delta tables in Unity Catalog (edf.chatbot schema)
+
+edf.chatbot.bronze_degree_days_forecast
+edf.chatbot.bronze_degree_days_historical
+edf.chatbot.bronze_degree_days_normals
+edf.chatbot.epo_forecast_bronze
+edf.chatbot.epo_historical_bronze
+edf.chatbot.bronze_mjo_phase_forecast
+edf.chatbot.bronze_mjo_phase_historical
+edf.chatbot.nao_forecast_bronze
+edf.chatbot.nao_historical_bronze
+edf.chatbot.pna_forecast_bronze
+edf.chatbot.pna_historical_bronze
+edf.chatbot.bronze_wpo_forecast
+edf.chatbot.bronze_wpo_historical

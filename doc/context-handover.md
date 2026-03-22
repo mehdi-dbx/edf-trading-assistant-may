@@ -14,11 +14,11 @@ AI Ops Advisor for airport check-in: chat with agent, dashboard tables, suggeste
 
 | Folder | Contents |
 | ------ | -------- |
-| **agent_server/** | `agent.py` (tools, MCP, prompt load), `start_server.py` (FastAPI, /current-time), `utils.py`, `evaluate_agent.py` |
+| **agent_server/** | `agent.py` (tools, MCP, prompt load), `start_server.py` (FastAPI), `utils.py`, `evaluate_agent.py` |
 | **data/** | `init/create_*.sql` (table DDL + seed), `proc/*_procedure.sql` (stored procedures), `create_genie_space.py`, `run_sql.py`, `csv_to_delta.py`, `verify_tables.py` |
 | **prompt/** | `main.prompt` – agent system prompt, flow instructions, block formats, Genie query templates |
 | **scripts/** | `start_local.sh` (full stack), `reset_state.py` (re-run create SQL), `quickstart.py`, `start_app.py` |
-| **tools/** | Agent tools: `sql_executor.py`, `create_checkin_incident`, `create_border_incident`, `back_to_normal`, `update_checkin_agent`, `update_border_officer`, `update_flight_risk`, `confirm_arrival`, `get_current_time`, `placeholder_tool` |
+| **tools/** | Agent tools: `sql_executor.py`, `create_checkin_incident`, `create_border_incident`, `back_to_normal`, `update_checkin_agent`, `update_border_officer`, `update_flight_risk`, `confirm_arrival`, `placeholder_tool` |
 | **e2e-chatbot-app-next/** | Cloned template: client (Vite/React), server (Express), packages (auth, ai-sdk-providers, chat-template/core) |
 
 ---

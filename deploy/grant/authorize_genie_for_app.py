@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Add genie_space resource so app SP gets CAN_RUN. Reads space_id from databricks.yml."""
+"""Add genie_space resource so app SP gets CAN_RUN. Reads space_id from databricks.yml or .env.local."""
 import os
 import re
 import sys
@@ -7,6 +7,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 YML = ROOT / "databricks.yml"
+RESOURCE_NAME = "genie_trading"
+GENIE_LABEL = "EDF TRADING"
 
 
 def main() -> int:
@@ -17,18 +19,18 @@ def main() -> int:
     if not space_id:
         from dotenv import load_dotenv
         load_dotenv(ROOT / ".env.local")
-        space_id = os.environ.get("AMADEUS_GENIE_CHECKIN", "").strip()
+        space_id = os.environ.get("EDF_TRADING_GENIE_ROOM", "").strip()
         if not space_id:
-            print("Error: No space_id in databricks.yml or AMADEUS_GENIE_CHECKIN in .env.local", file=sys.stderr)
+            print("Error: No space_id in databricks.yml or EDF_TRADING_GENIE_ROOM in .env.local", file=sys.stderr)
             return 1
 
-    if "genie_checkin" in content and space_id in content:
-        print(f"genie_checkin ({space_id}) already in databricks.yml")
+    if RESOURCE_NAME in content and space_id in content:
+        print(f"{RESOURCE_NAME} ({space_id}) already in databricks.yml")
         return 0
 
-    block = f"""        - name: 'genie_checkin'
+    block = f"""        - name: '{RESOURCE_NAME}'
           genie_space:
-            name: 'AMADEUS CHECKIN'
+            name: '{GENIE_LABEL}'
             space_id: '{space_id}'
             permission: 'CAN_RUN'
 """
@@ -38,7 +40,7 @@ def main() -> int:
         return 1
     content = content.replace(m2.group(1), m2.group(1).rstrip() + "\n" + block)
     YML.write_text(content)
-    print(f"Added genie_checkin ({space_id}) to databricks.yml")
+    print(f"Added {RESOURCE_NAME} ({space_id}) to databricks.yml")
     return 0
 
 

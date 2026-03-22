@@ -12,19 +12,11 @@ from dotenv import load_dotenv
 
 load_dotenv(ROOT / ".env.local", override=True)
 
-# Order: checkin_metrics, flights, checkin_agents, border_officers, border_terminals (no cross-deps)
+# Order: example_data (no cross-deps)
 SQL_SCRIPTS = [
-    "data/init/create_checkin_metrics.sql",
-    "data/init/create_flights.sql",
-    "data/init/create_checkin_agents.sql",
-    "data/init/create_border_officers.sql",
-    "data/init/create_border_terminals.sql",
+    "data/init/create_example_data.sql",
 ]
-# Procedures (run after tables; update_checkin_agent depends on checkin_agents)
-PROCEDURE_SCRIPTS = [
-    "data/proc/update_checkin_agents_procedure.sql",
-    "data/proc/confirm_arrival_procedure.sql",
-]
+PROCEDURE_SCRIPTS = []
 
 
 def main() -> None:
@@ -38,7 +30,7 @@ def main() -> None:
     wh = os.environ.get("DATABRICKS_WAREHOUSE_ID") or next(iter(w.warehouses.list())).id
     wh_id = str(getattr(wh, "id", wh) or wh)
 
-    for rel_path in SQL_SCRIPTS + PROCEDURE_SCRIPTS:
+    for rel_path in SQL_SCRIPTS:
         path = ROOT / rel_path
         if not path.exists():
             print(f"Skip (not found): {path}", file=sys.stderr)

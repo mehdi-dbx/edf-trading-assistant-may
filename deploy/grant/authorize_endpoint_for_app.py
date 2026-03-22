@@ -41,11 +41,13 @@ def main() -> int:
             name: '{endpoint}'
             permission: 'CAN_QUERY'
 """
-    m2 = re.search(r"(        - name: 'genie_checkin'\n          genie_space:.*?permission: 'CAN_RUN'\n)", content, re.DOTALL)
+    m2 = re.search(r"(        - name: 'genie_trading'\n          genie_space:.*?permission: 'CAN_RUN'\n)", content, re.DOTALL)
+    if not m2:
+        m2 = re.search(r"(        - name: 'genie_checkin'\n          genie_space:.*?permission: 'CAN_RUN'\n)", content, re.DOTALL)
     if not m2:
         m2 = re.search(r"(        - name: 'sql_warehouse'\n          sql_warehouse:.*?permission: 'CAN_USE'\n)", content)
     if not m2:
-        print("Error: Could not find genie_checkin or sql_warehouse block in databricks.yml", file=sys.stderr)
+        print("Error: Could not find genie_trading, genie_checkin, or sql_warehouse block in databricks.yml", file=sys.stderr)
         return 1
     content = content.replace(m2.group(1), m2.group(1).rstrip() + "\n" + block)
     YML.write_text(content)

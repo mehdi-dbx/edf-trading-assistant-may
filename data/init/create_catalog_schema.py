@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create Databricks Unity Catalog and schema if not exists. Reads AMADEUS_UNITY_CATALOG_SCHEMA from .env.local."""
+"""Create Databricks Unity Catalog and schema if not exists. Reads UNITY_CATALOG_SCHEMA from .env.local."""
 import os
 import sys
 from pathlib import Path
@@ -18,10 +18,10 @@ def main() -> None:
 
     from data.csv_to_delta import _wait_for_statement
 
-    spec = os.environ.get("AMADEUS_UNITY_CATALOG_SCHEMA") or ""
+    spec = os.environ.get("UNITY_CATALOG_SCHEMA") or ""
     catalog, _, schema = spec.strip().partition(".")
     if not catalog or not schema:
-        sys.exit("Set AMADEUS_UNITY_CATALOG_SCHEMA to catalog.schema in .env.local")
+        sys.exit("Set UNITY_CATALOG_SCHEMA to catalog.schema in .env.local")
 
     w = WorkspaceClient()
     wh = os.environ.get("DATABRICKS_WAREHOUSE_ID") or next(iter(w.warehouses.list())).id

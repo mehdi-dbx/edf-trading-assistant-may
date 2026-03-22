@@ -5,9 +5,8 @@ Logs everything to create_all_assets.log (including errors).
 
 Order:
   1. create_catalog_schema.py
-  2. create_checkin_metrics.sql, create_flights.sql, create_checkin_agents.sql, create_border_officers.sql, create_border_terminals.sql
-  3. create_genie_space.py
-  4. All *.sql in data/proc
+  2. create_example_data.sql
+  3. All *.sql in data/proc
 
 Usage: uv run python data/init/create_all_assets.py
 """
@@ -25,14 +24,10 @@ os.chdir(ROOT)
 LOG_FILE = ROOT / "create_all_assets.log"
 
 INIT_SQL = [
-    "data/init/create_checkin_metrics.sql",
-    "data/init/create_flights.sql",
-    "data/init/create_checkin_agents.sql",
-    "data/init/create_border_officers.sql",
-    "data/init/create_border_terminals.sql",
+    "data/init/create_example_data.sql",
 ]
 
-TABLES_TO_VERIFY = ["checkin_metrics", "flights", "checkin_agents", "border_officers", "border_terminals"]
+TABLES_TO_VERIFY = ["example_data"]
 
 # ANSI (same as init_check_dbx_env.py)
 R, G, Y, B, M, C, W = "\033[31m", "\033[32m", "\033[33m", "\033[34m", "\033[35m", "\033[36m", "\033[0m"
@@ -110,10 +105,10 @@ def verify_assets() -> bool:
     from dotenv import load_dotenv
 
     load_dotenv(ROOT / ".env.local", override=True)
-    spec = os.environ.get("AMADEUS_UNITY_CATALOG_SCHEMA", "").strip()
+    spec = os.environ.get("UNITY_CATALOG_SCHEMA", "").strip()
     if "." not in spec:
-        print(f"  {FAIL} AMADEUS_UNITY_CATALOG_SCHEMA not set{W}")
-        _log_plain("FAIL verify: AMADEUS_UNITY_CATALOG_SCHEMA not set")
+        print(f"  {FAIL} UNITY_CATALOG_SCHEMA not set{W}")
+        _log_plain("FAIL verify: UNITY_CATALOG_SCHEMA not set")
         return False
 
     catalog, schema = spec.split(".", 1)
@@ -157,18 +152,6 @@ def verify_assets() -> bool:
                 _log_plain(f"FAIL verify table {full_name}: {e}")
                 ok = False
 
-        # Genie space (if env set)
-        space_id = os.environ.get("AMADEUS_GENIE_CHECKIN", "").strip()
-        if space_id:
-            try:
-                space = w.genie.get_space(space_id=space_id)
-                print(f"  {OK} Genie space {C}({getattr(space, 'title', space_id)}){W}")
-                _log_plain(f"OK verify genie space: {getattr(space, 'title', space_id)}")
-            except Exception as e:
-                print(f"  {FAIL} Genie space {C}({e}){W}")
-                _log_plain(f"FAIL verify genie space {space_id}: {e}")
-                ok = False
-
     except Exception as e:
         print(f"  {FAIL} {e}{W}")
         _log_plain(f"FAIL verify setup: {e}")
@@ -180,7 +163,7 @@ def verify_assets() -> bool:
 def main() -> None:
     proc_dir = ROOT / "data" / "proc"
     proc_sql = sorted(proc_dir.glob("*.sql"))
-    total_steps = 1 + len(INIT_SQL) + 1 + len(proc_sql) + 1
+    total_steps = 1 + len(INIT_SQL) + len(proc_sql) + 1
 
     print(f"\n{BOLD}{M}╔══════════════════════════════════════════╗{W}")
     print(f"{BOLD}{M}║  Create All Assets                       ║{W}")
@@ -198,10 +181,6 @@ def main() -> None:
         step += 1
         if not run_step(f"run_sql {sql}", ["uv", "run", "python", "data/run_sql.py", sql], step, total_steps):
             sys.exit(1)
-
-    step += 1
-    if not run_step("create_genie_space", ["uv", "run", "python", "data/init/create_genie_space.py"], step, total_steps):
-        sys.exit(1)
 
     for sql_path in proc_sql:
         step += 1

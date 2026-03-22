@@ -3,18 +3,6 @@ import React, { memo, useEffect, useState } from 'react';
 import { AnimatedAssistantIcon } from './animation-assistant-icon';
 import { Response } from './elements/response';
 import { MessageContent } from './elements/message';
-import { TurnaroundStartedCard } from './elements/turnaround-started-card';
-import { LiveTurnaroundChecklistCard } from './elements/live-turnaround-checklist';
-import { CheckinRootCauseCard } from './elements/checkin-root-cause-card';
-import { StaffingDutyCard } from './elements/staffing-duty-card';
-import { CheckinConsequencesCard } from './elements/checkin-consequences-card';
-import { CheckinRecommendedActionCard } from './elements/checkin-recommended-action-card';
-import { CheckinAvailableAgents } from './elements/checkin-available-agents';
-import { CheckinUpdateCard } from './elements/checkin-update-card';
-import { CheckinPerformanceIssueCard } from './elements/checkin-performance-issue-card';
-import { CheckinImpactCard } from './elements/checkin-impact-card';
-import { FollowUpActions } from './elements/follow-up-actions';
-import { CheckinRootCauseActionsCard } from './elements/checkin-root-cause-actions-card';
 import { KnowledgeBaseCard } from './elements/knowledge-base-card';
 import { parseResponseBlocks, hasResponseBlocks } from '@/lib/response-blocks';
 import {
@@ -248,92 +236,6 @@ const PurePreviewMessage = ({
                               <Response key={i}>{seg.content}</Response>
                             );
                           }
-                          if (seg.type === 'turnaround_started') {
-                            return (
-                              <TurnaroundStartedCard
-                                key={i}
-                                flight={seg.parsed.flight}
-                                etaMin={seg.parsed.etaMin}
-                                tobt={seg.parsed.tobt}
-                              />
-                            );
-                          }
-                          if (seg.type === 'live_turnaround_checklist') {
-                            return (
-                              <LiveTurnaroundChecklistCard
-                                key={i}
-                                flight={seg.parsed.flight}
-                                tasks={seg.parsed.tasks}
-                                readiness={seg.parsed.readiness}
-                              />
-                            );
-                          }
-                          if (seg.type === 'checkin_root_cause') {
-                            return (
-                              <CheckinRootCauseCard
-                                key={i}
-                                zone={seg.parsed.zone}
-                                items={seg.parsed.items}
-                              />
-                            );
-                          }
-                          if (seg.type === 'checkin_consequences') {
-                            return (
-                              <CheckinConsequencesCard
-                                key={i}
-                                items={seg.parsed.items}
-                              />
-                            );
-                          }
-                          if (seg.type === 'checkin_recommended_action') {
-                            return (
-                              <CheckinRecommendedActionCard
-                                key={i}
-                                items={seg.parsed.items}
-                              />
-                            );
-                          }
-                          if (seg.type === 'checkin_available_agents') {
-                            return (
-                              <CheckinAvailableAgents
-                                key={i}
-                                agents={seg.parsed.agents}
-                              />
-                            );
-                          }
-                          if (seg.type === 'checkin_update') {
-                            return (
-                              <CheckinUpdateCard
-                                key={i}
-                                zone={seg.parsed.zone}
-                                body={seg.parsed.body}
-                                agent={seg.parsed.agent}
-                                flights={seg.parsed.flights}
-                              />
-                            );
-                          }
-                          if (seg.type === 'checkin_performance_issue') {
-                            return (
-                              <CheckinPerformanceIssueCard
-                                key={i}
-                                zone={seg.parsed.zone}
-                                pctChange={seg.parsed.pctChange}
-                                windowMins={seg.parsed.windowMins}
-                                avgCheckin={seg.parsed.avgCheckin}
-                                baseline={seg.parsed.baseline}
-                                timestamp={seg.parsed.timestamp}
-                              />
-                            );
-                          }
-                          if (seg.type === 'checkin_impact') {
-                            return (
-                              <CheckinImpactCard
-                                key={i}
-                                count={seg.parsed.count}
-                                flights={seg.parsed.flights}
-                              />
-                            );
-                          }
                           if (seg.type === 'knowledge_base') {
                             return (
                               <KnowledgeBaseCard
@@ -344,79 +246,11 @@ const PurePreviewMessage = ({
                               />
                             );
                           }
-                          if (seg.type === 'staffing_duty') {
-                            return (
-                              <StaffingDutyCard
-                                key={i}
-                                zone={seg.parsed.zone}
-                                counter={seg.parsed.counter}
-                                assignedById={seg.parsed.assignedById}
-                                sendMessage={sendMessage}
-                              />
-                            );
-                          }
                           if (seg.type === 'refresh_table') {
                             return (
                               <RefreshTableTrigger
                                 key={i}
                                 table={seg.parsed.table}
-                              />
-                            );
-                          }
-                          if (seg.type === 'checkin_root_cause_actions') {
-                            const showButtons =
-                              !isReadonly && !isLoading && isLastMessage;
-                            return (
-                              <CheckinRootCauseActionsCard
-                                key={i}
-                                agents={seg.parsed.agents}
-                                actions={seg.parsed.actions}
-                                onConfirm={(selectedActionIds) =>
-                                  sendMessage({
-                                    role: 'user',
-                                    parts: [
-                                      {
-                                        type: 'text',
-                                        text: `yes (actions: ${selectedActionIds.join(', ')})`,
-                                      },
-                                    ],
-                                    metadata: { source: 'followup' },
-                                  })
-                                }
-                                disabled={!showButtons}
-                              />
-                            );
-                          }
-                          if (seg.type === 'checkin_followup') {
-                            const showButtons =
-                              !isReadonly && !isLoading && isLastMessage;
-                            const actionId = seg.parsed.actionId ?? '';
-                            return (
-                              <FollowUpActions
-                                key={i}
-                                question={seg.parsed.question}
-                                onValidate={() =>
-                                  sendMessage({
-                                    role: 'user',
-                                    parts: [
-                                      {
-                                        type: 'text',
-                                        text: actionId
-                                          ? `yes (action: ${actionId})`
-                                          : 'yes',
-                                      },
-                                    ],
-                                    metadata: { source: 'followup' },
-                                  })
-                                }
-                                onCancel={() =>
-                                  sendMessage({
-                                    role: 'user',
-                                    parts: [{ type: 'text', text: 'no' }],
-                                    metadata: { source: 'followup' },
-                                  })
-                                }
-                                disabled={!showButtons}
                               />
                             );
                           }

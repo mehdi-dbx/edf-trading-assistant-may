@@ -3,21 +3,21 @@
 # Run from project root: ./deploy/deploy.sh
 #
 # Uses databricks bundle deploy which uploads source from local (source_code_path: ./)
-# and properly links it to the app. App name comes from target: use -t airops-checkin for
-# agent-airops-checkin (see databricks.yml targets.airops-checkin).
+# and properly links it to the app. App name comes from target: use -t template for
+# agent-langgraph (see databricks.yml targets.template).
 #
 # If "App already exists" error: bind first:
-#   databricks bundle deployment bind agent_langgraph agent-airops-checkin -t airops-checkin --auto-approve
+#   databricks bundle deployment bind agent_langgraph agent-langgraph -t template --auto-approve
 set -e
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-# Load .env.local for AMADEUS_UNITY_CATALOG_SCHEMA
+# Load .env.local for UNITY_CATALOG_SCHEMA
 [ -f "$ROOT/.env.local" ] && set -a && source "$ROOT/.env.local" && set +a
 
-# Default target airops-checkin -> agent-airops-checkin; override with DEPLOY_TARGET env
-TARGET="${DEPLOY_TARGET:-airops-checkin}"
+# Default target template -> agent-langgraph; override with DEPLOY_TARGET env
+TARGET="${DEPLOY_TARGET:-template}"
 
 echo "Deploying (target: $TARGET)..."
 echo ""
@@ -32,10 +32,9 @@ fi
 
 # If app exists but isn't bound to bundle, bind it first
 case "$TARGET" in
-  airops-checkin) APP_NAME="agent-airops-checkin" ;;
-  airops)        APP_NAME="agent-airops" ;;
-  prod)          APP_NAME="agent-langgraph" ;;
-  *)             APP_NAME="agent-langgraph" ;;
+  template) APP_NAME="agent-langgraph" ;;
+  prod)     APP_NAME="agent-langgraph" ;;
+  *)        APP_NAME="agent-langgraph" ;;
 esac
 if databricks apps get "$APP_NAME" --output json &>/dev/null; then
   echo "Binding existing app $APP_NAME to bundle..."
@@ -56,7 +55,7 @@ databricks bundle run agent_langgraph -t "$TARGET"
 
 echo ""
 echo "Granting UC table access to app service principal..."
-SCHEMA="${AMADEUS_UNITY_CATALOG_SCHEMA:-mc.amadeus-checkin}"
+SCHEMA="${UNITY_CATALOG_SCHEMA:-edf.template}"
 uv run python deploy/grant/grant_app_tables.py "$APP_NAME" --schema "$SCHEMA" || {
   echo "Warning: grant_app_tables.py failed (tables may not exist yet). Run manually: uv run python deploy/grant/grant_app_tables.py $APP_NAME --schema $SCHEMA"
 }

@@ -4,8 +4,8 @@
 Usage:
   uv run python deploy/grant/grant_app_tables.py [APP_NAME] [--schema SCHEMA]
 
-  APP_NAME: Databricks app name (default: agent-airops-checkin)
-  --schema: Catalog.schema (default: from AMADEUS_UNITY_CATALOG_SCHEMA or mc.amadeus-checkin)
+  APP_NAME: Databricks app name (default: agent-langgraph)
+  --schema: Catalog.schema (default: from UNITY_CATALOG_SCHEMA or edf.template)
 """
 import argparse
 import os
@@ -21,16 +21,16 @@ load_dotenv(ROOT / ".env.local")
 from databricks.sdk import WorkspaceClient
 from tools.sql_executor import execute_statement, get_warehouse
 
-DEFAULT_SCHEMA = os.environ.get("AMADEUS_UNITY_CATALOG_SCHEMA", "mc.amadeus-checkin")
+DEFAULT_SCHEMA = os.environ.get("UNITY_CATALOG_SCHEMA", "edf.template")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Grant SELECT on UC tables to app service principal")
-    parser.add_argument("app_name", nargs="?", default="agent-airops-checkin", help="Databricks app name")
+    parser.add_argument("app_name", nargs="?", default="agent-langgraph", help="Databricks app name")
     parser.add_argument(
         "--schema",
         default=DEFAULT_SCHEMA,
-        help=f"Catalog.schema (default: {DEFAULT_SCHEMA} or AMADEUS_UNITY_CATALOG_SCHEMA)",
+        help=f"Catalog.schema (default: {DEFAULT_SCHEMA} or UNITY_CATALOG_SCHEMA)",
     )
     args = parser.parse_args()
 
@@ -52,7 +52,7 @@ def main() -> int:
     print(f"Granting SELECT to app service principal: {app.service_principal_name} ({sp_id})")
 
     w_client, wh_id = get_warehouse()
-    catalog, schema = args.schema.split(".", 1) if "." in args.schema else (args.schema, "amadeus-checkin")
+    catalog, schema = args.schema.split(".", 1) if "." in args.schema else (args.schema, "template")
 
     tables = list(w.tables.list(catalog_name=catalog, schema_name=schema))
     if not tables:

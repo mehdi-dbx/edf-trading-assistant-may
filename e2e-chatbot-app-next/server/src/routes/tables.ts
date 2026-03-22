@@ -1,7 +1,7 @@
 import { Router, type Request, type Response } from 'express';
 import { authMiddleware, requireAuth } from '../middleware/auth';
 
-const ALLOWED_TABLES = ['checkin_metrics', 'flights', 'checkin_agents', 'border_officers', 'border_terminals'] as const;
+const ALLOWED_TABLES = ['example_data'] as const;
 
 export const tablesRouter = Router();
 tablesRouter.use(authMiddleware);

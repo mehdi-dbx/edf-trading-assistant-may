@@ -10,11 +10,8 @@ import { Conversation, ConversationContent } from './elements/conversation';
 import { ArrowDownIcon } from 'lucide-react';
 import { getTextFromMessage } from '@/lib/utils';
 
-const CHECKLIST_TRIGGER_MESSAGE = 'Show the turnaround checklist';
-const PERSONA_MESSAGES = [
-  'Your current persona is now Check-in Manager M01',
-  'Your current persona is now Check-in Agent A14',
-];
+const CHECKLIST_TRIGGER_MESSAGE = '__hide__';
+const PERSONA_MESSAGES: string[] = [];
 
 function isHiddenSystemMessage(message: ChatMessage): boolean {
   if ((message.metadata as { source?: string } | undefined)?.source === 'system')

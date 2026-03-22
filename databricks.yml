@@ -23,20 +23,87 @@ resources:
           sql_warehouse:
             id: 'f9738bf02b7d1c4f'
             permission: 'CAN_USE'
-        - name: 'genie_checkin'
-          genie_space:
-            name: 'AMADEUS CHECKIN'
-            space_id: '01f11afee6f211559a00ef8d9c36d468'
-            permission: 'CAN_RUN'
         - name: 'serving_endpoint'
           serving_endpoint:
             name: 'claude-sonnet-4-6'
             permission: 'CAN_QUERY'
         - name: 'openai_api_key'
           secret:
-            scope: 'amadeus-checkin'
+            scope: 'template'
             key: 'openai-api-key'
             permission: 'READ'
+
+        # --- KA endpoints (from data/ka.list) ---
+        - name: 'ka_00138eb9'
+          serving_endpoint:
+            name: 'ka-00138eb9-endpoint'
+            permission: 'CAN_QUERY'
+        - name: 'ka_296a5e81'
+          serving_endpoint:
+            name: 'ka-296a5e81-endpoint'
+            permission: 'CAN_QUERY'
+        - name: 'ka_4ec75e4c'
+          serving_endpoint:
+            name: 'ka-4ec75e4c-endpoint'
+            permission: 'CAN_QUERY'
+        - name: 'ka_5a105383'
+          serving_endpoint:
+            name: 'ka-5a105383-endpoint'
+            permission: 'CAN_QUERY'
+        - name: 'ka_5cd019a5'
+          serving_endpoint:
+            name: 'ka-5cd019a5-endpoint'
+            permission: 'CAN_QUERY'
+        - name: 'ka_61806910'
+          serving_endpoint:
+            name: 'ka-61806910-endpoint'
+            permission: 'CAN_QUERY'
+        - name: 'ka_64e256da'
+          serving_endpoint:
+            name: 'ka-64e256da-endpoint'
+            permission: 'CAN_QUERY'
+        - name: 'ka_69061eaf'
+          serving_endpoint:
+            name: 'ka-69061eaf-endpoint'
+            permission: 'CAN_QUERY'
+        - name: 'ka_7370ef1c'
+          serving_endpoint:
+            name: 'ka-7370ef1c-endpoint'
+            permission: 'CAN_QUERY'
+        - name: 'ka_79b609b3'
+          serving_endpoint:
+            name: 'ka-79b609b3-endpoint'
+            permission: 'CAN_QUERY'
+        - name: 'ka_aa684c1e'
+          serving_endpoint:
+            name: 'ka-aa684c1e-endpoint'
+            permission: 'CAN_QUERY'
+        - name: 'ka_b0fdac6d'
+          serving_endpoint:
+            name: 'ka-b0fdac6d-endpoint'
+            permission: 'CAN_QUERY'
+        - name: 'ka_cb13cd52'
+          serving_endpoint:
+            name: 'ka-cb13cd52-endpoint'
+            permission: 'CAN_QUERY'
+        - name: 'ka_d690527e'
+          serving_endpoint:
+            name: 'ka-d690527e-endpoint'
+            permission: 'CAN_QUERY'
+        - name: 'ka_daa7c012'
+          serving_endpoint:
+            name: 'ka-daa7c012-endpoint'
+            permission: 'CAN_QUERY'
+        - name: 'ka_ee88f235'
+          serving_endpoint:
+            name: 'ka-ee88f235-endpoint'
+            permission: 'CAN_QUERY'
+        # --- end KA endpoints ---
+        - name: 'genie_trading'
+          genie_space:
+            name: 'EDF TRADING'
+            space_id: '01f125ff96d61121a20aab6e7d0b080d'
+            permission: 'CAN_RUN'
 
 targets:
   dev:
@@ -53,14 +120,14 @@ targets:
         agent_langgraph:
           name: agent-langgraph
 
-  # Default target: agent-airops-checkin (DBX_APP_NAME in .env.local)
+  # Default target (DBX_APP_NAME in .env.local)
   # Use: databricks bundle deploy  (no -t needed) or ./deploy/deploy.sh
-  airops-checkin:
+  template:
     mode: production
     default: true
     workspace:
-      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/airops-checkin
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/template
     resources:
       apps:
         agent_langgraph:
-          name: agent-airops-checkin
+          name: agent-langgraph

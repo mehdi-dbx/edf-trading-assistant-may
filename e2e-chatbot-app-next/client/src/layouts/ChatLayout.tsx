@@ -1,9 +1,9 @@
 import { useState, useCallback } from 'react';
-import { Outlet, useNavigate, useLocation, useParams } from 'react-router-dom';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { AppHeader } from '@/components/AppHeader';
 import { AppSidebar } from '@/components/app-sidebar';
 import { EmbeddedChatPanel } from '@/components/embedded-chat-panel';
-import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider } from '@/components/ui/sidebar';
 import { TaskEventsListener } from '@/components/task-events-listener';
 import { ChatSendMessageProvider } from '@/contexts/ChatSendMessageContext';
 import { RoleProvider } from '@/contexts/RoleContext';
@@ -68,9 +68,6 @@ export default function ChatLayout() {
               user={session.user}
               preferredUsername={preferredUsername}
             />
-            <SidebarInset className="min-h-0 min-w-0 flex-1 overflow-auto">
-              <Outlet />
-            </SidebarInset>
             <EmbeddedChatPanel chatId={chatId} onNewChat={onNewChat} />
           </div>
             </div>

@@ -1,2 +1,0 @@
--- Check-in agent staffing in Zone B: counts how many agents are at counter (ACTIVE) vs away or on break.
-SELECT CASE WHEN UPPER(`at_counter`) IN ('AWAY', 'BREAK') THEN 'AWAY_OR_BREAK' WHEN UPPER(`at_counter`) = 'ACTIVE' THEN 'ACTIVE' ELSE 'OTHER' END AS status_group, COUNT(*) AS agent_count, COLLECT_LIST(`name`) AS agent_names FROM __SCHEMA_QUALIFIED__.`checkin_agents` WHERE `zone` = 'B' AND `at_counter` IS NOT NULL AND `name` IS NOT NULL GROUP BY status_group

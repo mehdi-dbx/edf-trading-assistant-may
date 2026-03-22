@@ -49,7 +49,6 @@ app.use(
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Log every request (so you can see if /api/current-time hits this server)
 app.use((req, _res, next) => {
   console.log('[req]', req.method, req.url);
   next();
@@ -58,56 +57,6 @@ app.use((req, _res, next) => {
 // Health check endpoint (for Playwright tests)
 app.get('/ping', (_req, res) => {
   res.status(200).send('pong');
-});
-
-// Dedicated route for stepping time back (register before /api/current-time so it matches first).
-app.get('/api/current-time/backward', async (_req, res) => {
-  const apiProxy = process.env.API_PROXY || '';
-  let base = apiProxy.replace(/\/invocations\/?$/, '') || 'http://127.0.0.1:8000';
-  if (base.startsWith('http://localhost:') || base.startsWith('https://localhost:')) {
-    base = base.replace('localhost', '127.0.0.1');
-  }
-  const url = `${base}/current-time/backward`;
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      const text = await response.text();
-      console.error(`[current-time/backward] ${url} → ${response.status}`, text.slice(0, 200));
-      return res.status(response.status).json({ error: 'Backend error', details: text.slice(0, 200) });
-    }
-    const data = (await response.json()) as { currentTime: string };
-    return res.json(data);
-  } catch (err) {
-    console.error('[current-time/backward] fetch failed', url, err);
-    return res.status(502).json({ error: 'Backend unavailable' });
-  }
-});
-
-// Proxy to backend: simulated current time. ?advance=true moves queue; default peeks.
-app.get('/api/current-time', async (req, res) => {
-  const apiProxy = process.env.API_PROXY || '';
-  let base = apiProxy.replace(/\/invocations\/?$/, '') || 'http://127.0.0.1:8000';
-  // Use 127.0.0.1 for localhost so Node can reach the backend reliably
-  if (base.startsWith('http://localhost:') || base.startsWith('https://localhost:')) {
-    base = base.replace('localhost', '127.0.0.1');
-  }
-  const advance = req.query.advance === 'true' ? 'true' : 'false';
-  const backward = req.query.backward === 'true' ? 'true' : 'false';
-  const url = `${base}/current-time?advance=${advance}&backward=${backward}`;
-  console.log('[current-time] proxy', advance, backward, '->', url);
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      const text = await response.text();
-      console.error(`[current-time] ${url} → ${response.status}`, text.slice(0, 200));
-      return res.status(response.status).json({ error: 'Backend error', details: text.slice(0, 200) });
-    }
-    const data = (await response.json()) as { currentTime: string };
-    return res.json(data);
-  } catch (err) {
-    console.error('[current-time] fetch failed', url, err);
-    return res.status(502).json({ error: 'Backend unavailable' });
-  }
 });
 
 // Reset demo state: runs scripts/reset_state.py (sequence of SQL scripts)

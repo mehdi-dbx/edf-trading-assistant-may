@@ -1,0 +1,3304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Dictionary – EDF (Energy Data Framework) Raw Data Catalog</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --card-hover: #f1f5f9;
+      --header-bg: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #e0f2fe 100%);
+      --header-fg: #0c4a6e;
+      --accent: #0284c7;
+      --accent-dim: #0369a1;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --border-accent: #bae6fd;
+      --radius: 10px;
+      --radius-sm: 6px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+    header {
+      background: var(--header-bg);
+      color: var(--header-fg);
+      padding: 2rem 2rem 1.75rem;
+      border-bottom: 1px solid var(--border-accent);
+    }
+    header h1 {
+      margin: 0 0 0.5rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    header p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #0369a1;
+      opacity: 0.85;
+    }
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    .toc {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.75rem;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .toc h2 {
+      margin: 0 0 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .toc ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem 0;
+    }
+    .toc a {
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+    .toc a:hover { color: var(--accent-dim); text-decoration: underline; }
+    .volume-section {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 1.5rem 1.75rem;
+      margin-bottom: 1.25rem;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      transition: border-color 0.15s;
+    }
+    .volume-section:hover { border-color: var(--border-accent); }
+    .volume-section h2 {
+      margin: 0 0 0.25rem;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent-dim);
+      letter-spacing: -0.01em;
+    }
+    .volume-section .vol-subtitle {
+      margin: 0 0 0.75rem;
+      padding-bottom: 0.75rem;
+      font-size: 0.9rem;
+      font-weight: 400;
+      color: var(--accent-dim);
+      border-bottom: 1px solid var(--accent);
+    }
+    .vol-desc {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 0.75rem;
+      font-size: 0.875rem;
+      color: var(--text);
+    }
+    .vol-desc li {
+      padding-left: 1.1rem;
+      margin-bottom: 0.25rem;
+      position: relative;
+    }
+    .vol-desc li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.55em;
+      width: 4px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+    .acronym-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      margin: 0 0 1rem;
+      padding: 0;
+      background: none;
+      border: none;
+    }
+    .acronym-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3em;
+      font-size: 0.75rem;
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      white-space: nowrap;
+      line-height: 1.4;
+    }
+    .acronym-chip:nth-child(odd) {
+      background: #e0f2fe;
+      border: 1px solid #bae6fd;
+      color: #0c4a6e;
+    }
+    .acronym-chip:nth-child(even) {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      color: #14532d;
+    }
+    .acronym-chip b {
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+    .folder-entry {
+      border-top: 1px solid var(--border);
+      padding-top: 1rem;
+      margin-top: 1rem;
+    }
+    .folder-entry:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+    .folder-entry h3 {
+      margin: 0 0 0.35rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .folder-entry h3 code {
+      font-family: ui-monospace, monospace;
+      font-size: 0.875rem;
+      background: #f1f5f9;
+      padding: 0.1em 0.4em;
+      border-radius: 4px;
+      color: var(--accent-dim);
+    }
+    .folder-date {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 400;
+      font-family: var(--font-sans);
+    }
+    p.meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin: 0.25rem 0 0.5rem;
+    }
+    p.meta code {
+      font-size: 0.78rem;
+      background: #f8fafc;
+      padding: 0.1em 0.3em;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+    }
+    .content-box {
+      margin-top: 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+    .content-box summary {
+      padding: 0.5rem 0.875rem;
+      background: #f8fafc;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.8rem;
+      color: var(--muted);
+      transition: background 0.15s, color 0.15s;
+      border: none;
+      user-select: none;
+    }
+    .content-box summary:hover {
+      background: #f0f9ff;
+      color: var(--accent);
+    }
+    .content-box pre {
+      margin: 0;
+      padding: 0.875rem;
+      font-size: 0.73rem;
+      font-family: ui-monospace, monospace;
+      overflow-x: auto;
+      max-height: 360px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #fafafa;
+      color: var(--text);
+      border-top: 1px solid var(--border);
+    }
+
+    .layman-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-left: 4px solid #f59e0b;
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 0.9rem;
+      margin: 0 0 1rem;
+      font-size: 0.82rem;
+      color: #78350f;
+      line-height: 1.55;
+    }
+    .layman-box .layman-icon {
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+      color: #b45309;
+    }
+    .layman-box .layman-icon svg {
+      width: 15px;
+      height: 15px;
+      stroke-width: 2;
+    }
+    .layman-box p {
+      margin: 0;
+    }
+    .layman-box ul {
+      margin: 0;
+      padding-left: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .layman-box ul li {
+      margin: 0;
+    }
+
+    .schema-box {
+      margin: 0.75rem 0 0.5rem;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      font-size: 0.76rem;
+    }
+    .schema-box-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f1f5f9;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 0.4rem 0.75rem;
+      font-weight: 600;
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .schema-box-header .schema-icon svg {
+      width: 13px;
+      height: 13px;
+      stroke-width: 2;
+      color: var(--muted);
+      vertical-align: middle;
+      position: relative;
+      top: -1px;
+    }
+    .schema-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .schema-table thead tr {
+      background: #f8fafc;
+    }
+    .schema-table th {
+      text-align: left;
+      padding: 0.3rem 0.7rem;
+      font-weight: 600;
+      color: var(--accent-dim);
+      font-size: 0.72rem;
+      border-bottom: 1px solid #e2e8f0;
+      white-space: nowrap;
+    }
+    .schema-table td {
+      padding: 0.28rem 0.7rem;
+      border-bottom: 1px solid #f1f5f9;
+      color: var(--text);
+      vertical-align: top;
+    }
+    .schema-table tr:last-child td { border-bottom: none; }
+    .schema-table tr:nth-child(even) td { background: #f8fafc; }
+    .schema-field { font-family: ui-monospace, monospace; font-weight: 600; color: var(--accent-dim); }
+    .schema-type  { font-family: ui-monospace, monospace; color: #7c3aed; font-size: 0.7rem; }
+    .schema-note  { color: var(--muted); font-size: 0.72rem; }
+    .schema-no-data {
+      padding: 0.5rem 0.75rem;
+      color: #991b1b;
+      background: #fff1f2;
+      font-style: normal;
+    }
+
+    /* ── Raw vs Ingested separator ── */
+    .data-layer-separator {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin: 1.25rem 0 1rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+    }
+    .data-layer-separator::before,
+    .data-layer-separator::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .layer-label-raw {
+      background: #fef9c3;
+      color: #713f12;
+      border: 1px solid #fde68a;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+    }
+    .layer-label-ingested {
+      background: #dcfce7;
+      color: #14532d;
+      border: 1px solid #bbf7d0;
+      padding: 0.15rem 0.55rem;
+      border-radius: 999px;
+    }
+
+    /* ── Ingested card ── */
+    .ingested-card {
+      border: 1px solid #bbf7d0;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      margin-top: 0.5rem;
+      font-size: 0.76rem;
+    }
+    .ingested-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #f0fdf4;
+      border-bottom: 1px solid #bbf7d0;
+      padding: 0.4rem 0.75rem;
+      font-weight: 600;
+      font-size: 0.72rem;
+      color: #15803d;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .ingested-card-header svg {
+      width: 13px; height: 13px;
+      stroke-width: 2;
+      color: #15803d;
+      flex-shrink: 0;
+    }
+    .ingested-table-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .ingested-table-list li {
+      border-bottom: 1px solid #f0fdf4;
+      padding: 0.45rem 0.75rem;
+    }
+    .ingested-table-list li:last-child { border-bottom: none; }
+    .ingested-table-list li:nth-child(even) { background: #f8fff9; }
+    .it-name {
+      font-family: ui-monospace, monospace;
+      font-weight: 600;
+      color: #0f766e;
+      font-size: 0.74rem;
+    }
+    .it-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.3rem 0.75rem;
+      margin-top: 0.25rem;
+    }
+    .it-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.68rem;
+      color: var(--muted);
+    }
+    .it-chip b { color: var(--text); font-weight: 500; }
+    .it-cols {
+      margin-top: 0.35rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+    }
+    .it-col-pill {
+      font-family: ui-monospace, monospace;
+      font-size: 0.66rem;
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
+      border-radius: 999px;
+      padding: 0.1rem 0.45rem;
+    }
+    .it-col-pill.ts  { background:#f3e8ff; color:#6d28d9; border-color:#ddd6fe; }
+    .it-col-pill.sys { background:#f1f5f9; color:#64748b; border-color:#e2e8f0; }
+
+    .it-sample {
+      margin-top: 0.4rem;
+      overflow-x: auto;
+    }
+    .it-sample-table {
+      border-collapse: collapse;
+      font-size: 0.66rem;
+      font-family: ui-monospace, monospace;
+      width: 100%;
+      min-width: max-content;
+    }
+    .it-sample-table thead tr {
+      background: #dcfce7;
+    }
+    .it-sample-table th {
+      padding: 0.2rem 0.5rem;
+      text-align: left;
+      font-weight: 600;
+      color: #166534;
+      border-bottom: 1px solid #bbf7d0;
+      white-space: nowrap;
+    }
+    .it-sample-table td {
+      padding: 0.18rem 0.5rem;
+      color: var(--text);
+      border-bottom: 1px solid #f0fdf4;
+      white-space: nowrap;
+    }
+    .it-sample-table tr:last-child td { border-bottom: none; }
+    .it-sample-table tr:nth-child(even) td { background: #f0fdf4; }
+    .it-sample-toggle {
+      margin-top: 0.35rem;
+      font-size: 0.67rem;
+      color: #15803d;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: var(--font-sans);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+    details.it-sample-details summary {
+      font-size: 0.67rem;
+      color: #15803d;
+      cursor: pointer;
+      margin-top: 0.35rem;
+      font-weight: 500;
+      list-style: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    details.it-sample-details summary::before {
+      content: '▶';
+      font-size: 0.55rem;
+      transition: transform 0.15s;
+    }
+    details.it-sample-details[open] summary::before { content: '▼'; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Data Dictionary — EDF (Energy Data Framework) Raw Data Catalog</h1>
+    <p>Weather &amp; climate data sources · content synthesis · sample file previews</p>
+  </header>
+  <main>
+    <nav class="toc">
+      <h2>Contents</h2>
+      <ul>
+    <li><a href="#vol-cwg">CWG</a></li>
+    <li><a href="#vol-daily_outlook">DAILY OUTLOOK</a></li>
+    <li><a href="#vol-degree_days">DEGREE_DAYS</a></li>
+    <li><a href="#vol-enso">ENSO</a></li>
+    <li><a href="#vol-epo">EPO</a></li>
+    <li><a href="#vol-global_tropics_hazards">GLOBAL_TROPICS_HAZARDS</a></li>
+    <li><a href="#vol-learnings">LEARNINGS</a></li>
+    <li><a href="#vol-mjo">MJO</a></li>
+    <li><a href="#vol-mjo_phase">MJO_PHASE</a></li>
+    <li><a href="#vol-nao">NAO</a></li>
+    <li><a href="#vol-pna">PNA</a></li>
+    <li><a href="#vol-wpo">WPO</a></li>
+      </ul>
+    </nav>
+  <section id="vol-cwg" class="volume-section">
+    <h2>CWG</h2>
+    <p class="vol-subtitle">Wind Generation Forecasts</p>
+    <ul class="vol-desc">
+      <li>1–15 day US wind power generation outlooks</li>
+      <li>Covers all US ISOs (Independent System Operators)</li>
+      <li>Used to anticipate renewable energy supply fluctuations</li>
+    </ul>
+    <p class="acronym-line">
+      <span class="acronym-chip"><b>CWG</b> = Commodity Weather Group</span>
+      <span class="acronym-chip"><b>MSLP</b> = Mean Sea Level Pressure</span>
+      <span class="acronym-chip"><b>GFS</b> = Global Forecast System</span>
+      <span class="acronym-chip"><b>ECMWF</b> = European Centre for Medium-Range Weather Forecasts</span>
+      <span class="acronym-chip"><b>00Z</b> = midnight UTC (Coordinated Universal Time) model run</span>
+      <span class="acronym-chip"><b>ISO</b> = Independent System Operator</span>
+      <span class="acronym-chip"><b>NOAA</b> = National Oceanic and Atmospheric Administration</span>
+    </p>
+    <div class="layman-box"><span class="layman-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><ul><li><strong>Daily wind forecast</strong> for the entire US, up to 15 days ahead</li><li>More wind = more electricity from turbines; less wind = grid must compensate</li><li>Produced by a private weather firm specializing in energy markets</li><li>Used by traders to anticipate renewable supply swings</li></ul></div>
+    <div class="folder-entry">
+      <h3><code>cwg</code><span class="folder-date">2025-11-26</span></h3>
+      <p class="meta">Sample: <code>20251126_National_Wind_Generation_Update_11_26_25.pdf</code> · 2 files</p>
+      <div class="schema-box">
+      <div class="schema-box-header"><span class="schema-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span> Dataset Schema</div>
+      <div class="schema-no-data">Unstructured text / narrative report — no tabular schema applies.</div>
+    </div>
+    <details class="content-box">
+        <summary>View sample file</summary>
+        <pre>National Wind Generation Update 11/26/25
+Posted: 2025-11-26
+Article Highlights:
+ Variable wind generation can be expected in the 1-5 day.
+ Wind generation looks to average on the lower side of normal next workweek.
+ National wind generation in the 11-15 day is expected to be normal to above normal.
+National daily wind generation according to the latest 00Z models over the next two weeks is
+shown above. This information takes into consideration the location and size of wind farms
+across the US ISO&#x27;s. A few highlights.
+ The models are in fair agreement during the period.
+ Variable daily national wind generation in the 1–5 day should be the lowest tomorrow,
+highest on Friday and Saturday.
+ The models suggest that wind generation in the 6-10 day averages on the lower side of
+normal. The best model agreement for below-normal national wind generation is on Monday
+and Tuesday. Wednesday and Thursday could be on the lower side of normal as well.
+
+ In the 11-15 day, the latest models suggest that wind generation could be normal to slightly
+above.
+ The MSLP anomalies from the 00Z GFS, European, and Canadian ensembles for the 6-10
+and 11-15 day periods are shown below. With high pressure dominating the US more often
+than not in the 6-10 day (yellow shade), wind anomalies should lean on the lower than normal
+side (like the models suggest). In the 11–15 day, the MSLP anomalies offer more in the way
+of low pressure (blue shading). As a result, wind anomalies could lean higher than normal at
+times.
+</pre>
+      </details>
+    </div>
+  </section>
+  <section id="vol-daily_outlook" class="volume-section">
+    <h2>Daily Outlook</h2>
+    <p class="vol-subtitle">CPC Medium-Range Forecasts</p>
+    <ul class="vol-desc">
+      <li>NWS Climate Prediction Center (CPC) official bulletins</li>
+      <li>6–10 day and 8–14 day temperature &amp; precipitation outlooks</li>
+      <li>State-by-state: A (Above) / B (Below) / N (Near normal)</li>
+    </ul>
+    <p class="acronym-line">
+      <span class="acronym-chip"><b>CPC</b> = Climate Prediction Center</span>
+      <span class="acronym-chip"><b>NWS</b> = National Weather Service</span>
+      <span class="acronym-chip"><b>NOAA</b> = National Oceanic and Atmospheric Administration</span>
+      <span class="acronym-chip"><b>CONUS</b> = Contiguous US</span>
+      <span class="acronym-chip"><b>GEFS</b> = Global Ensemble Forecast System</span>
+      <span class="acronym-chip"><b>ECENS</b> = European Centre Ensemble System</span>
+      <span class="acronym-chip"><b>CMCE</b> = Canadian Meteorological Centre Ensemble</span>
+      <span class="acronym-chip"><b>AWIPS</b> = Advanced Weather Interactive Processing System</span>
+      <span class="acronym-chip"><b>EST</b> = Eastern Standard Time</span>
+    </p>
+    <div class="layman-box"><span class="layman-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><ul><li><strong>Official US government forecast</strong> for the next 6–14 days</li><li>Covers every state: simply says <em>warmer / cooler / wetter / drier</em> than usual — no exact numbers</li><li>Published daily by NOAA's Climate Prediction Center</li><li>Energy companies use it to predict heating &amp; cooling demand ahead of time</li></ul></div>
+    <div class="folder-entry">
+      <h3><code>daily_outlook/2005</code><span class="folder-date">2005-12-31</span></h3>
+      <p class="meta">Sample: <code>20051231_cpc_daily_outlook.txt</code> · 2 files</p>
+      <div class="schema-box">
+      <div class="schema-box-header"><span class="schema-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span> Dataset Schema</div>
+      <table class="schema-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+      <tr>
+        <td class="schema-field">STATE</td>
+        <td class="schema-type">string</td>
+        <td class="schema-note">US state or region name (e.g. WASHINGTON, FL PENIN)</td>
+      </tr>
+      <tr>
+        <td class="schema-field">TEMP</td>
+        <td class="schema-type">enum</td>
+        <td class="schema-note">Temperature outlook vs. normal: A = Above · N = Near normal · B = Below</td>
+      </tr>
+      <tr>
+        <td class="schema-field">PCPN</td>
+        <td class="schema-type">enum</td>
+        <td class="schema-note">Precipitation outlook vs. median: A = Above · N = Near median · B = Below</td>
+      </tr>
+        </tbody>
+      </table><div class="schema-note" style="padding:0.3rem 0.7rem 0.5rem;border-top:1px solid #e2e8f0">Two tables per file: 6–10 day outlook and 8–14 day outlook. One row per state/region.</div>
+    </div>
+    <details class="content-box">
+        <summary>View sample file</summary>
+        <pre>PROGNOSTIC DISCUSSIONS FOR 6 TO 10 AND 8 TO 14 DAY OUTLOOKS
+NWS CLIMATE PREDICTION CENTER CAMP SPRINGS MD
+300 PM EST SAT DEC 31 2005
+ 
+THERE IS NO FORECASTER MESSAGE WRITTEN ON WEEKENDS
+NEW NOTE EFFECTIVE MAR 16 2004:
+THE GLOSSARY FORMERLY FOUND AT THIS LOCATION WILL NO LONGER BE
+TRANSMITTED AS PART OF THIS MESSAGE. IF YOU WISH TO SEE THE
+DEFINITIONS OF TERMS USED IN THESE MESSAGES... PLEASE GO TO THE
+CPC WEB PAGE AT (USE LOWER CASE) HTTP://WWW.CPC.NCEP.NOAA.GOV
+AND FOLLOW THE APPROPRIATE LINKS.
+
+ANALOGS TO THE 5 DAY MEAN OBSERVED PATTERN CENTERED 3 DAYS AGO (D-3)
+FOR THE REGION FROM 20N to 70N LATITUDE AND 175E to 60W LONGITUDE
+INCLUDE THE 5 DAY PERIODS CENTERED ON THE FOLLOWING DATES: 
+19811218 - 19861230 - 19530101 - 19941219 - 19751224
+ 
+ANALOGS TO THE 7 DAY MEAN OBSERVED PATTERN CENTERED 4 DAYS AGO (D-4)
+FOR THE REGION FROM 20N to 70N LATITUDE AND 175E to 60W LONGITUDE
+INCLUDE THE 5 DAY PERIODS CENTERED ON THE FOLLOWING DATES: 
+19861230 - 19811218 - 19941219 - 19530101 - 19751224
+ 
+6 to 10 day Outlook Table
+OUTLOOK FOR JAN 06 - 10, 2006
+ 
+STATE      TEMP PCPN   STATE      TEMP PCPN   STATE      TEMP PCPN   
+WASHINGTON  A    A     OREGON      A    A     NRN CALIF   A    B     
+SRN CALIF   A    B     IDAHO       A    N     NEVADA      A    B     
+W MONTANA   A    B     E MONTANA   A    B     WYOMING     A    B     
+UTAH        A    B     ARIZONA     A    B     COLORADO    A    B     
+NEW MEXICO  A    B     N DAKOTA    A    B     S DAKOTA    A    B     
+NEBRASKA    A    B     KANSAS      A    B     OKLAHOMA    A    B     
+N TEXAS     N    B     S TEXAS     N    B     W TEXAS     A    B     
+MINNESOTA   A    B     IOWA        A    B     MISSOURI    A    B     
+ARKANSAS    N    B     LOUISIANA   B    B     WISCONSIN   A    B     
+ILLINOIS    N    B     MISSISSIPPI B    B     MICHIGAN    N    B     
+INDIANA     N    B     OHIO        N    N     KENTUCKY    B    B     
+TENNESSEE   B    B     ALABAMA     B    B     NEW YORK    N    A     
+VERMONT     N    A     NEW HAMP    N    A     MAINE       A    A     
+MASS        N    A     CONN        N    A     RHODE IS    N    A     
+PENN        N    N     NEW JERSEY  N    N     W VIRGINIA  B    N     
+MARYLAND    B    N     DELAWARE    B    N     VIRGINIA    B    N     
+N CAROLINA  B    B     S CAROLINA  B    B     GEORGIA     B    B     
+FL PNHDL    B    B     FL PENIN    B    B     AK N SLOPE  N    B     
+AK ALEUTIAN N    B     AK WESTERN  N    B     AK INT BSN  N    B     
+AK S INT    A    B     AK SO COAST A    B     AK PNHDL    A    N     
+ 
+ 
+8 to 14 day Outlook Table
+OUTLOOK FOR JAN 08 - 14, 2006
+ 
+STATE      TEMP PCPN   STATE      TEMP PCPN   STATE      TEMP PCPN   
+WASHINGTON  A    A     OREGON      A    A     NRN CALIF   A    N     
+SRN CALIF   A    B     IDAHO       A    N     NEVADA      A    B     
+W MONTANA   A    B     E MONTANA   A    B     WYOMING     A    B     
+UTAH        A    B     ARIZONA     A    B     COLORADO    A    B     
+NEW MEXICO  A    B     N DAKOTA    A    B     S DAKOTA    A    B     
+NEBRASKA    A    B     KANSAS      A    B     OKLAHOMA    A    B     
+N TEXAS     A    B     S TEXAS     A    B     W TEXAS     A    B     
+MINNESOTA   A    B     IOWA        A    B     MISSOURI    A    B     
+ARKANSAS    A    B     LOUISIANA   N    B     WISCONSIN   A    B     
+ILLINOIS    A    B     MISSISSIPPI N    B     MICHIGAN    A    B     
+INDIANA     A    B     OHIO        A    B     KENTUCKY    A    B     
+TENNESSEE   A    B     ALABAMA     N    B     NEW YORK    A    B     
+VERMONT     A    N     NEW HAMP    A    B     MAINE       A    N     
+MASS        A    B     CONN        A    B     RHODE IS    A    B     
+PENN        A    B     NEW JERSEY  A    B     W VIRGINIA  A    B     
+MARYLAND    A    B     DELAWARE    A    B     VIRGINIA    A    B     
+N CAROLINA  A    B     S CAROLINA  A    B     GEORGIA     N    B     
+FL PNHDL    B    B     FL PENIN    B    B     AK N SLOPE  B    B     
+AK ALEUTIAN N    N     AK WESTERN  N    B     AK INT BSN  A    N     
+AK S INT    A    B     AK SO COAST A    N     AK PNHDL    A    A     
+ 
+                           LEGEND
+TEMPS WITH RESPECT TO NORMAL     PCPN WITH RESPECT TO MEDIAN
+A - ABOVE   N  - NEAR NORMAL     A - ABOVE   N - NEAR MEDIAN
+B - BELOW                        B - BELOW
+ 
+THE FORECAST CLASSES REPRESENT AVERAGES FOR EACH STATE. NORMAL
+VALUES - WHICH MAY VARY WIDELY ACROSS SOME STATES - ARE
+AVAILABLE FROM YOUR LOCAL WEATHER SERVICE FORECAST OFFICE.
+ 
+FOR ADDITIONAL INFORMATION SEE MESSAGE FXUS06 KWBC - ON AWIPS AS
+PMDMRD.
+ 
+$$
+</pre>
+      </details>
+    </div>
+    <div class="folder-entry">
+      <h3><code>daily_outlook/2025</code><span class="folder-date">2025-11-26</span></h3>
+      <p class="meta">Sample: <code>20251126_cpc_daily_outlook.txt</code> · 2 files</p>
+      <div class="schema-box">
+      <div class="schema-box-header"><span class="schema-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span> Dataset Schema</div>
+      <div class="schema-no-data">Unstructured text / narrative report — no tabular schema applies.</div>
+    </div>
+    <details class="content-box">
+        <summary>View sample file</summary>
+        <pre>Prognostic Discussion for 6 to 10 and 8 to 14 day outlooks
+NWS Climate Prediction Center College Park, MD
+300 PM EST Wed November 26 2025
+
+6-10 DAY OUTLOOK FOR DEC 02 - 06 2025
+
+The GEFS, ECENS, and CMCE are in good agreement with the longwave 500-hPa 
+pattern which features a retrograding amplified ridge over the northern Pacific 
+and Alaska, a downstream trough extending from Hudson Bay to the southwestern 
+contiguous U.S. (CONUS), and a weakening subtropical ridge along the central 
+North Atlantic into the Southeast. The amplified mid-level ridge over the 
+northern Pacific and Alaska is likely to promote Arctic surface high pressure 
+shifting southward into the lower 48 states beginning by the end of November. 
+The ensemble mean solutions remain consistent in forecasting strong surface 
+high pressure becoming centered across the Midwest just prior to the start of 
+this outlook period, then reinforced again by day 8, December 4. These surface 
+highs, accompanied by anomalous cold, favor below-normal temperatures across 
+much of the Great Plains, Mississippi Valley, Midwest, and Northeast. The 
+subtropical ridge is expected to allow above-normal temperatures to prevail for 
+the period as a whole across Florida and most of Georgia, but subnormal mean 
+temperatures are expected farther south than yesterday, which is consistent 
+with the expected progression of weather features. Farther west, near to 
+above-normal temperatures are more likely west of the Rockies closer to the 
+mid-level ridge, although the mid-level trough extension into the Southwest is 
+expected to trigger one or more rounds of significant precipitation there, 
+lessening the odds for above-normal mean temperatures.
+ 
+Between the cold high pressure over the central and northeastern CONUS and the 
+subtropical mid-level ridge nosing into Florida and adjacent areas, one or two 
+surface low pressure systems should help establish a wavering quasi-stationary 
+front from approximately the central Gulf Coast northeastward into the Atlantic 
+Ocean. This favors a widespread area with enhanced above-normal precipitation 
+probabilities from the Gulf Coast region northward through along most of the 
+Eastern Seaboard. The best odds for heavy precipitation stretch along the most 
+likely mean position of the quasi-stationary front, specifically from the 
+Louisiana Bayou northeastward through parts of the Southeast and across the 
+Carolinas. Ensemble means show 1 to 2 inches of rain falling along this stripe, 
+where probabilities for surplus precipitation exceed 50 percent. Farther west, 
+the longwave trough draped from eastern Canada into the southwestern CONUS 
+favors above-normal precipitation throughout the Rockies. Consistent with raw 
+and reforecast output from the ensembles, the greatest odds for enhanced 
+precipitation are centered over the northern High Plains, and across portions 
+of the Southwest near or upstream from the base of the mid-level trough. The 
+amplified North Pacific mid-level ridge favors below-normal precipitation along 
+the West Coast from central California northward through Oregon for the period 
+as a whole, but onshore flow and some retrogression of the mid-level ridge 
+should increase precipitation around the end of the period.  
+ 
+Enhanced southwesterly surface flow leads to an increased chance of 
+above-normal temperatures and above-normal precipitation throughout most of 
+Alaska, with odds for warmth exceeding 70 percent in parts of southeastern 
+Alaska where mid-level height anomalies are expected to be largest. However, 
+the ensemble means remain in good agreement, showing a retrogression of the 
+amplified ridge toward the Aleutians and Bering Strait by day 10 (December 6), 
+which would favor dramatic 500-hPa height declines over eastern parts of the 
+state and a pattern change for Alaska beyond this outlook period.
+ 
+Based on the GEFS and ECENS, above-normal temperatures and above-normal 
+precipitation are favored for most of Hawaii, downstream from an anomalous 
+mid-level trough and upstream from a weak mid-level ridge.
+
+The official 6-10 day 500-hPa height blend consists of 40% of Today&#x27;s 6z GFS 
+Ensemble Mean centered on Day 8, 25% of Today&#x27;s 0z European Ensemble Mean 
+centered on Day 8, 20% of Today&#x27;s operational 0z ECMWF centered on Day 8, and 
+15% of Today&#x27;s 0z Canadian Ensemble Mean centered on Day 8 
+ 
+
+FORECAST CONFIDENCE FOR THE 6-10 DAY PERIOD: Above average, 4 out of 5, due to 
+good agreement and consistency on the evolving longwave pattern among the 
+ensemble mean solutions, tempered slightly by differences in the southward and 
+westward extent of mean subnormal temperatures among the reforecast (warmest), 
+bias-corrected, and raw mean (coldest) ensemble output.
+
+8-14 DAY OUTLOOK FOR DEC 04 - 10 2025 
+
+The GEFS, ECENS, and CMCE favor the amplified 500-hPa ridge retrograding west 
+to the Aleutians and Bering Strait over the course of week-2 with a broad 
+anomalous trough over the higher latitudes of most of North America. The ECENS 
+maintains more amplitude with this feature than the other ensemble means, which 
+show 500-hPa heights dropping toward normal west of Alaska by the end of the 
+period. In response to the retrograding ridge upstream, a mid-level trough may 
+develop along or offshore of western or northwestern North America, but the 
+models are less consistent with the evolution and amplitude of this feature 
+than yesterday, with the ECENS keeping subnormal heights north and east of the 
+CONUS West Coast. Farther east, the ensemble means are more consistent showing 
+well below normal 500-hPa heights across most of Canada, with negative height 
+anomalies extending southward along most of the northern tier of the CONUS. 
+Farther south, a weak semblance of the subtropical ridge lingers over the 
+south-central and southeastern CONUS, setting up relatively broad, 
+cyclonically-curved zonal flow across the central and eastern states. This 
+pattern should keep below normal temperatures and surface high pressure 
+entrenched across throughout the northeastern quarter of the CONUS. Although 
+less-meridional mid-level flow should allow temperatures to rebound somewhat 
+from the southern Great Plains through the Gulf Coast region and into the 
+Southeast. The largest below-normal temperature probabilities (more than 60 
+percent) are forecast from the Great Lakes into the Northeast, closest to the 
+broad area of well below-normal 500-hPa heights. Farther west, return flow on 
+the backside of the cold high pressure over or near the Northeast should favor 
+above-normal temperatures from the High Plains and Rockies westward to the 
+Pacific Ocean. This represents a bit more certainty in this region than noted 
+yesterday, with models more strongly favoring higher 500-hPa heights over the 
+West. 
+ 
+The week-2 outlook leans on the wet side for a majority of the lower 48 states 
+due to the broad cyclonically-curved 500-hPa flow expected to become 
+established across most of the CONUS. Guidance again shows the best odds for 
+surplus precipitation in northern and southern parts of the western CONUS, and 
+in parts of the Southeast where the wavering frontal boundary south of the cold 
+surface high pressure could serve as a focus for convergence and precipitation 
+development. The outlook is somewhat drier for parts of the central CONUS to 
+the northwest of the quasi-stationary frontal boundary. 
+ 
+As the North Pacific mid-level ridge retrogrades and weakens, 500-hPa heights 
+should drop rapidly across the state, especially eastern sections. The should 
+abet some incursion of Arctic high pressure into the state, particularly later 
+week-2. With the timing of this transition uncertain, near normal temperatures 
+are favored for southeastern parts of the state where conditions will be much 
+colder by the end of the period. Since the evolving pattern will have the state 
+downstream from a mid-level ridge, precipitation should decrease over the 
+course of week-2, with enhanced chances for surplus precipitation limited to 
+parts of east-central and southeastern Alaska. This is consistent with the 
+reforecast tools and the consolidation.
+ 
+Based on the GEFS and ECENS, an increased chance of above-normal temperatures 
+and above-normal precipitation persists across Hawaii. Positive sea surface 
+temperature anomalies should also support above-normal temperatures, especially 
+across the central and northwestern islands.
+
+
+The official 8-14 day 500-hPa height blend consists of: 25% of Today&#x27;s 6z GFS 
+Ensemble Mean centered on Day 11, 50% of Today&#x27;s 0z European Ensemble Mean 
+centered on Day 11, and 25% of Today&#x27;s 0z Canadian Ensemble Mean centered on 
+Day 11 
+
+
+FORECAST CONFIDENCE FOR THE 8-14 DAY PERIOD: Average, 3 out of 5, due to decent 
+agreement among the ensemble means but significant uncertainties regarding the 
+placement and timing of individual features. The marked disagreement on the 
+amplitude of the mid-level ridge west of Alaska further increases uncertainty.
+
+FORECASTER: Rich Tinker
+
+Notes:
+
+
+The notation for the categorical forecast indicated on the maps is 
+the same as that in the tables: A-above   N-near normal   B-below 
+ 
+The temperature map shows regions with &gt; 33% chance of being warmer
+(orange, &quot;A&quot;), colder (blue, &quot;B&quot;), or close to (gray, &quot;N&quot;) normal.
+Labels on the shaded lines give the probability (&gt; 33%) of the more
+likely category (B or A). Probability of N is always &lt; 40%.
+ 
+The precipitation map shows regions with &gt; 33% chance of being 
+wetter (green, &quot;A&quot;), drier (tan, &quot;B&quot;), or close to (gray, &quot;N&quot;)
+normal. Labels on the shaded lines give the probability (&gt; 33%) of
+the more likely category (B or A). Probability of N is always &lt; 40%.
+ 
+In the southwest and other climatologically dry regions - there will 
+be a greater than 33.3% chance of no precipitation and occasionally 
+even a normal (i.e. Median) value of zero - especially during the dry 
+seasons.  In such cases a forecast of near normal is effectively a 
+forecast of little or no precipitation. 
+ 
+The climate prediction center uses 1991-2020 base period means as  
+reference in the climate outlooks.
+
+The next set of long-lead monthly and seasonal outlooks will be released on 
+December 18.
+
+
+Analogs to the 5 day mean observed pattern centered 3 days ago (D-3)
+for the region from 20N to 70N latitude and 175E to 60W longitude
+include the 5 day periods centered on the following dates: 
+19961125 - 19801208 - 19581209 - 19831126 - 19851207
+
+
+Analogs to the 7 day mean observed pattern centered 4 days ago (D-4)
+for the region from 20N to 70N latitude and 175E to 60W longitude
+include the 7 day periods centered on the following dates: 
+19961124 - 19851207 - 19911106 - 19581209 - 19801208
+
+
+6-10 DAY OUTLOOK TABLE
+Outlook for Dec 02 - 06 2025
+
+STATE      TEMP PCPN   STATE      TEMP PCPN   STATE      TEMP PCPN   
+WASHINGTON  A    N     OREGON      A    N     NRN CALIF   A    B     
+SRN CALIF   N    A     IDAHO       A    A     NEVADA      A    N     
+W MONTANA   N    A     E MONTANA   N    A     WYOMING     B    A     
+UTAH        N    A     ARIZONA     N    A     COLORADO    B    A     
+NEW MEXICO  B    A     N DAKOTA    B    A     S DAKOTA    B    A     
+NEBRASKA    B    A     KANSAS      B    N     OKLAHOMA    B    N     
+N TEXAS     B    A     S TEXAS     B    A     W TEXAS     B    A     
+MINNESOTA   B    A     IOWA        B    N     MISSOURI    B    N     
+ARKANSAS    B    N     LOUISIANA   B    A     WISCONSIN   B    N     
+ILLINOIS    B    N     MISSISSIPPI B    A     MICHIGAN    B    N     
+INDIANA     B    N     OHIO        B    A     KENTUCKY    B    A     
+TENNESSEE   B    A     ALABAMA     N    A     NEW YORK    B    N     
+VERMONT     B    N     NEW HAMP    B    A     MAINE       B    N     
+MASS        B    A     CONN        B    A     RHODE IS    B    A     
+PENN        B    A     NEW JERSEY  B    A     W VIRGINIA  B    A     
+MARYLAND    B    A     DELAWARE    B    A     VIRGINIA    B    A     
+N CAROLINA  B    A     S CAROLINA  N    A     GEORGIA     A    A     
+FL PNHDL    A    A     FL PENIN    A    N     AK N SLOPE  B    A     
+AK ALEUTIAN A    A     AK WESTERN  A    A     AK INT BSN  A    A     
+AK S INT    A    A     AK SO COAST A    A     AK PNHDL    A    A     
+ 
+                           
+
+8-14 DAY OUTLOOK TABLE
+Outlook for Dec 04 - 10 2025
+
+STATE      TEMP PCPN   STATE      TEMP PCPN   STATE      TEMP PCPN   
+WASHINGTON  A    A     OREGON      A    A     NRN CALIF   A    A     
+SRN CALIF   A    A     IDAHO       A    A     NEVADA      A    A     
+W MONTANA   A    A     E MONTANA   N    A     WYOMING     A    A     
+UTAH        A    A     ARIZONA     A    A     COLORADO    A    A     
+NEW MEXICO  A    A     N DAKOTA    B    A     S DAKOTA    B    A     
+NEBRASKA    N    N     KANSAS      A    N     OKLAHOMA    A    N     
+N TEXAS     A    N     S TEXAS     A    A     W TEXAS     A    A     
+MINNESOTA   B    A     IOWA        B    N     MISSOURI    B    N     
+ARKANSAS    N    N     LOUISIANA   A    A     WISCONSIN   B    A     
+ILLINOIS    B    N     MISSISSIPPI A    A     MICHIGAN    B    A     
+INDIANA     B    A     OHIO        B    A     KENTUCKY    B    A     
+TENNESSEE   B    A     ALABAMA     A    A     NEW YORK    B    A     
+VERMONT     B    A     NEW HAMP    B    A     MAINE       B    A     
+MASS        B    A     CONN        B    A     RHODE IS    B    A     
+PENN        B    A     NEW JERSEY  B    A     W VIRGINIA  B    A     
+MARYLAND    B    A     DELAWARE    B    A     VIRGINIA    B    A     
+N CAROLINA  B    A     S CAROLINA  N    A     GEORGIA     A    A     
+FL PNHDL    A    A     FL PENIN    A    N     AK N SLOPE  B    N     
+AK ALEUTIAN A    N     AK WESTERN  B    N     AK INT BSN  B    A     
+AK S INT    B    N     AK SO COAST B    N     AK PNHDL    N    A     
+ 
+                           LEGEND
+TEMPS WITH RESPECT TO NORMAL     PCPN WITH RESPECT TO MEDIAN
+A - ABOVE   N  - NEAR NORMAL     A - ABOVE   N - NEAR MEDIAN
+B - BELOW                        B - BELOW
+ 
+THE FORECAST CLASSES REPRESENT AVERAGES FOR EACH STATE. NORMAL
+VALUES - WHICH MAY VARY WIDELY ACROSS SOME STATES - ARE
+AVAILABLE FROM YOUR LOCAL WEATHER SERVICE FORECAST OFFICE.
+ 
+FOR ADDITIONAL INFORMATION SEE MESSAGE FXUS06 KWBC - ON AWIPS AS
+PMDMRD.
+
+$$
+
+</pre>
+      </details>
+    </div>
+  </section>
+  <section id="vol-degree_days" class="volume-section">
+    <h2>Degree Days</h2>
+    <p class="vol-subtitle">10-Year Historical Normals</p>
+    <ul class="vol-desc">
+      <li>HDD (Heating Degree Days): heating demand below 65°F baseline</li>
+      <li>CDD (Cooling Degree Days): cooling demand above 65°F baseline</li>
+      <li>Daily normals by energy market region (e.g. ISONE)</li>
+    </ul>
+    <p class="acronym-line">
+      <span class="acronym-chip"><b>HDD</b> = Heating Degree Days</span>
+      <span class="acronym-chip"><b>CDD</b> = Cooling Degree Days</span>
+      <span class="acronym-chip"><b>ISONE</b> = ISO New England (Independent System Operator New England)</span>
+      <span class="acronym-chip"><b>10YR</b> = 10-year historical average</span>
+    </p>
+    <div class="layman-box"><span class="layman-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><ul><li><strong>Measures how hard the grid worked</strong> to heat or cool buildings on a given day</li><li><strong>HDD</strong> (Heating Degree Day) — it was cold; most people turned on the heat</li><li><strong>CDD</strong> (Cooling Degree Day) — it was hot; most people ran the AC</li><li>Higher number = more extreme temperature = more energy consumed</li><li>These are 10-year historical averages, used as a baseline for forecasting</li></ul></div>
+    
+    <div class="data-layer-separator"><span class="layer-label-raw">Raw data — as received</span></div>
+    <div class="folder-entry">
+      <h3><code>degree_days/YYYYMMDD</code><span class="folder-date">latest snapshot: 2025-11-25</span></h3>
+      <p class="meta">Sample: <code>degree_days_normals.md</code> · 2 files</p>
+      <div class="schema-box">
+      <div class="schema-box-header"><span class="schema-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span> Dataset Schema</div>
+      <table class="schema-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+      <tr>
+        <td class="schema-field">wx_aggregate</td>
+        <td class="schema-type">string</td>
+        <td class="schema-note">Energy market region (e.g. ISONE = ISO New England)</td>
+      </tr>
+      <tr>
+        <td class="schema-field">wx_type</td>
+        <td class="schema-type">string</td>
+        <td class="schema-note">Normal type — 10YR = 10-year historical average</td>
+      </tr>
+      <tr>
+        <td class="schema-field">wx_date</td>
+        <td class="schema-type">date</td>
+        <td class="schema-note">Calendar date (YYYY-MM-DD)</td>
+      </tr>
+      <tr>
+        <td class="schema-field">wx_cdd</td>
+        <td class="schema-type">float</td>
+        <td class="schema-note">Cooling Degree Days — energy needed for AC above 65°F baseline</td>
+      </tr>
+      <tr>
+        <td class="schema-field">wx_hdd</td>
+        <td class="schema-type">float</td>
+        <td class="schema-note">Heating Degree Days — energy needed for heat below 65°F baseline</td>
+      </tr>
+        </tbody>
+      </table><div class="schema-note" style="padding:0.3rem 0.7rem 0.5rem;border-top:1px solid #e2e8f0">Exactly one of wx_cdd / wx_hdd is non-zero per row (never both on the same day).</div>
+    </div>
+    <details class="content-box">
+        <summary>View sample file</summary>
+        <pre># Degree Days - Normals
+
+**Generated:** 2025-11-25 10:40:51
+
+**Period:** 2025-10-21 to 2027-11-24
+
+**Total Records:** 6783
+
+## Normals Data Table
+
+| wx_aggregate   | wx_type   | wx_date    |   wx_cdd |   wx_hdd |
+|:---------------|:----------|:-----------|---------:|---------:|
+| ISONE          | 10YR      | 2025-10-21 |    0     |    7.078 |
+| ISONE          | 10YR      | 2025-10-22 |    0     |    8.993 |
+| ISONE          | 10YR      | 2025-10-23 |    0     |   10.881 |
+| ISONE          | 10YR      | 2025-10-24 |    0     |   11.934 |
+| ISONE          | 10YR      | 2025-10-25 |    0     |   12.443 |
+| ISONE          | 10YR      | 2025-10-26 |    0     |   13.231 |
+| ISONE          | 10YR      | 2025-10-27 |    0     |   14.946 |
+| ISONE          | 10YR      | 2025-10-28 |    0     |   14.795 |
+| ISONE          | 10YR      | 2025-10-29 |    0     |   14.199 |
+| ISONE          | 10YR      | 2025-10-30 |    0     |   14.422 |
+| ISONE          | 10YR      | 2025-10-31 |    0     |   14.798 |
+| ISONE          | 10YR      | 2025-11-01 |    0     |   13.918 |
+| ISONE          | 10YR      | 2025-11-02 |    0     |   14.805 |
+| ISONE          | 10YR      | 2025-11-03 |    0     |   15.731 |
+| ISONE          | 10YR      | 2025-11-04 |    0     |   17.718 |
+| ISONE          | 10YR      | 2025-11-05 |    0     |   12.389 |
+| ISONE          | 10YR      | 2025-11-06 |    0     |   10.009 |
+| ISONE          | 10YR      | 2025-11-07 |    0     |   12.94  |
+| ISONE          | 10YR      | 2025-11-08 |    0     |   18.974 |
+| ISONE          | 10YR      | 2025-11-09 |    0     |   21.398 |
+| ISONE          | 10YR      | 2025-11-10 |    0     |   18.856 |
+| ISONE          | 10YR      | 2025-11-11 |    0     |   17.457 |
+| ISONE          | 10YR      | 2025-11-12 |    0     |   20.107 |
+| ISONE          | 10YR      | 2025-11-13 |    0     |   23.635 |
+| ISONE          | 10YR      | 2025-11-14 |    0     |   26.379 |
+| ISONE          | 10YR      | 2025-11-15 |    0     |   24.657 |
+| ISONE          | 10YR      | 2025-11-16 |    0     |   20.919 |
+| ISONE          | 10YR      | 2025-11-17 |    0     |   23.46  |
+| ISONE          | 10YR      | 2025-11-18 |    0     |   23.182 |
+| ISONE          | 10YR      | 2025-11-19 |    0     |   22.64  |
+| ISONE          | 10YR      | 2025-11-20 |    0     |   24.487 |
+| ISONE          | 10YR      | 2025-11-21 |    0     |   25.437 |
+| ISONE          | 10YR      | 2025-11-22 |    0     |   25.792 |
+| ISONE          | 10YR      | 2025-11-23 |    0     |   27.647 |
+| ISONE          | 10YR      | 2025-11-24 |    0     |   27.67  |
+| ISONE          | 10YR      | 2025-11-25 |    0     |   24.297 |
+| ISONE          | 10YR      | 2025-11-26 |    0     |   22.613 |
+| ISONE          | 10YR      | 2025-11-27 |    0     |   22.357 |
+| ISONE          | 10YR      | 2025-11-28 |    0     |   25.575 |
+| ISONE          | 10YR      | 2025-11-29 |    0     |   26.563 |
+| ISONE          | 10YR      | 2025-11-30 |    0     |   27.443 |
+| ISONE          | 10YR      | 2025-12-01 |    0     |   25.876 |
+| ISONE          | 10YR      | 2025-12-02 |    0     |   25.756 |
+| ISONE          | 10YR      | 2025-12-03 |    0     |   25.17  |
+| ISONE          | 10YR      | 2025-12-04 |    0     |   28.317 |
+| ISONE          | 10YR      | 2025-12-05 |    0     |   27.768 |
+| ISONE          | 10YR      | 2025-12-06 |    0     |   27.656 |
+| ISONE          | 10YR      | 2025-12-07 |    0     |   29.611 |
+| ISONE          | 10YR      | 2025-12-08 |    0     |   31.263 |
+| ISONE          | 10YR      | 2025-12-09 |    0     |   29.89  |
+| ISONE          | 10YR      | 2025-12-10 |    0     |   27.662 |
+| ISONE          | 10YR      | 2025-12-11 |    0     |   27.864 |
+| ISONE          | 10YR      | 2025-12-12 |    0     |   28.545 |
+| ISONE          | 10YR      | 2025-12-13 |    0     |   29.969 |
+| ISONE          | 10YR      | 2025-12-14 |    0     |   29.749 |
+| ISONE          | 10YR      | 2025-12-15 |    0     |   30.456 |
+| ISONE          | 10YR      | 2025-12-16 |    0     |   31.323 |
+| ISONE          | 10YR      | 2025-12-17 |    0     |   28.663 |
+| ISONE          | 10YR      | 2025-12-18 |    0     |   29.033 |
+| ISONE          | 10YR      | 2025-12-19 |    0     |   34.411 |
+| ISONE          | 10YR      | 2025-12-20 |    0     |   34.806 |
+| ISONE          | 10YR      | 2025-12-21 |    0     |   32.526 |
+| ISONE          | 10YR      | 2025-12-22 |    0     |   31.425 |
+| ISONE          | 10YR      | 2025-12-23 |    0     |   31.449 |
+| ISONE          | 10YR      | 2025-12-24 |    0     |   30.11  |
+| ISONE          | 10YR      | 2025-12-25 |    0     |   30.083 |
+| ISONE          | 10YR      | 2025-12-26 |    0     |   32.469 |
+| ISONE          | 10YR      | 2025-12-27 |    0     |   30.774 |
+| ISONE          | 10YR      | 2025-12-28 |    0     |   30.63  |
+| ISONE          | 10YR      | 2025-12-29 |    0     |   30.889 |
+| ISONE          | 10YR      | 2025-12-30 |    0     |   30.478 |
+| ISONE          | 10YR      | 2025-12-31 |    0     |   29.716 |
+| ISONE          | 10YR      | 2026-01-01 |    0     |   29.591 |
+| ISONE          | 10YR      | 2026-01-02 |    0     |   32.244 |
+| ISONE          | 10YR      | 2026-01-03 |    0     |   31.845 |
+| ISONE          | 10YR      | 2026-01-04 |    0     |   32.658 |
+| ISONE          | 10YR      | 2026-01-05 |    0     |   36.006 |
+| ISONE          | 10YR      | 2026-01-06 |    0     |   36.96  |
+| ISONE          | 10YR      | 2026-01-07 |    0     |   39.055 |
+| ISONE          | 10YR      | 2026-01-08 |    0     |   37.648 |
+| ISONE          | 10YR      | 2026-01-09 |    0     |   35.685 |
+| ISONE          | 10YR      | 2026-01-10 |    0     |   31.235 |
+| ISONE          | 10YR      | 2026-01-11 |    0     |   32.009 |
+| ISONE          | 10YR      | 2026-01-12 |    0     |   29.328 |
+| ISONE          | 10YR      | 2026-01-13 |    0     |   30.392 |
+| ISONE          | 10YR      | 2026-01-14 |    0     |   36.96  |
+| ISONE          | 10YR      | 2026-01-15 |    0     |   37.933 |
+| ISONE          | 10YR      | 2026-01-16 |    0     |   35.351 |
+| ISONE          | 10YR      | 2026-01-17 |    0     |   35.081 |
+| ISONE          | 10YR      | 2026-01-18 |    0     |   35.621 |
+| ISONE          | 10YR      | 2026-01-19 |    0     |   34.903 |
+| ISONE          | 10YR      | 2026-01-20 |    0     |   38.346 |
+| ISONE          | 10YR      | 2026-01-21 |    0     |   41.744 |
+| ISONE          | 10YR      | 2026-01-22 |    0     |   39.339 |
+| ISONE          | 10YR      | 2026-01-23 |    0     |   35.291 |
+| ISONE          | 10YR      | 2026-01-24 |    0     |   33.741 |
+| ISONE          | 10YR      | 2026-01-25 |    0     |   33.004 |
+| ISONE          | 10YR      | 2026-01-26 |    0     |   32.136 |
+| ISONE          | 10YR      | 2026-01-27 |    0     |   31.541 |
+| ISONE          | 10YR      | 2026-01-28 |    0     |   31.9   |
+| ISONE          | 10YR      | 2026-01-29 |    0     |   35.06  |
+| ISONE          | 10YR      | 2026-01-30 |    0     |   39.567 |
+| ISONE          | 10YR      | 2026-01-31 |    0     |   39.548 |
+| ISONE          | 10YR      | 2026-02-01 |    0     |   35.554 |
+| ISONE          | 10YR      | 2026-02-02 |    0     |   34.902 |
+| ISONE          | 10YR      | 2026-02-03 |    0     |   33.809 |
+| ISONE          | 10YR      | 2026-02-04 |    0     |   32.915 |
+| ISONE          | 10YR      | 2026-02-05 |    0     |   33.222 |
+| ISONE          | 10YR      | 2026-02-06 |    0     |   35.042 |
+| ISONE          | 10YR      | 2026-02-07 |    0     |   33.398 |
+| ISONE          | 10YR      | 2026-02-08 |    0     |   32.792 |
+| ISONE          | 10YR      | 2026-02-09 |    0     |   36.798 |
+| ISONE          | 10YR      | 2026-02-10 |    0     |   32.214 |
+| ISONE          | 10YR      | 2026-02-11 |    0     |   33.599 |
+| ISONE          | 10YR      | 2026-02-12 |    0     |   34.598 |
+| ISONE          | 10YR      | 2026-02-13 |    0     |   35.874 |
+| ISONE          | 10YR      | 2026-02-14 |    0     |   38.398 |
+| ISONE          | 10YR      | 2026-02-15 |    0     |   36.312 |
+| ISONE          | 10YR      | 2026-02-16 |    0     |   29.198 |
+| ISONE          | 10YR      | 2026-02-17 |    0     |   31.881 |
+| ISONE          | 10YR      | 2026-02-18 |    0     |   34.968 |
+| ISONE          | 10YR      | 2026-02-19 |    0     |   34.161 |
+| ISONE          | 10YR      | 2026-02-20 |    0     |   31.821 |
+| ISONE          | 10YR      | 2026-02-21 |    0     |   29.842 |
+| ISONE          | 10YR      | 2026-02-22 |    0     |   29.287 |
+| ISONE          | 10YR      | 2026-02-23 |    0     |   27.472 |
+| ISONE          | 10YR      | 2026-02-24 |    0     |   26.427 |
+| ISONE          | 10YR      | 2026-02-25 |    0     |   27.977 |
+| ISONE          | 10YR      | 2026-02-26 |    0     |   30.798 |
+| ISONE          | 10YR      | 2026-02-27 |    0     |   30.429 |
+| ISONE          | 10YR      | 2026-02-28 |    0     |   27.917 |
+| ISONE          | 10YR      | 2026-03-01 |    0     |   29.146 |
+| ISONE          | 10YR      | 2026-03-02 |    0     |   30.431 |
+| ISONE          | 10YR      | 2026-03-03 |    0     |   29.669 |
+| ISONE          | 10YR      | 2026-03-04 |    0     |   31.75  |
+| ISONE          | 10YR      | 2026-03-05 |    0     |   31.493 |
+| ISONE          | 10YR      | 2026-03-06 |    0     |   28.836 |
+| ISONE          | 10YR      | 2026-03-07 |    0     |   28.717 |
+| ISONE          | 10YR      | 2026-03-08 |    0     |   27.27  |
+| ISONE          | 10YR      | 2026-03-09 |    0     |   23.547 |
+| ISONE          | 10YR      | 2026-03-10 |    0     |   23.624 |
+| ISONE          | 10YR      | 2026-03-11 |    0     |   25.107 |
+| ISONE          | 10YR      | 2026-03-12 |    0     |   26.748 |
+| ISONE          | 10YR      | 2026-03-13 |    0     |   26.934 |
+| ISONE          | 10YR      | 2026-03-14 |    0     |   25.837 |
+| ISONE          | 10YR      | 2026-03-15 |    0     |   25.642 |
+| ISONE          | 10YR      | 2026-03-16 |    0     |   25.549 |
+| ISONE          | 10YR      | 2026-03-17 |    0     |   23.734 |
+| ISONE          | 10YR      | 2026-03-18 |    0     |   25.118 |
+| ISONE          | 10YR      | 2026-03-19 |    0     |   27.295 |
+| ISONE          | 10YR      | 2026-03-20 |    0     |   23.713 |
+| ISONE          | 10YR      | 2026-03-21 |    0     |   23.888 |
+| ISONE          | 10YR      | 2026-03-22 |    0     |   25.788 |
+| ISONE          | 10YR      | 2026-03-23 |    0     |   25.422 |
+| ISONE          | 10YR      | 2026-03-24 |    0     |   24.808 |
+| ISONE          | 10YR      | 2026-03-25 |    0     |   23.367 |
+| ISONE          | 10YR      | 2026-03-26 |    0     |   22.883 |
+| ISONE          | 10YR      | 2026-03-27 |    0     |   23.066 |
+| ISONE          | 10YR      | 2026-03-28 |    0     |   23.276 |
+| ISONE          | 10YR      | 2026-03-29 |    0     |   23.224 |
+| ISONE          | 10YR      | 2026-03-30 |    0     |   21.82  |
+| ISONE          | 10YR      | 2026-03-31 |    0     |   17.833 |
+| ISONE          | 10YR      | 2026-04-01 |    0     |   19.571 |
+| ISONE          | 10YR      | 2026-04-02 |    0     |   23.93  |
+| ISONE          | 10YR      | 2026-04-03 |    0     |   22.847 |
+| ISONE          | 10YR      | 2026-04-04 |    0     |   21.22  |
+| ISONE          | 10YR      | 2026-04-05 |    0     |   23.013 |
+| ISONE          | 10YR      | 2026-04-06 |    0     |   20.316 |
+| ISONE          | 10YR      | 2026-04-07 |    0     |   18.162 |
+| ISONE          | 10YR      | 2026-04-08 |    0     |   20.147 |
+| ISONE          | 10YR      | 2026-04-09 |    0     |   21.064 |
+| ISONE          | 10YR      | 2026-04-10 |    0     |   18.962 |
+| ISONE          | 10YR      | 2026-04-11 |    0     |   15.961 |
+| ISONE          | 10YR      | 2026-04-12 |    0     |   14.803 |
+| ISONE          | 10YR      | 2026-04-13 |    0     |   11.043 |
+| ISONE          | 10YR      | 2026-04-14 |    0     |   11.856 |
+| ISONE          | 10YR      | 2026-04-15 |    0     |   14.454 |
+| ISONE          | 10YR      | 2026-04-16 |    0     |   14.688 |
+| ISONE          | 10YR      | 2026-04-17 |    0     |   16.723 |
+| ISONE          | 10YR      | 2026-04-18 |    0     |   17.437 |
+| ISONE          | 10YR      | 2026-04-19 |    0     |   13.254 |
+| ISONE          | 10YR      | 2026-04-20 |    0     |   13.115 |
+| ISONE          | 10YR      | 2026-04-21 |    0     |   15.383 |
+| ISONE          | 10YR      | 2026-04-22 |    0     |   14.616 |
+| ISONE          | 10YR      | 2026-04-23 |    0     |   14.013 |
+| ISONE          | 10YR      | 2026-04-24 |    0     |   12.794 |
+| ISONE          | 10YR      | 2026-04-25 |    0     |   13.944 |
+| ISONE          | 10YR      | 2026-04-26 |    0     |   15.149 |
+| ISONE          | 10YR      | 2026-04-27 |    0     |   14.973 |
+| ISONE          | 10YR      | 2026-04-28 |    0     |   11.641 |
+| ISONE          | 10YR      | 2026-04-29 |    0     |   11.182 |
+| ISONE          | 10YR      | 2026-04-30 |    0     |   13.684 |
+| ISONE          | 10YR      | 2026-05-01 |    0     |   12.368 |
+| ISONE          | 10YR      | 2026-05-02 |    0     |    8.053 |
+| ISONE          | 10YR      | 2026-05-03 |    0     |    7.68  |
+| ISONE          | 10YR      | 2026-05-04 |    0     |    9.83  |
+| ISONE          | 10YR      | 2026-05-05 |    0     |   11.848 |
+| ISONE          | 10YR      | 2026-05-06 |    0     |    8.795 |
+| ISONE          | 10YR      | 2026-05-07 |    0     |    8.487 |
+| ISONE          | 10YR      | 2026-05-08 |    0     |   10.66  |
+| ISONE          | 10YR      | 2026-05-09 |    0     |   13.015 |
+| ISONE          | 10YR      | 2026-05-10 |    0     |   10.5   |
+| ISONE          | 10YR      | 2026-05-11 |    0     |    8.11  |
+| ISONE          | 10YR      | 2026-05-12 |    0     |    9.323 |
+| ISONE          | 10YR      | 2026-05-13 |    0     |    8.17  |
+| ISONE          | 10YR      | 2026-05-14 |    0     |    5.684 |
+| ISONE          | 10YR      | 2026-05-15 |    0     |    3.574 |
+| ISONE          | 10YR      | 2026-05-16 |    0     |    2.873 |
+| ISONE          | 10YR      | 2026-05-17 |    0     |    3.466 |
+| ISONE          | 10YR      | 2026-05-18 |    0     |    3.873 |
+| ISONE          | 10YR      | 2026-05-19 |    0     |    5.779 |
+| ISONE          | 10YR      | 2026-05-20 |    0     |    4.237 |
+| ISONE          | 10YR      | 2026-05-21 |    0     |    2.605 |
+| ISONE          | 10YR      | 2026-05-22 |    0     |    2.189 |
+| ISONE          | 10YR      | 2026-05-23 |    0     |    1.98  |
+| ISONE          | 10YR      | 2026-05-24 |    0     |    4.76  |
+| ISONE          | 10YR      | 2026-05-25 |    0     |    3.718 |
+| ISONE          | 10YR      | 2026-05-26 |    0.816 |    0     |
+| ISONE          | 10YR      | 2026-05-27 |    0.544 |    0     |
+| ISONE          | 10YR      | 2026-05-28 |    0.28  |    0     |
+| ISONE          | 10YR      | 2026-05-29 |    0     |    2.585 |
+| ISONE          | 10YR      | 2026-05-30 |    0     |    2.758 |
+| ISONE          | 10YR      | 2026-05-31 |    0     |    0.894 |
+| ISONE          | 10YR      | 2026-06-01 |    0     |    1.144 |
+| ISONE          | 10YR      | 2026-06-02 |    0     |    0.853 |
+| ISONE          | 10YR      | 2026-06-03 |    0     |    2.285 |
+| ISONE          | 10YR      | 2026-06-04 |    0     |    1     |
+| ISONE          | 10YR      | 2026-06-05 |    1.626 |    0     |
+| ISONE          | 10YR      | 2026-06-06 |    2.831 |    0     |
+| ISONE          | 10YR      | 2026-06-07 |    1.703 |    0     |
+| ISONE          | 10YR      | 2026-06-08 |    1.843 |    0     |
+| ISONE          | 10YR      | 2026-06-09 |    1.326 |    0     |
+| ISONE          | 10YR      | 2026-06-10 |    0.248 |    0     |
+| ISONE          | 10YR      | 2026-06-11 |    1.672 |    0     |
+| ISONE          | 10YR      | 2026-06-12 |    4.622 |    0     |
+| ISONE          | 10YR      | 2026-06-13 |    2.687 |    0     |
+| ISONE          | 10YR      | 2026-06-14 |    1.255 |    0     |
+| ISONE          | 10YR      | 2026-06-15 |    1.25  |    0     |
+| ISONE          | 10YR      | 2026-06-16 |    1.238 |    0     |
+| ISONE          | 10YR      | 2026-06-17 |    3.054 |    0     |
+| ISONE          | 10YR      | 2026-06-18 |    5.596 |    0     |
+| ISONE          | 10YR      | 2026-06-19 |    7.717 |    0     |
+| ISONE          | 10YR      | 2026-06-20 |    7.638 |    0     |
+| ISONE          | 10YR      | 2026-06-21 |    6.376 |    0     |
+| ISONE          | 10YR      | 2026-06-22 |    4.48  |    0     |
+| ISONE          | 10YR      | 2026-06-23 |    5.97  |    0     |
+| ISONE          | 10YR      | 2026-06-24 |    8.003 |    0     |
+| ISONE          | 10YR      | 2026-06-25 |    7.545 |    0     |
+| ISONE          | 10YR      | 2026-06-26 |    7.645 |    0     |
+| ISONE          | 10YR      | 2026-06-27 |    6.521 |    0     |
+| ISONE          | 10YR      | 2026-06-28 |    6.586 |    0     |
+| ISONE          | 10YR      | 2026-06-29 |    9.035 |    0     |
+| ISONE          | 10YR      | 2026-06-30 |    9.957 |    0     |
+| ISONE          | 10YR      | 2026-07-01 |   10.007 |    0     |
+| ISONE          | 10YR      | 2026-07-02 |    9.392 |    0     |
+| ISONE          | 10YR      | 2026-07-03 |    8.781 |    0     |
+| ISONE          | 10YR      | 2026-07-04 |    7.881 |    0     |
+| ISONE          | 10YR      | 2026-07-05 |    9.574 |    0     |
+| ISONE          | 10YR      | 2026-07-06 |   12.229 |    0     |
+| ISONE          | 10YR      | 2026-07-07 |    9.055 |    0     |
+| ISONE          | 10YR      | 2026-07-08 |    8.492 |    0     |
+| ISONE          | 10YR      | 2026-07-09 |    8.746 |    0     |
+| ISONE          | 10YR      | 2026-07-10 |    8.124 |    0     |
+| ISONE          | 10YR      | 2026-07-11 |    9.72  |    0     |
+| ISONE          | 10YR      | 2026-07-12 |   10.612 |    0     |
+| ISONE          | 10YR      | 2026-07-13 |    9.887 |    0     |
+| ISONE          | 10YR      | 2026-07-14 |    9.169 |    0     |
+| ISONE          | 10YR      | 2026-07-15 |   11.301 |    0     |
+| ISONE          | 10YR      | 2026-07-16 |   12.178 |    0     |
+| ISONE          | 10YR      | 2026-07-17 |   12.596 |    0     |
+| ISONE          | 10YR      | 2026-07-18 |   10.598 |    0     |
+| ISONE          | 10YR      | 2026-07-19 |   10.839 |    0     |
+| ISONE          | 10YR      | 2026-07-20 |   12.897 |    0     |
+| ISONE          | 10YR      | 2026-07-21 |   11.604 |    0     |
+| ISONE          | 10YR      | 2026-07-22 |    9.655 |    0     |
+| ISONE          | 10YR      | 2026-07-23 |   10.073 |    0     |
+| ISONE          | 10YR      | 2026-07-24 |    9.39  |    0     |
+| ISONE          | 10YR      | 2026-07-25 |   10.211 |    0     |
+| ISONE          | 10YR      | 2026-07-26 |   10.777 |    0     |
+| ISONE          | 10YR      | 2026-07-27 |   11.011 |    0     |
+| ISONE          | 10YR      | 2026-07-28 |   12.066 |    0     |
+| ISONE          | 10YR      | 2026-07-29 |   10.972 |    0     |
+| ISONE          | 10YR      | 2026-07-30 |   10.452 |    0     |
+| ISONE          | 10YR      | 2026-07-31 |    8.183 |    0     |
+| ISONE          | 10YR      | 2026-08-01 |    8.666 |    0     |
+| ISONE          | 10YR      | 2026-08-02 |    9.219 |    0     |
+| ISONE          | 10YR      | 2026-08-03 |    9.67  |    0     |
+| ISONE          | 10YR      | 2026-08-04 |    9.618 |    0     |
+| ISONE          | 10YR      | 2026-08-05 |    9.65  |    0     |
+| ISONE          | 10YR      | 2026-08-06 |    9.731 |    0     |
+| ISONE          | 10YR      | 2026-08-07 |    9.651 |    0     |
+| ISONE          | 10YR      | 2026-08-08 |    9.764 |    0     |
+| ISONE          | 10YR      | 2026-08-09 |   10.468 |    0     |
+| ISONE          | 10YR      | 2026-08-10 |    9.907 |    0     |
+| ISONE          | 10YR      | 2026-08-11 |   10.518 |    0     |
+| ISONE          | 10YR      | 2026-08-12 |   11.044 |    0     |
+| ISONE          | 10YR      | 2026-08-13 |   10.39  |    0     |
+| ISONE          | 10YR      | 2026-08-14 |   10.167 |    0     |
+| ISONE          | 10YR      | 2026-08-15 |    7.657 |    0     |
+| ISONE          | 10YR      | 2026-08-16 |    7.035 |    0     |
+| ISONE          | 10YR      | 2026-08-17 |    7.801 |    0     |
+| ISONE          | 10YR      | 2026-08-18 |    8.36  |    0     |
+| ISONE          | 10YR      | 2026-08-19 |    7.661 |    0     |
+| ISONE          | 10YR      | 2026-08-20 |    6.78  |    0     |
+| ISONE          | 10YR      | 2026-08-21 |    7.456 |    0     |
+| ISONE          | 10YR      | 2026-08-22 |    7.21  |    0     |
+| ISONE          | 10YR      | 2026-08-23 |    6.247 |    0     |
+| ISONE          | 10YR      | 2026-08-24 |    7.189 |    0     |
+| ISONE          | 10YR      | 2026-08-25 |    7.778 |    0     |
+| ISONE          | 10YR      | 2026-08-26 |    7.239 |    0     |
+| ISONE          | 10YR      | 2026-08-27 |    5.671 |    0     |
+| ISONE          | 10YR      | 2026-08-28 |    6.194 |    0     |
+| ISONE          | 10YR      | 2026-08-29 |    6.601 |    0     |
+| ISONE          | 10YR      | 2026-08-30 |    6.509 |    0     |
+| ISONE          | 10YR      | 2026-08-31 |    4.178 |    0     |
+| ISONE          | 10YR      | 2026-09-01 |    2.072 |    0     |
+| ISONE          | 10YR      | 2026-09-02 |    1.474 |    0     |
+| ISONE          | 10YR      | 2026-09-03 |    3.458 |    0     |
+| ISONE          | 10YR      | 2026-09-04 |    5.921 |    0     |
+| ISONE          | 10YR      | 2026-09-05 |    5.216 |    0     |
+| ISONE          | 10YR      | 2026-09-06 |    5.632 |    0     |
+| ISONE          | 10YR      | 2026-09-07 |    3.775 |    0     |
+| ISONE          | 10YR      | 2026-09-08 |    2.628 |    0     |
+| ISONE          | 10YR      | 2026-09-09 |    2.215 |    0     |
+| ISONE          | 10YR      | 2026-09-10 |    2.565 |    0     |
+| ISONE          | 10YR      | 2026-09-11 |    3.194 |    0     |
+| ISONE          | 10YR      | 2026-09-12 |    2.29  |    0     |
+| ISONE          | 10YR      | 2026-09-13 |    2.455 |    0     |
+| ISONE          | 10YR      | 2026-09-14 |    3.355 |    0     |
+| ISONE          | 10YR      | 2026-09-15 |    1.324 |    0     |
+| ISONE          | 10YR      | 2026-09-16 |    0.668 |    0     |
+| ISONE          | 10YR      | 2026-09-17 |    1.078 |    0     |
+| ISONE          | 10YR      | 2026-09-18 |    1.722 |    0     |
+| ISONE          | 10YR      | 2026-09-19 |    0.065 |    0     |
+| ISONE          | 10YR      | 2026-09-20 |    0     |    1.578 |
+| ISONE          | 10YR      | 2026-09-21 |    0     |    1.296 |
+| ISONE          | 10YR      | 2026-09-22 |    0     |    1.022 |
+| ISONE          | 10YR      | 2026-09-23 |    0.333 |    0     |
+| ISONE          | 10YR      | 2026-09-24 |    0     |    1.797 |
+| ISONE          | 10YR      | 2026-09-25 |    0     |    2.206 |
+| ISONE          | 10YR      | 2026-09-26 |    0.712 |    0     |
+| ISONE          | 10YR      | 2026-09-27 |    0.932 |    0     |
+| ISONE          | 10YR      | 2026-09-28 |    0     |    0.736 |
+| ISONE          | 10YR      | 2026-09-29 |    0     |    3.968 |
+| ISONE          | 10YR      | 2026-09-30 |    0     |    6.551 |
+| ISONE          | 10YR      | 2026-10-01 |    0     |    5.837 |
+| ISONE          | 10YR      | 2026-10-02 |    0     |    6.682 |
+| ISONE          | 10YR      | 2026-10-03 |    0     |    6.295 |
+| ISONE          | 10YR      | 2026-10-04 |    0     |    4.973 |
+| ISONE          | 10YR      | 2026-10-05 |    0     |    4.995 |
+| ISONE          | 10YR      | 2026-10-06 |    0     |    3.988 |
+| ISONE          | 10YR      | 2026-10-07 |    0     |    0.376 |
+| ISONE          | 10YR      | 2026-10-08 |    0     |    6.376 |
+| ISONE          | 10YR      | 2026-10-09 |    0     |    8.145 |
+| ISONE          | 10YR      | 2026-10-10 |    0     |    6.468 |
+| ISONE          | 10YR      | 2026-10-11 |    0     |    7.15  |
+| ISONE          | 10YR      | 2026-10-12 |    0     |    8.781 |
+| ISONE          | 10YR      | 2026-10-13 |    0     |   10.215 |
+| ISONE          | 10YR      | 2026-10-14 |    0     |    9.008 |
+| ISONE          | 10YR      | 2026-10-15 |    0     |    9.112 |
+| ISONE          | 10YR      | 2026-10-16 |    0     |   10.315 |
+| ISONE          | 10YR      | 2026-10-17 |    0     |   11.995 |
+| ISONE          | 10YR      | 2026-10-18 |    0     |   12.21  |
+| ISONE          | 10YR      | 2026-10-19 |    0     |   10.538 |
+| ISONE          | 10YR      | 2026-10-20 |    0     |    8.387 |
+| ISONE          | 10YR      | 2026-10-21 |    0     |    7.09  |
+| ISONE          | 10YR      | 2026-10-22 |    0     |    9.293 |
+| ISONE          | 10YR      | 2026-10-23 |    0     |   10.183 |
+| ISONE          | 10YR      | 2026-10-24 |    0     |   11.054 |
+| ISONE          | 10YR      | 2026-10-25 |    0     |   13.125 |
+| ISONE          | 10YR      | 2026-10-26 |    0     |   12.914 |
+| ISONE          | 10YR      | 2026-10-27 |    0     |   14.922 |
+| ISONE          | 10YR      | 2026-10-28 |    0     |   15.291 |
+| ISONE          | 10YR      | 2026-10-29 |    0     |   15.886 |
+| ISONE          | 10YR      | 2026-10-30 |    0     |   14.23  |
+| ISONE          | 10YR      | 2026-10-31 |    0     |   13.635 |
+| ISONE          | 10YR      | 2026-11-01 |    0     |   14.419 |
+| ISONE          | 10YR      | 2026-11-02 |    0     |   15.883 |
+| ISONE          | 10YR      | 2026-11-03 |    0     |   16.823 |
+| ISONE          | 10YR      | 2026-11-04 |    0     |   18.184 |
+| ISONE          | 10YR      | 2026-11-05 |    0     |   13.576 |
+| ISONE          | 10YR      | 2026-11-06 |    0     |   12.051 |
+| ISONE          | 10YR      | 2026-11-07 |    0     |   14.416 |
+| ISONE          | 10YR      | 2026-11-08 |    0     |   18.339 |
+| ISONE          | 10YR      | 2026-11-09 |    0     |   21.186 |
+| ISONE          | 10YR      | 2026-11-10 |    0     |   18.894 |
+| ISONE          | 10YR      | 2026-11-11 |    0     |   18.583 |
+| ISONE          | 10YR      | 2026-11-12 |    0     |   21.229 |
+| ISONE          | 10YR      | 2026-11-13 |    0     |   24.491 |
+| ISONE          | 10YR      | 2026-11-14 |    0     |   26.452 |
+| ISONE          | 10YR      | 2026-11-15 |    0     |   25.099 |
+| ISONE          | 10YR      | 2026-11-16 |    0     |   21.309 |
+| ISONE          | 10YR      | 2026-11-17 |    0     |   23.511 |
+| ISONE          | 10YR      | 2026-11-18 |    0     |   23.077 |
+| ISONE          | 10YR      | 2026-11-19 |    0     |   24.004 |
+| ISONE          | 10YR      | 2026-11-20 |    0     |   25.799 |
+| ISONE          | 10YR      | 2026-11-21 |    0     |   25.887 |
+| ISONE          | 10YR      | 2026-11-22 |    0     |   25.908 |
+| ISONE          | 10YR      | 2026-11-23 |    0     |   27.78  |
+| ISONE          | 10YR      | 2026-11-24 |    0     |   26.926 |
+| ISONE          | 10YR      | 2026-11-25 |    0     |   23.668 |
+| ISONE          | 10YR      | 2026-11-26 |    0     |   22.931 |
+| ISONE          | 10YR      | 2026-11-27 |    0     |   23.732 |
+| ISONE          | 10YR      | 2026-11-28 |    0     |   26.544 |
+| ISONE          | 10YR      | 2026-11-29 |    0     |   26.362 |
+| ISONE          | 10YR      | 2026-11-30 |    0     |   26.796 |
+| ISONE          | 10YR      | 2026-12-01 |    0     |   25.383 |
+| ISONE          | 10YR      | 2026-12-02 |    0     |   26.17  |
+| ISONE          | 10YR      | 2026-12-03 |    0     |   25.701 |
+| ISONE          | 10YR      | 2026-12-04 |    0     |   28.859 |
+| ISONE          | 10YR      | 2026-12-05 |    0     |   28.343 |
+| ISONE          | 10YR      | 2026-12-06 |    0     |   28.208 |
+| ISONE          | 10YR      | 2026-12-07 |    0     |   30.504 |
+| ISONE          | 10YR      | 2026-12-08 |    0     |   31.906 |
+| ISONE          | 10YR      | 2026-12-09 |    0     |   30.402 |
+| ISONE          | 10YR      | 2026-12-10 |    0     |   29.019 |
+| ISONE          | 10YR      | 2026-12-11 |    0     |   29.091 |
+| ISONE          | 10YR      | 2026-12-12 |    0     |   30.228 |
+| ISONE          | 10YR      | 2026-12-13 |    0     |   31.492 |
+| ISONE          | 10YR      | 2026-12-14 |    0     |   31.504 |
+| ISONE          | 10YR      | 2026-12-15 |    0     |   32.464 |
+| ISONE          | 10YR      | 2026-12-16 |    0     |   32.177 |
+| ISONE          | 10YR      | 2026-12-17 |    0     |   29.606 |
+| ISONE          | 10YR      | 2026-12-18 |    0     |   29.879 |
+| ISONE          | 10YR      | 2026-12-19 |    0     |   34.991 |
+| ISONE          | 10YR      | 2026-12-20 |    0     |   35.313 |
+| ISONE          | 10YR      | 2026-12-21 |    0     |   33.442 |
+| ISONE          | 10YR      | 2026-12-22 |    0     |   33.282 |
+| ISONE          | 10YR      | 2026-12-23 |    0     |   32.964 |
+| ISONE          | 10YR      | 2026-12-24 |    0     |   32.49  |
+| ISONE          | 10YR      | 2026-12-25 |    0     |   32.018 |
+| ISONE          | 10YR      | 2026-12-26 |    0     |   34.039 |
+| ISONE          | 10YR      | 2026-12-27 |    0     |   31.955 |
+| ISONE          | 10YR      | 2026-12-28 |    0     |   30.465 |
+| ISONE          | 10YR      | 2026-12-29 |    0     |   30.403 |
+| ISONE          | 10YR      | 2026-12-30 |    0     |   30.078 |
+| ISONE          | 10YR      | 2026-12-31 |    0     |   30.145 |
+| ISONE          | 10YR      | 2027-01-01 |    0     |   29.63  |
+| ISONE          | 10YR      | 2027-01-02 |    0     |   32.408 |
+| ISONE          | 10YR      | 2027-01-03 |    0     |   32.164 |
+| ISONE          | 10YR      | 2027-01-04 |    0     |   31.549 |
+| ISONE          | 10YR      | 2027-01-05 |    0     |   34.57  |
+| ISONE          | 10YR      | 2027-01-06 |    0     |   36.972 |
+| ISONE          | 10YR      | 2027-01-07 |    0     |   39.509 |
+| ISONE          | 10YR      | 2027-01-08 |    0     |   38.157 |
+| ISONE          | 10YR      | 2027-01-09 |    0     |   36.79  |
+| ISONE          | 10YR      | 2027-01-10 |    0     |   32.736 |
+| ISONE          | 10YR      | 2027-01-11 |    0     |   32.124 |
+| ISONE          | 10YR      | 2027-01-12 |    0     |   28.434 |
+| ISONE          | 10YR      | 2027-01-13 |    0     |   29.225 |
+| ISONE          | 10YR      | 2027-01-14 |    0     |   36.554 |
+| ISONE          | 10YR      | 2027-01-15 |    0     |   38.378 |
+| ISONE          | 10YR      | 2027-01-16 |    0     |   36.191 |
+| ISONE          | 10YR      | 2027-01-17 |    0     |   35.401 |
+| ISONE          | 10YR      | 2027-01-18 |    0     |   34.948 |
+| ISONE          | 10YR      | 2027-01-19 |    0     |   33.792 |
+| ISONE          | 10YR      | 2027-01-20 |    0     |   38.246 |
+| ISONE          | 10YR      | 2027-01-21 |    0     |   41.967 |
+| ISONE          | 10YR      | 2027-01-22 |    0     |   38.998 |
+| ISONE          | 10YR      | 2027-01-23 |    0     |   34.605 |
+| ISONE          | 10YR      | 2027-01-24 |    0     |   33.165 |
+| ISONE          | 10YR      | 2027-01-25 |    0     |   32.66  |
+| ISONE          | 10YR      | 2027-01-26 |    0     |   32.653 |
+| ISONE          | 10YR      | 2027-01-27 |    0     |   31.881 |
+| ISONE          | 10YR      | 2027-01-28 |    0     |   31.717 |
+| ISONE          | 10YR      | 2027-01-29 |    0     |   35.673 |
+| ISONE          | 10YR      | 2027-01-30 |    0     |   40.559 |
+| ISONE          | 10YR      | 2027-01-31 |    0     |   41.771 |
+| ISONE          | 10YR      | 2027-02-01 |    0     |   37.696 |
+| ISONE          | 10YR      | 2027-02-02 |    0     |   36.033 |
+| ISONE          | 10YR      | 2027-02-03 |    0     |   35.173 |
+| ISONE          | 10YR      | 2027-02-04 |    0     |   34.713 |
+| ISONE          | 10YR      | 2027-02-05 |    0     |   33.367 |
+| ISONE          | 10YR      | 2027-02-06 |    0     |   34.735 |
+| ISONE          | 10YR      | 2027-02-07 |    0     |   33.631 |
+| ISONE          | 10YR      | 2027-02-08 |    0     |   32.287 |
+| ISONE          | 10YR      | 2027-02-09 |    0     |   36.331 |
+| ISONE          | 10YR      | 2027-02-10 |    0     |   31.639 |
+| ISONE          | 10YR      | 2027-02-11 |    0     |   32.282 |
+| ISONE          | 10YR      | 2027-02-12 |    0     |   32.763 |
+| ISONE          | 10YR      | 2027-02-13 |    0     |   33.547 |
+| ISONE          | 10YR      | 2027-02-14 |    0     |   35.51  |
+| ISONE          | 10YR      | 2027-02-15 |    0     |   34.525 |
+| ISONE          | 10YR      | 2027-02-16 |    0     |   29.62  |
+| ISONE          | 10YR      | 2027-02-17 |    0     |   32.321 |
+| ISONE          | 10YR      | 2027-02-18 |    0     |   34.714 |
+| ISONE          | 10YR      | 2027-02-19 |    0     |   33.718 |
+| ISONE          | 10YR      | 2027-02-20 |    0     |   33.257 |
+| ISONE          | 10YR      | 2027-02-21 |    0     |   30.926 |
+| ISONE          | 10YR      | 2027-02-22 |    0     |   29.231 |
+| ISONE          | 10YR      | 2027-02-23 |    0     |   26.781 |
+| ISONE          | 10YR      | 2027-02-24 |    0     |   27.044 |
+| ISONE          | 10YR      | 2027-02-25 |    0     |   29.358 |
+| ISONE          | 10YR      | 2027-02-26 |    0     |   30.465 |
+| ISONE          | 10YR      | 2027-02-27 |    0     |   29.827 |
+| ISONE          | 10YR      | 2027-02-28 |    0     |   28.811 |
+| ISONE          | 10YR      | 2027-03-01 |    0     |   29.432 |
+| ISONE          | 10YR      | 2027-03-02 |    0     |   30.677 |
+| ISONE          | 10YR      | 2027-03-03 |    0     |   28.603 |
+| ISONE          | 10YR      | 2027-03-04 |    0     |   31.112 |
+| ISONE          | 10YR      | 2027-03-05 |    0     |   30.956 |
+| ISONE          | 10YR      | 2027-03-06 |    0     |   28.654 |
+| ISONE          | 10YR      | 2027-03-07 |    0     |   29.031 |
+| ISONE          | 10YR      | 2027-03-08 |    0     |   28.034 |
+| ISONE          | 10YR      | 2027-03-09 |    0     |   25.417 |
+| ISONE          | 10YR      | 2027-03-10 |    0     |   25.529 |
+| ISONE          | 10YR      | 2027-03-11 |    0     |   25.877 |
+| ISONE          | 10YR      | 2027-03-12 |    0     |   27.587 |
+| ISONE          | 10YR      | 2027-03-13 |    0     |   28.61  |
+| ISONE          | 10YR      | 2027-03-14 |    0     |   26.117 |
+| ISONE          | 10YR      | 2027-03-15 |    0     |   26.127 |
+| ISONE          | 10YR      | 2027-03-16 |    0     |   26.433 |
+| ISONE          | 10YR      | 2027-03-17 |    0     |   24.898 |
+| ISONE          | 10YR      | 2027-03-18 |    0     |   25.457 |
+| ISONE          | 10YR      | 2027-03-19 |    0     |   27.065 |
+| ISONE          | 10YR      | 2027-03-20 |    0     |   22.576 |
+| ISONE          | 10YR      | 2027-03-21 |    0     |   23.423 |
+| ISONE          | 10YR      | 2027-03-22 |    0     |   25.926 |
+| ISONE          | 10YR      | 2027-03-23 |    0     |   26.83  |
+| ISONE          | 10YR      | 2027-03-24 |    0     |   24.922 |
+| ISONE          | 10YR      | 2027-03-25 |    0     |   23.442 |
+| ISONE          | 10YR      | 2027-03-26 |    0     |   22.701 |
+| ISONE          | 10YR      | 2027-03-27 |    0     |   22.895 |
+| ISONE          | 10YR      | 2027-03-28 |    0     |   23.38  |
+| ISONE          | 10YR      | 2027-03-29 |    0     |   23.293 |
+| ISONE          | 10YR      | 2027-03-30 |    0     |   21.9   |
+| ISONE          | 10YR      | 2027-03-31 |    0     |   19     |
+| ISONE          | 10YR      | 2027-04-01 |    0     |   21.42  |
+| ISONE          | 10YR      | 2027-04-02 |    0     |   24.632 |
+| ISONE          | 10YR      | 2027-04-03 |    0     |   21.933 |
+| ISONE          | 10YR      | 2027-04-04 |    0     |   19.246 |
+| ISONE          | 10YR      | 2027-04-05 |    0     |   21.491 |
+| ISONE          | 10YR      | 2027-04-06 |    0     |   18.912 |
+| ISONE          | 10YR      | 2027-04-07 |    0     |   18.4   |
+| ISONE          | 10YR      | 2027-04-08 |    0     |   19.984 |
+| ISONE          | 10YR      | 2027-04-09 |    0     |   20.412 |
+| ISONE          | 10YR      | 2027-04-10 |    0     |   18.159 |
+| ISONE          | 10YR      | 2027-04-11 |    0     |   15.941 |
+| ISONE          | 10YR      | 2027-04-12 |    0     |   14.463 |
+| ISONE          | 10YR      | 2027-04-13 |    0     |    9.843 |
+| ISONE          | 10YR      | 2027-04-14 |    0     |   10.955 |
+| ISONE          | 10YR      | 2027-04-15 |    0     |   13.992 |
+| ISONE          | 10YR      | 2027-04-16 |    0     |   14.439 |
+| ISONE          | 10YR      | 2027-04-17 |    0     |   16.874 |
+| ISONE          | 10YR      | 2027-04-18 |    0     |   18.31  |
+| ISONE          | 10YR      | 2027-04-19 |    0     |   13.325 |
+| ISONE          | 10YR      | 2027-04-20 |    0     |   12.841 |
+| ISONE          | 10YR      | 2027-04-21 |    0     |   16.146 |
+| ISONE          | 10YR      | 2027-04-22 |    0     |   16.304 |
+| ISONE          | 10YR      | 2027-04-23 |    0     |   14.535 |
+| ISONE          | 10YR      | 2027-04-24 |    0     |   12.295 |
+| ISONE          | 10YR      | 2027-04-25 |    0     |   13.954 |
+| ISONE          | 10YR      | 2027-04-26 |    0     |   14.516 |
+| ISONE          | 10YR      | 2027-04-27 |    0     |   14.704 |
+| ISONE          | 10YR      | 2027-04-28 |    0     |   10.848 |
+| ISONE          | 10YR      | 2027-04-29 |    0     |   10.546 |
+| ISONE          | 10YR      | 2027-04-30 |    0     |   13.557 |
+| ISONE          | 10YR      | 2027-05-01 |    0     |   11.724 |
+| ISONE          | 10YR      | 2027-05-02 |    0     |    6.921 |
+| ISONE          | 10YR      | 2027-05-03 |    0     |    6.71  |
+| ISONE          | 10YR      | 2027-05-04 |    0     |    8.959 |
+| ISONE          | 10YR      | 2027-05-05 |    0     |   11.201 |
+| ISONE          | 10YR      | 2027-05-06 |    0     |    8.426 |
+| ISONE          | 10YR      | 2027-05-07 |    0     |    7.761 |
+| ISONE          | 10YR      | 2027-05-08 |    0     |   10.545 |
+| ISONE          | 10YR      | 2027-05-09 |    0     |   13.305 |
+| ISONE          | 10YR      | 2027-05-10 |    0     |   10.645 |
+| ISONE          | 10YR      | 2027-05-11 |    0     |    8.384 |
+| ISONE          | 10YR      | 2027-05-12 |    0     |    9.907 |
+| ISONE          | 10YR      | 2027-05-13 |    0     |    8.602 |
+| ISONE          | 10YR      | 2027-05-14 |    0     |    6.362 |
+| ISONE          | 10YR      | 2027-05-15 |    0     |    2.457 |
+| ISONE          | 10YR      | 2027-05-16 |    0     |    1.546 |
+| ISONE          | 10YR      | 2027-05-17 |    0     |    2.939 |
+| ISONE          | 10YR      | 2027-05-18 |    0     |    3.314 |
+| ISONE          | 10YR      | 2027-05-19 |    0     |    5.551 |
+| ISONE          | 10YR      | 2027-05-20 |    0     |    4.18  |
+| ISONE          | 10YR      | 2027-05-21 |    0     |    2.514 |
+| ISONE          | 10YR      | 2027-05-22 |    0     |    1.895 |
+| ISONE          | 10YR      | 2027-05-23 |    0     |    1.984 |
+| ISONE          | 10YR      | 2027-05-24 |    0     |    4.582 |
+| ISONE          | 10YR      | 2027-05-25 |    0     |    4.645 |
+| ISONE          | 10YR      | 2027-05-26 |    0.281 |    0     |
+| ISONE          | 10YR      | 2027-05-27 |    0.156 |    0     |
+| ISONE          | 10YR      | 2027-05-28 |    0     |    1.084 |
+| ISONE          | 10YR      | 2027-05-29 |    0     |    3.26  |
+| ISONE          | 10YR      | 2027-05-30 |    0     |    3.281 |
+| ISONE          | 10YR      | 2027-05-31 |    0     |    2.163 |
+| ISONE          | 10YR      | 2027-06-01 |    0     |    1.496 |
+| ISONE          | 10YR      | 2027-06-02 |    0     |    0.705 |
+| ISONE          | 10YR      | 2027-06-03 |    0     |    2.44  |
+| ISONE          | 10YR      | 2027-06-04 |    0     |    1.502 |
+| ISONE          | 10YR      | 2027-06-05 |    1.904 |    0     |
+| ISONE          | 10YR      | 2027-06-06 |    2.256 |    0     |
+| ISONE          | 10YR      | 2027-06-07 |    1.152 |    0     |
+| ISONE          | 10YR      | 2027-06-08 |    2.217 |    0     |
+| ISONE          | 10YR      | 2027-06-09 |    1.95  |    0     |
+| ISONE          | 10YR      | 2027-06-10 |    0.523 |    0     |
+| ISONE          | 10YR      | 2027-06-11 |    2.446 |    0     |
+| ISONE          | 10YR      | 2027-06-12 |    4.966 |    0     |
+| ISONE          | 10YR      | 2027-06-13 |    3.22  |    0     |
+| ISONE          | 10YR      | 2027-06-14 |    1.279 |    0     |
+| ISONE          | 10YR      | 2027-06-15 |    0.605 |    0     |
+| ISONE          | 10YR      | 2027-06-16 |    0.853 |    0     |
+| ISONE          | 10YR      | 2027-06-17 |    3.119 |    0     |
+| ISONE          | 10YR      | 2027-06-18 |    5.993 |    0     |
+| ISONE          | 10YR      | 2027-06-19 |    8.098 |    0     |
+| ISONE          | 10YR      | 2027-06-20 |    7.717 |    0     |
+| ISONE          | 10YR      | 2027-06-21 |    6.112 |    0     |
+| ISONE          | 10YR      | 2027-06-22 |    4.551 |    0     |
+| ISONE          | 10YR      | 2027-06-23 |    6.368 |    0     |
+| ISONE          | 10YR      | 2027-06-24 |    8.563 |    0     |
+| ISONE          | 10YR      | 2027-06-25 |    8.062 |    0     |
+| ISONE          | 10YR      | 2027-06-26 |    7.807 |    0     |
+| ISONE          | 10YR      | 2027-06-27 |    6.228 |    0     |
+| ISONE          | 10YR      | 2027-06-28 |    6.397 |    0     |
+| ISONE          | 10YR      | 2027-06-29 |    8.849 |    0     |
+| ISONE          | 10YR      | 2027-06-30 |   10.114 |    0     |
+| ISONE          | 10YR      | 2027-07-01 |   10.094 |    0     |
+| ISONE          | 10YR      | 2027-07-02 |    9.906 |    0     |
+| ISONE          | 10YR      | 2027-07-03 |    9.085 |    0     |
+| ISONE          | 10YR      | 2027-07-04 |    7.738 |    0     |
+| ISONE          | 10YR      | 2027-07-05 |    9.691 |    0     |
+| ISONE          | 10YR      | 2027-07-06 |   11.894 |    0     |
+| ISONE          | 10YR      | 2027-07-07 |    9.073 |    0     |
+| ISONE          | 10YR      | 2027-07-08 |    9.058 |    0     |
+| ISONE          | 10YR      | 2027-07-09 |    9.934 |    0     |
+| ISONE          | 10YR      | 2027-07-10 |    9.014 |    0     |
+| ISONE          | 10YR      | 2027-07-11 |   10.437 |    0     |
+| ISONE          | 10YR      | 2027-07-12 |   10.839 |    0     |
+| ISONE          | 10YR      | 2027-07-13 |    9.599 |    0     |
+| ISONE          | 10YR      | 2027-07-14 |    8.722 |    0     |
+| ISONE          | 10YR      | 2027-07-15 |   10.644 |    0     |
+| ISONE          | 10YR      | 2027-07-16 |   11.79  |    0     |
+| ISONE          | 10YR      | 2027-07-17 |   12.77  |    0     |
+| ISONE          | 10YR      | 2027-07-18 |   10.114 |    0     |
+| ISONE          | 10YR      | 2027-07-19 |   11.124 |    0     |
+| ISONE          | 10YR      | 2027-07-20 |   13.63  |    0     |
+| ISONE          | 10YR      | 2027-07-21 |   11.712 |    0     |
+| ISONE          | 10YR      | 2027-07-22 |    8.617 |    0     |
+| ISONE          | 10YR      | 2027-07-23 |    9.321 |    0     |
+| ISONE          | 10YR      | 2027-07-24 |    9.038 |    0     |
+| ISONE          | 10YR      | 2027-07-25 |    9.866 |    0     |
+| ISONE          | 10YR      | 2027-07-26 |   10.113 |    0     |
+| ISONE          | 10YR      | 2027-07-27 |   10.675 |    0     |
+| ISONE          | 10YR      | 2027-07-28 |   11.704 |    0     |
+| ISONE          | 10YR      | 2027-07-29 |   10.846 |    0     |
+| ISONE          | 10YR      | 2027-07-30 |   10.389 |    0     |
+| ISONE          | 10YR      | 2027-07-31 |    8.399 |    0     |
+| ISONE          | 10YR      | 2027-08-01 |    8.854 |    0     |
+| ISONE          | 10YR      | 2027-08-02 |    9.74  |    0     |
+| ISONE          | 10YR      | 2027-08-03 |   10.13  |    0     |
+| ISONE          | 10YR      | 2027-08-04 |    9.908 |    0     |
+| ISONE          | 10YR      | 2027-08-05 |    9.554 |    0     |
+| ISONE          | 10YR      | 2027-08-06 |    9.161 |    0     |
+| ISONE          | 10YR      | 2027-08-07 |    9.337 |    0     |
+| ISONE          | 10YR      | 2027-08-08 |    9.812 |    0     |
+| ISONE          | 10YR      | 2027-08-09 |   10.609 |    0     |
+| ISONE          | 10YR      | 2027-08-10 |    9.938 |    0     |
+| ISONE          | 10YR      | 2027-08-11 |    9.633 |    0     |
+| ISONE          | 10YR      | 2027-08-12 |    9.974 |    0     |
+| ISONE          | 10YR      | 2027-08-13 |   10.114 |    0     |
+| ISONE          | 10YR      | 2027-08-14 |    9.322 |    0     |
+| ISONE          | 10YR      | 2027-08-15 |    6.921 |    0     |
+| ISONE          | 10YR      | 2027-08-16 |    6.703 |    0     |
+| ISONE          | 10YR      | 2027-08-17 |    7.386 |    0     |
+| ISONE          | 10YR      | 2027-08-18 |    7.883 |    0     |
+| ISONE          | 10YR      | 2027-08-19 |    7.334 |    0     |
+| ISONE          | 10YR      | 2027-08-20 |    6.482 |    0     |
+| ISONE          | 10YR      | 2027-08-21 |    7.233 |    0     |
+| ISONE          | 10YR      | 2027-08-22 |    7.53  |    0     |
+| ISONE          | 10YR      | 2027-08-23 |    6.535 |    0     |
+| ISONE          | 10YR      | 2027-08-24 |    7.006 |    0     |
+| ISONE          | 10YR      | 2027-08-25 |    7.385 |    0     |
+| ISONE          | 10YR      | 2027-08-26 |    6.356 |    0     |
+| ISONE          | 10YR      | 2027-08-27 |    5.082 |    0     |
+| ISONE          | 10YR      | 2027-08-28 |    5.95  |    0     |
+| ISONE          | 10YR      | 2027-08-29 |    6.015 |    0     |
+| ISONE          | 10YR      | 2027-08-30 |    6.673 |    0     |
+| ISONE          | 10YR      | 2027-08-31 |    3.719 |    0     |
+| ISONE          | 10YR      | 2027-09-01 |    1.52  |    0     |
+| ISONE          | 10YR      | 2027-09-02 |    1.201 |    0     |
+| ISONE          | 10YR      | 2027-09-03 |    3.785 |    0     |
+| ISONE          | 10YR      | 2027-09-04 |    6.441 |    0     |
+| ISONE          | 10YR      | 2027-09-05 |    5.576 |    0     |
+| ISONE          | 10YR      | 2027-09-06 |    5.804 |    0     |
+| ISONE          | 10YR      | 2027-09-07 |    3.341 |    0     |
+| ISONE          | 10YR      | 2027-09-08 |    1.936 |    0     |
+| ISONE          | 10YR      | 2027-09-09 |    0.632 |    0     |
+| ISONE          | 10YR      | 2027-09-10 |    1.696 |    0     |
+| ISONE          | 10YR      | 2027-09-11 |    2.919 |    0     |
+| ISONE          | 10YR      | 2027-09-12 |    2.648 |    0     |
+| ISONE          | 10YR      | 2027-09-13 |    2.329 |    0     |
+| ISONE          | 10YR      | 2027-09-14 |    2.755 |    0     |
+| ISONE          | 10YR      | 2027-09-15 |    1.882 |    0     |
+| ISONE          | 10YR      | 2027-09-16 |    1.155 |    0     |
+| ISONE          | 10YR      | 2027-09-17 |    1.233 |    0     |
+| ISONE          | 10YR      | 2027-09-18 |    1.016 |    0     |
+| ISONE          | 10YR      | 2027-09-19 |    0     |    0.559 |
+| ISONE          | 10YR      | 2027-09-20 |    0     |    2.512 |
+| ISONE          | 10YR      | 2027-09-21 |    0     |    2.295 |
+| ISONE          | 10YR      | 2027-09-22 |    0     |    1.61  |
+| ISONE          | 10YR      | 2027-09-23 |    0.125 |    0     |
+| ISONE          | 10YR      | 2027-09-24 |    0     |    1.296 |
+| ISONE          | 10YR      | 2027-09-25 |    0     |    1.381 |
+| ISONE          | 10YR      | 2027-09-26 |    1.955 |    0     |
+| ISONE          | 10YR      | 2027-09-27 |    1.058 |    0     |
+| ISONE          | 10YR      | 2027-09-28 |    0     |    0.066 |
+| ISONE          | 10YR      | 2027-09-29 |    0     |    3.544 |
+| ISONE          | 10YR      | 2027-09-30 |    0     |    6.393 |
+| ISONE          | 10YR      | 2027-10-01 |    0     |    5.389 |
+| ISONE          | 10YR      | 2027-10-02 |    0     |    6.37  |
+| ISONE          | 10YR      | 2027-10-03 |    0     |    6.749 |
+| ISONE          | 10YR      | 2027-10-04 |    0     |    4.578 |
+| ISONE          | 10YR      | 2027-10-05 |    0     |    4.431 |
+| ISONE          | 10YR      | 2027-10-06 |    0     |    3.656 |
+| ISONE          | 10YR      | 2027-10-07 |    0.089 |    0     |
+| ISONE          | 10YR      | 2027-10-08 |    0     |    6.303 |
+| ISONE          | 10YR      | 2027-10-09 |    0     |    8     |
+| ISONE          | 10YR      | 2027-10-10 |    0     |    5.513 |
+| ISONE          | 10YR      | 2027-10-11 |    0     |    6.292 |
+| ISONE          | 10YR      | 2027-10-12 |    0     |    8.527 |
+| ISONE          | 10YR      | 2027-10-13 |    0     |   10.685 |
+| ISONE          | 10YR      | 2027-10-14 |    0     |    8.386 |
+| ISONE          | 10YR      | 2027-10-15 |    0     |    8.172 |
+| ISONE          | 10YR      | 2027-10-16 |    0     |   10.521 |
+| ISONE          | 10YR      | 2027-10-17 |    0     |   13.501 |
+| ISONE          | 10YR      | 2027-10-18 |    0     |   13.449 |
+| ISONE          | 10YR      | 2027-10-19 |    0     |   11.995 |
+| ISONE          | 10YR      | 2027-10-20 |    0     |    8.551 |
+| ISONE          | 10YR      | 2027-10-21 |    0     |    7.936 |
+| ISONE          | 10YR      | 2027-10-22 |    0     |    9.023 |
+| ISONE          | 10YR      | 2027-10-23 |    0     |    9.718 |
+| ISONE          | 10YR      | 2027-10-24 |    0     |   10.792 |
+| ISONE          | 10YR      | 2027-10-25 |    0     |   12.202 |
+| ISONE          | 10YR      | 2027-10-26 |    0     |   11.733 |
+| ISONE          | 10YR      | 2027-10-27 |    0     |   13.651 |
+| ISONE          | 10YR      | 2027-10-28 |    0     |   14.955 |
+| ISONE          | 10YR      | 2027-10-29 |    0     |   15.659 |
+| ISONE          | 10YR      | 2027-10-30 |    0     |   14.636 |
+| ISONE          | 10YR      | 2027-10-31 |    0     |   12.715 |
+| ISONE          | 10YR      | 2027-11-01 |    0     |   13.473 |
+| ISONE          | 10YR      | 2027-11-02 |    0     |   16.766 |
+| ISONE          | 10YR      | 2027-11-03 |    0     |   17.758 |
+| ISONE          | 10YR      | 2027-11-04 |    0     |   18.227 |
+| ISONE          | 10YR      | 2027-11-05 |    0     |   12.825 |
+| ISONE          | 10YR      | 2027-11-06 |    0     |   11.272 |
+| ISONE          | 10YR      | 2027-11-07 |    0     |   13.349 |
+| ISONE          | 10YR      | 2027-11-08 |    0     |   18.389 |
+| ISONE          | 10YR      | 2027-11-09 |    0     |   21.677 |
+| ISONE          | 10YR      | 2027-11-10 |    0     |   18.705 |
+| ISONE          | 10YR      | 2027-11-11 |    0     |   18.797 |
+| ISONE          | 10YR      | 2027-11-12 |    0     |   20.767 |
+| ISONE          | 10YR...</pre>
+      </details>
+    </div>
+  
+    <div class="data-layer-separator"><span class="layer-label-ingested">Ingested — Unity Catalog (Databricks)</span></div>
+    <div class="ingested-card">
+      <div class="ingested-card-header"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg> Delta Tables · edf.chatbot</div>
+      <ul class="ingested-table-list">
+      <li>
+        <div class="it-name">edf.chatbot.bronze_degree_days_forecast</div>
+        <div class="it-meta">
+          <span class="it-chip">Type <b>MANAGED</b></span>
+          <span class="it-chip">Format <b>DELTA</b></span>
+          <span class="it-chip">Catalog <b>edf</b></span>
+          <span class="it-chip">Schema <b>chatbot</b></span>
+        </div>
+        <div class="it-cols"><span class="it-col-pill ">wx_aggregate<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_forecast_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_cdd<span style="opacity:.55"> float</span></span><span class="it-col-pill ">wx_hdd<span style="opacity:.55"> float</span></span><span class="it-col-pill ">wx_cycle<span style="opacity:.55"> int</span></span><span class="it-col-pill sys">folder_date<span style="opacity:.55"> date</span></span><span class="it-col-pill sys">source_file<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">ingestion_timestamp<span style="opacity:.55"> ts</span></span></div>
+        <div class="it-chip" style="margin-top:.3rem;font-style:italic">Forward-looking degree days by forecast issue date and cycle</div>
+      
+        <details class="it-sample-details">
+          <summary>Sample data (5 rows)</summary>
+          <div class="it-sample"><table class="it-sample-table">
+            <thead><tr><th>wx_aggregate</th><th>wx_forecast_date</th><th>wx_date</th><th>wx_cdd</th><th>wx_hdd</th><th>wx_cycle</th><th>folder_date</th><th>source_file</th></tr></thead>
+            <tbody><tr><td>PJM</td><td>2025-11-17</td><td>2025-11-17</td><td>0.0</td><td>23.671</td><td>0</td><td>2025-11-24</td><td>20251124/degree_days_forecast_20251117.md</td></tr><tr><td>PJM</td><td>2025-11-17</td><td>2025-11-18</td><td>0.0</td><td>24.431</td><td>0</td><td>2025-11-24</td><td>20251124/degree_days_forecast_20251117.md</td></tr><tr><td>PJM</td><td>2025-11-17</td><td>2025-11-19</td><td>0.0</td><td>19.639</td><td>0</td><td>2025-11-24</td><td>20251124/degree_days_forecast_20251117.md</td></tr><tr><td>PJM</td><td>2025-11-17</td><td>2025-11-20</td><td>0.0</td><td>18.244</td><td>0</td><td>2025-11-24</td><td>20251124/degree_days_forecast_20251117.md</td></tr><tr><td>PJM</td><td>2025-11-17</td><td>2025-11-21</td><td>0.0</td><td>14.979</td><td>0</td><td>2025-11-24</td><td>20251124/degree_days_forecast_20251117.md</td></tr></tbody>
+          </table></div>
+        </details>
+      </li>
+      <li>
+        <div class="it-name">edf.chatbot.bronze_degree_days_historical</div>
+        <div class="it-meta">
+          <span class="it-chip">Type <b>MANAGED</b></span>
+          <span class="it-chip">Format <b>DELTA</b></span>
+          <span class="it-chip">Catalog <b>edf</b></span>
+          <span class="it-chip">Schema <b>chatbot</b></span>
+        </div>
+        <div class="it-cols"><span class="it-col-pill ">wx_aggregate<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_cdd<span style="opacity:.55"> float</span></span><span class="it-col-pill ">wx_hdd<span style="opacity:.55"> float</span></span><span class="it-col-pill sys">folder_date<span style="opacity:.55"> date</span></span><span class="it-col-pill sys">source_file<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">ingestion_timestamp<span style="opacity:.55"> ts</span></span></div>
+        <div class="it-chip" style="margin-top:.3rem;font-style:italic">Observed (past) degree day values</div>
+      
+        <details class="it-sample-details">
+          <summary>Sample data (5 rows)</summary>
+          <div class="it-sample"><table class="it-sample-table">
+            <thead><tr><th>wx_aggregate</th><th>wx_date</th><th>wx_cdd</th><th>wx_hdd</th><th>folder_date</th><th>source_file</th></tr></thead>
+            <tbody><tr><td>ISONE</td><td>2025-10-20</td><td>0.0</td><td>5.038</td><td>2025-11-24</td><td>20251124/degree_days_historical.md</td></tr><tr><td>ISONE</td><td>2025-10-21</td><td>0.0</td><td>7.589</td><td>2025-11-24</td><td>20251124/degree_days_historical.md</td></tr><tr><td>ISONE</td><td>2025-10-22</td><td>0.0</td><td>7.134</td><td>2025-11-24</td><td>20251124/degree_days_historical.md</td></tr><tr><td>ISONE</td><td>2025-10-23</td><td>0.0</td><td>11.61</td><td>2025-11-24</td><td>20251124/degree_days_historical.md</td></tr><tr><td>ISONE</td><td>2025-10-24</td><td>0.0</td><td>15.047</td><td>2025-11-24</td><td>20251124/degree_days_historical.md</td></tr></tbody>
+          </table></div>
+        </details>
+      </li>
+      <li>
+        <div class="it-name">edf.chatbot.bronze_degree_days_normals</div>
+        <div class="it-meta">
+          <span class="it-chip">Type <b>MANAGED</b></span>
+          <span class="it-chip">Format <b>DELTA</b></span>
+          <span class="it-chip">Catalog <b>edf</b></span>
+          <span class="it-chip">Schema <b>chatbot</b></span>
+        </div>
+        <div class="it-cols"><span class="it-col-pill ">wx_aggregate<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_type<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_cdd<span style="opacity:.55"> float</span></span><span class="it-col-pill ">wx_hdd<span style="opacity:.55"> float</span></span><span class="it-col-pill sys">folder_date<span style="opacity:.55"> date</span></span><span class="it-col-pill sys">source_file<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">ingestion_timestamp<span style="opacity:.55"> ts</span></span></div>
+        <div class="it-chip" style="margin-top:.3rem;font-style:italic">10-year climatological averages used as baseline</div>
+      
+        <details class="it-sample-details">
+          <summary>Sample data (5 rows)</summary>
+          <div class="it-sample"><table class="it-sample-table">
+            <thead><tr><th>wx_aggregate</th><th>wx_type</th><th>wx_date</th><th>wx_cdd</th><th>wx_hdd</th><th>folder_date</th><th>source_file</th></tr></thead>
+            <tbody><tr><td>PJM</td><td>10YR</td><td>2027-11-05</td><td>0.0</td><td>9.529</td><td>2025-11-24</td><td>20251124/degree_days_normals.md</td></tr><tr><td>PJM</td><td>10YR</td><td>2027-11-06</td><td>0.0</td><td>10.365</td><td>2025-11-24</td><td>20251124/degree_days_normals.md</td></tr><tr><td>PJM</td><td>10YR</td><td>2027-11-07</td><td>0.0</td><td>13.861</td><td>2025-11-24</td><td>20251124/degree_days_normals.md</td></tr><tr><td>ISONE</td><td>10YR</td><td>2025-10-21</td><td>0.0</td><td>7.078</td><td>2025-11-25</td><td>20251125/degree_days_normals.md</td></tr><tr><td>ISONE</td><td>10YR</td><td>2025-10-22</td><td>0.0</td><td>8.993</td><td>2025-11-25</td><td>20251125/degree_days_normals.md</td></tr></tbody>
+          </table></div>
+        </details>
+      </li>
+      </ul>
+    </div>
+  </section>
+  <section id="vol-enso" class="volume-section">
+    <h2>ENSO</h2>
+    <p class="vol-subtitle">El Niño-Southern Oscillation</p>
+    <ul class="vol-desc">
+      <li>Monthly NOAA/CPC diagnostic discussions</li>
+      <li>Tracks El Niño (warm) and La Niña (cool) Pacific SST phases</li>
+      <li>Drives major shifts in global temperature &amp; precipitation</li>
+    </ul>
+    <p class="acronym-line">
+      <span class="acronym-chip"><b>ENSO</b> = El Niño-Southern Oscillation</span>
+      <span class="acronym-chip"><b>SST</b> = Sea Surface Temperature</span>
+      <span class="acronym-chip"><b>OLR</b> = Outgoing Longwave Radiation</span>
+      <span class="acronym-chip"><b>CPC</b> = Climate Prediction Center</span>
+      <span class="acronym-chip"><b>NOAA</b> = National Oceanic and Atmospheric Administration</span>
+      <span class="acronym-chip"><b>NCEP</b> = National Centers for Environmental Prediction</span>
+      <span class="acronym-chip"><b>NWS</b> = National Weather Service</span>
+      <span class="acronym-chip"><b>CFS</b> = Climate Forecast System</span>
+      <span class="acronym-chip"><b>IRI</b> = International Research Institute for Climate and Society</span>
+      <span class="acronym-chip"><b>Niño 3.4</b> = key Pacific SST monitoring region (5°N–5°S, 170°W–120°W)</span>
+    </p>
+    <div class="layman-box"><span class="layman-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><ul><li><strong>Biggest natural climate cycle on Earth</strong>, reshaping weather worldwide</li><li><strong>El Niño</strong> — Pacific Ocean warms up unusually → droughts, warmer winters in North America</li><li><strong>La Niña</strong> — Pacific Ocean cools down unusually → floods, colder winters in parts of the US</li><li>Cycles last 1–2 years and repeat every few years</li><li>Monthly NOAA reports track current status and forecast the next phase</li></ul></div>
+    <div class="folder-entry">
+      <h3><code>enso/unzip/ENSO/2008</code><span class="folder-date">2008-12-01</span></h3>
+      <p class="meta">Sample: <code>20081201_cpc_enso_discussion.pdf</code> · 2 files</p>
+      <div class="schema-box">
+      <div class="schema-box-header"><span class="schema-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span> Dataset Schema</div>
+      <div class="schema-no-data">Unstructured text / narrative report — no tabular schema applies.</div>
+    </div>
+    <details class="content-box">
+        <summary>View sample file</summary>
+        <pre>EL NIÑO/SOUTHERN OSCILLATION (ENSO)              
+DIAGNOSTIC DISCUSSION 
+issued by  
+CLIMATE PREDICTION CENTER/NCEP/NWS                        
+11 December 2008 
+ 
+Synopsis:  ENSO-neutral or La Niña conditions are equally likely through early 2009.    
+ENSO-neutral conditions continued during November 2008, although equatorial sea 
+surface temperatures (SSTs) remained below-av erage across much of the central and eastern 
+Pacific Ocean (Fig. 1). Correspondingly, the latest weekly SST index values were -0.9°C in Niño-
+1+2, -0.3°C in Niño 3, -0.5°C in Niño 3.4, and -0.4°C in Niño 4 (Fig. 2).  The subsurface oceanic 
+heat content anomalies (average temperatures in  the upper 300m of the ocean, Fig. 3) became 
+increasingly negative as below-average temperatur es at thermocline depth expanded throughout 
+the central and eastern Pacific (Fig. 4).   
+Low-level easterly winds and upper-level westerly winds expanded and strengthened 
+across the equatorial Pacific Ocean during the mont h.  Also, convection remained enhanced near 
+Indonesia and suppressed near the International Date Line.  However, in recent months 
+intraseasonal variability has contributed to epis odic strengthening and weakening of convection 
+over Indonesia.  Overall, the ocean-atmosphere system during November remained consistent 
+with ENSO-neutral conditions, but exhibited sever al atmospheric characteristics typical of weak 
+La Niña conditions. 
+A majority of the SST forecasts indicate ENSO-neutral conditions (Niño-3.4 index of 
+−0.5°C to 0.5°C) will continue into the first ha lf of 2009.  Several models, including the NOAA 
+Climate Forecast System (CFS), suggest the deve lopment of La Niña during December 2008- 
+March 2009 (Fig. 5).  The recent strengthening of the low-level easterlies over the equatorial 
+Pacific suggests the possibility of additional a nomalous cooling of the SSTs.  However, the 
+magnitude of cooling remains uncertain and it is possible the La Niña threshold will not be met 
+(3-month average of the Niño-3.4 index less than or equal to −0.5°C).  Therefore, based on 
+current observations and recent trends, ENSO-neutr al or La Niña conditions are equally likely 
+through early 2009.   
+This discussion is a consolidated effort of the National Atmospheric and Oceanic 
+Administration (NOAA), NOAA’s National Weathe r Service, and their funded institutions. 
+Oceanic and atmospheric conditions are updated weekly on the Climate Prediction Center web 
+site ( El Niño/La Niña Current Cond itions and Expert Discussions ). Forecasts for the 
+evolution of El Niño/La Niña are updated monthly in the Forecast Forum  section of CPC&#x27;s 
+Climate Diagnostics Bulletin. The next ENSO Diag nostics Discussion is scheduled for 8 January 
+2009. To receive an e-mail notification when the monthly ENSO Diagnostic Discussions are 
+released, please send an e-mail message to: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="cea0adabbee0a2a7bdbae0aba0bda1e3bbbeaaafbaab8ea0a1afafe0a9a1b8">[email&#160;protected]</a>. 
+Climate Prediction Center 
+National Centers for Environmental Prediction 
+NOAA/National Weather Service 
+Camp Springs, MD 20746-4304 
+ 
+ 
+ 
+ 
+ 
+ 
+Figure 1. Average sea surface temperature (SST) anomalies (°C) for the four-week period 9 
+November - 6 December 2008.   Anomalies are computed with respect to the 1971-2000 
+base period weekly means (Xue et al. 2003, J. Climate, 16, 1601-1612). 
+ 
+ 
+ 
+ 
+ 
+Figure 2. Time series of area-averaged sea surface temperature (SST) anomalies (°C) in the Niño 
+regions [Niño-1+2 (0°-10°S, 90°W-80°W), Niño 3 (5°N-5°S, 150°W-90°W), Niño-3.4 (5°N-5°S, 
+170°W-120°W), Niño-4 (150ºW-160ºE and 5ºN-5ºS)]. SST anomalies are departures from the 
+1971-2000 base period weekly means (Xue et al. 2003, J. Climate, 16, 1601-1612).   
+ 
+ 
+ 
+ 
+Figure 3. Area-averaged upper-ocean heat content anomalies (°C) in the equatorial Pacific (5°N-
+5°S, 180º-100ºW). Heat content anomalies are computed as departures from the 1982-
+2004 base period pentad means. 
+ 
+ 
+ 
+Figure 4. Depth-longitude section of equatorial Pacific upper-ocean (0-300m) temperature 
+anomalies (°C) centered on the week of 4 December 2008. The anomalies are averaged 
+between 5°N-5°S.  Anomalies are departures from the 1982-2004 base period pentad 
+means.   
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Figure 5. Forecasts of sea surface temperature (SST) anomalies for the Niño 3.4 region (5°N-5°S, 
+120°W-170°W).  Figure courtesy of the International Research Institute (IRI) for Climate 
+and Society.  Figure updated 20 November 2008. 
+ 
+ 
+ 
+ </pre>
+      </details>
+    </div>
+    <div class="folder-entry">
+      <h3><code>enso/unzip/ENSO/2025</code><span class="folder-date">2025-11-01</span></h3>
+      <p class="meta">Sample: <code>20251101_cpc_enso_discussion.pdf</code> · 2 files</p>
+      <div class="schema-box">
+      <div class="schema-box-header"><span class="schema-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span> Dataset Schema</div>
+      <div class="schema-no-data">Unstructured text / narrative report — no tabular schema applies.</div>
+    </div>
+    <details class="content-box">
+        <summary>View sample file</summary>
+        <pre> 
+ 
+EL NIÑO/SOUTHERN OSCILLATION (ENSO) DIAGNOSTIC 
+DISCUSSION 
+ 
+issued by 
+ 
+CLIMATE PREDICTION CENTER/NCEP/NWS    
+13 November 2025  
+ 
+ENSO Alert System Status: La Niña Advisory 
+ 
+Synopsis: La Niña is favored to continue into the Northern Hemisphere winter, with a 
+transition to ENSO-neutral most likely in January-March 2026 (61% chance).   
+ 
+La Niña continued over the past month , as indicated by the  strengthening of below -
+average sea surface temperatures (SSTs) across the central and  eastern equatorial Pacific Ocean 
+(Fig. 1). The latest weekly Niño indices were between -0.5C and -0.7C, with the exception of 
+the easternmost Niño-1+2 index at -0.2C (Fig. 2). Negative subsurface temperature anomalies 
+persisted (averaged from 180-100W; Fig. 3), with below-average temperatures prevailing from 
+the surface to 200m depth in the eastern half of the equatorial Pacific (Fig. 4).  The atmosphere 
+continued to reflect La Niña, with l ow-level easterly wind anomalies and upper-level westerly 
+wind anomalies observed across most of  the equatorial Pacific Ocean. Enhanced convection 
+persisted over Indonesia  and was weakly suppressed near the Date Line (Fig. 5).   Both the  
+traditional and equatorial Southern Oscillation indices were positive. Collectively, the coupled 
+ocean-atmosphere system reflected La Niña. 
+The IRI multi-model predictions favor La Niña to continue through December-February 
+(DJF) 2025-26 (Fig. 6). While also considering predictions from the North American Multi-
+Model Ensemble, the ENSO team believes uncertainty for the DJF season is high with La Niña 
+(51% chance) slightly favored over ENSO-neutral (48% chance).  La Niña is expected to remain 
+weak (3-month average Niño-3.4 index value at or between -0.5C and -0.9C).  A weak La Niña 
+would be less likely to result in conventional winter impacts, though predictable signals could 
+still influence the forecast guidance (e.g., CPC&#x27;s seasonal outlooks). In summary, La Niña is 
+favored to continue into the Northern Hemisphere winter, with a transition to ENSO-neutral most 
+likely in January-March 2026 (61% chance; Fig. 7).  
+This discussion is a consolidated effort of the National O ceanic and Atmospheric 
+Administration (NOAA), NOAA’s National Weather  Service, and their funded institutions. 
+Oceanic and atmospheric conditions are updated weekly on the Climate Prediction Center 
+website (El Niño/La Niña Current Conditions and Expert Discussions ). A probabilistic strength 
+forecast is available here. The next ENSO Diagnostics Discussion is scheduled for 11 December 
+2025. To receive an e -mail notification when the monthly ENSO Diagnostic Discussions are 
+released, please send an e-mail message to: <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="7f111c1a0f5113160c0b511a110c10520a0f1b1e0b1a3f11101e1e51181009">[email&#160;protected]</a>.  
+ 
+Climate Prediction Center 
+National Centers for Environmental Prediction 
+NOAA/National Weather Service 
+College Park, MD 20740 
+ 
+ 
+ 
+ 
+Figure 1. Average sea surface temperature (SST) anomalies (°C) for the week centered on 5 
+November 2025.  Anomalies are computed with respect to the 1991-2020 base period weekly 
+means.  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Figure 2. Time series of area-averaged sea surface temperature (SST) anomalies (°C) in the Niño 
+regions [Niño-4 (5ºN-5ºS, 150ºW-160ºE), Niño-3.4 (5°N-5°S, 170°W-120°W), Niño-3 (5°N-
+5°S, 150°W-90°W), Niño-1+2 (0°-10°S, 90°W-80°W)]. SST anomalies are departures from the 
+1991-2020 base period weekly means.    
+ 
+ 
+ 
+ 
+ 
+Figure 3. Area-averaged upper-ocean heat content anomaly (°C) in the equatorial Pacific (5°N-
+5°S, 180º-100ºW). The heat content anomaly is computed as the departure from the 1991-2020 
+base period pentad means. 
+ 
+ 
+Figure 4. Depth-longitude section of equatorial Pacific upper-ocean (0-300m) temperature 
+anomalies (°C) centered on the pentad of 4 November 2025. Anomalies are departures from the 
+1991-2020 base period pentad means. 
+ 
+ 
+ 
+ 
+Figure 5. Average outgoing longwave radiation (OLR) anomalies (W/m2) for the period 12 
+October – 6 November 2025.  OLR anomalies are computed as departures from the 1991-2020 
+base period pentad means.  
+ 
+Figure 6. Forecasts of sea surface temperature (SST) anomalies for the Niño 3.4 region (5°N-
+5°S, 120°W-170°W). Figure updated 20 October 2025 by the International Research Institute 
+(IRI) for Climate and Society. 
+ 
+ 
+ 
+ 
+Figure 7. Official ENSO probabilities for the Niño 3.4 sea surface temperature index (5°N-5°S, 
+120°W-170°W). Figure updated 13 November 2025. 
+ 
+ 
+ </pre>
+      </details>
+    </div>
+  </section>
+  <section id="vol-epo" class="volume-section">
+    <h2>EPO</h2>
+    <p class="vol-subtitle">East Pacific Oscillation</p>
+    <ul class="vol-desc">
+      <li>Daily index: atmospheric pressure anomalies over eastern Pacific</li>
+      <li>Positive → warmer W. North America; Negative → cooler conditions</li>
+      <li>Influences storm tracks &amp; energy demand forecasts</li>
+    </ul>
+    <p class="acronym-line">
+      <span class="acronym-chip"><b>EPO</b> = East Pacific Oscillation</span>
+    </p>
+    <div class="layman-box"><span class="layman-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><ul><li><strong>Atmospheric pressure seesaw</strong> over the eastern Pacific Ocean</li><li><strong>Positive</strong> → steers warm air into western North America</li><li><strong>Negative</strong> → brings cooler conditions instead</li><li>One of several atmosphere "dials" forecasters watch to anticipate energy demand shifts</li></ul></div>
+    
+    <div class="data-layer-separator"><span class="layer-label-raw">Raw data — as received</span></div>
+    <div class="folder-entry">
+      <h3><code>epo/YYYYMMDD</code><span class="folder-date">latest snapshot: 2025-11-25</span></h3>
+      <p class="meta">Sample: <code>EPO_historical.md</code> · 2 files</p>
+      <div class="schema-box">
+      <div class="schema-box-header"><span class="schema-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span> Dataset Schema</div>
+      <table class="schema-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+      <tr>
+        <td class="schema-field">wx_index</td>
+        <td class="schema-type">string</td>
+        <td class="schema-note">Index name — always EPO</td>
+      </tr>
+      <tr>
+        <td class="schema-field">wx_date</td>
+        <td class="schema-type">date</td>
+        <td class="schema-note">Calendar date (YYYY-MM-DD)</td>
+      </tr>
+      <tr>
+        <td class="schema-field">wx_value</td>
+        <td class="schema-type">float</td>
+        <td class="schema-note">Daily EPO index value (dimensionless; positive = warmer W. North America)</td>
+      </tr>
+        </tbody>
+      </table>
+    </div>
+    <details class="content-box">
+        <summary>View sample file</summary>
+        <pre># EPO - Historical Data
+
+**Generated:** 2025-11-25 10:40:50
+
+**Period:** 2025-10-21 to 2025-11-25
+
+**Total Records:** 36
+
+## Data Summary
+
+- **Mean Value:** 0.543
+- **Min Value:** -0.670
+- **Max Value:** 2.007
+- **Std Dev:** 0.671
+
+## Historical Data Table
+
+| wx_index   | wx_date    |   wx_value |
+|:-----------|:-----------|-----------:|
+| EPO        | 2025-10-21 |     0.2749 |
+| EPO        | 2025-10-22 |     0.6614 |
+| EPO        | 2025-10-23 |     1.6599 |
+| EPO        | 2025-10-24 |     1.5579 |
+| EPO        | 2025-10-25 |     1.2401 |
+| EPO        | 2025-10-26 |     1.0557 |
+| EPO        | 2025-10-27 |     0.5656 |
+| EPO        | 2025-10-28 |     0.0948 |
+| EPO        | 2025-10-29 |     0.7241 |
+| EPO        | 2025-10-30 |     0.7503 |
+| EPO        | 2025-10-31 |     1.7558 |
+| EPO        | 2025-11-01 |     2.0071 |
+| EPO        | 2025-11-02 |     1.0743 |
+| EPO        | 2025-11-03 |     0.5888 |
+| EPO        | 2025-11-04 |     0.1476 |
+| EPO        | 2025-11-05 |     0.2348 |
+| EPO        | 2025-11-06 |     1.014  |
+| EPO        | 2025-11-07 |     0.5678 |
+| EPO        | 2025-11-08 |    -0.5274 |
+| EPO        | 2025-11-09 |    -0.4305 |
+| EPO        | 2025-11-10 |     0.5521 |
+| EPO        | 2025-11-11 |     0.2296 |
+| EPO        | 2025-11-12 |    -0.5672 |
+| EPO        | 2025-11-13 |    -0.0255 |
+| EPO        | 2025-11-14 |     0.4728 |
+| EPO        | 2025-11-15 |     0.3929 |
+| EPO        | 2025-11-16 |     0.1006 |
+| EPO        | 2025-11-17 |     0.3736 |
+| EPO        | 2025-11-18 |     0.3175 |
+| EPO        | 2025-11-19 |     0.1281 |
+| EPO        | 2025-11-20 |     1.2267 |
+| EPO        | 2025-11-21 |     1.5047 |
+| EPO        | 2025-11-22 |     0.6383 |
+| EPO        | 2025-11-23 |     0.1557 |
+| EPO        | 2025-11-24 |    -0.3167 |
+| EPO        | 2025-11-25 |    -0.6698 |</pre>
+      </details>
+    </div>
+  
+    <div class="data-layer-separator"><span class="layer-label-ingested">Ingested — Unity Catalog (Databricks)</span></div>
+    <div class="ingested-card">
+      <div class="ingested-card-header"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg> Delta Tables · edf.chatbot</div>
+      <ul class="ingested-table-list">
+      <li>
+        <div class="it-name">edf.chatbot.epo_forecast_bronze</div>
+        <div class="it-meta">
+          <span class="it-chip">Type <b>MANAGED</b></span>
+          <span class="it-chip">Format <b>DELTA</b></span>
+          <span class="it-chip">Catalog <b>edf</b></span>
+          <span class="it-chip">Schema <b>chatbot</b></span>
+        </div>
+        <div class="it-cols"><span class="it-col-pill ">wx_index<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_model<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_cycle<span style="opacity:.55"> int</span></span><span class="it-col-pill ">wx_member_id<span style="opacity:.55"> int</span></span><span class="it-col-pill ">wx_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_forecast_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_value<span style="opacity:.55"> float</span></span><span class="it-col-pill sys">source_folder<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">source_file<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">source_generated_at<span style="opacity:.55"> ts</span></span><span class="it-col-pill sys">ingested_at<span style="opacity:.55"> ts</span></span></div>
+        <div class="it-chip" style="margin-top:.3rem;font-style:italic">Model-based EPO forecasts with ensemble member detail</div>
+      
+        <details class="it-sample-details">
+          <summary>Sample data (5 rows)</summary>
+          <div class="it-sample"><table class="it-sample-table">
+            <thead><tr><th>wx_index</th><th>wx_model</th><th>wx_cycle</th><th>wx_member_id</th><th>wx_date</th><th>wx_forecast_date</th><th>wx_value</th><th>source_folder</th></tr></thead>
+            <tbody><tr><td>EPO</td><td>EURO_ENS</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-17</td><td>0.3226</td><td>20251124</td></tr><tr><td>EPO</td><td>EURO_ENS</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-18</td><td>0.3755</td><td>20251124</td></tr><tr><td>EPO</td><td>EURO_ENS</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-19</td><td>0.152</td><td>20251124</td></tr><tr><td>EPO</td><td>EURO_ENS</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-20</td><td>0.3443</td><td>20251124</td></tr><tr><td>EPO</td><td>EURO_ENS</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-21</td><td>1.2723</td><td>20251124</td></tr></tbody>
+          </table></div>
+        </details>
+      </li>
+      <li>
+        <div class="it-name">edf.chatbot.epo_historical_bronze</div>
+        <div class="it-meta">
+          <span class="it-chip">Type <b>MANAGED</b></span>
+          <span class="it-chip">Format <b>DELTA</b></span>
+          <span class="it-chip">Catalog <b>edf</b></span>
+          <span class="it-chip">Schema <b>chatbot</b></span>
+        </div>
+        <div class="it-cols"><span class="it-col-pill ">wx_index<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_value<span style="opacity:.55"> float</span></span><span class="it-col-pill sys">source_folder<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">source_file<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">source_generated_at<span style="opacity:.55"> ts</span></span><span class="it-col-pill sys">ingested_at<span style="opacity:.55"> ts</span></span></div>
+        <div class="it-chip" style="margin-top:.3rem;font-style:italic">Observed daily EPO index values</div>
+      
+        <details class="it-sample-details">
+          <summary>Sample data (5 rows)</summary>
+          <div class="it-sample"><table class="it-sample-table">
+            <thead><tr><th>wx_index</th><th>wx_date</th><th>wx_value</th><th>source_folder</th><th>source_file</th></tr></thead>
+            <tbody><tr><td>EPO</td><td>2025-10-21</td><td>0.2749</td><td>20251124</td><td>EPO_historical.md</td></tr><tr><td>EPO</td><td>2025-10-22</td><td>0.6614</td><td>20251124</td><td>EPO_historical.md</td></tr><tr><td>EPO</td><td>2025-10-23</td><td>1.6599</td><td>20251124</td><td>EPO_historical.md</td></tr><tr><td>EPO</td><td>2025-10-24</td><td>1.5579</td><td>20251124</td><td>EPO_historical.md</td></tr><tr><td>EPO</td><td>2025-10-25</td><td>1.2401</td><td>20251124</td><td>EPO_historical.md</td></tr></tbody>
+          </table></div>
+        </details>
+      </li>
+      </ul>
+    </div>
+  </section>
+  <section id="vol-global_tropics_hazards" class="volume-section">
+    <h2>Global Tropics Hazards (GTH)</h2>
+    <p class="vol-subtitle">Weekly CPC Briefings</p>
+    <ul class="vol-desc">
+      <li>Weekly tropical weather hazard briefings from NOAA/CPC</li>
+      <li>2–3 week outlooks: tropical cyclones, precipitation, ENSO &amp; MJO status</li>
+      <li>Two sub-folders: Briefing (text) and PDF</li>
+    </ul>
+    <p class="acronym-line">
+      <span class="acronym-chip"><b>GTH</b> = Global Tropics Hazards</span>
+      <span class="acronym-chip"><b>TC</b> = Tropical Cyclone</span>
+      <span class="acronym-chip"><b>OLR</b> = Outgoing Longwave Radiation</span>
+      <span class="acronym-chip"><b>SST</b> = Sea Surface Temperature</span>
+      <span class="acronym-chip"><b>PNA</b> = Pacific-North American pattern</span>
+      <span class="acronym-chip"><b>AO</b> = Arctic Oscillation</span>
+      <span class="acronym-chip"><b>SPCZ</b> = South Pacific Convergence Zone</span>
+      <span class="acronym-chip"><b>MJO</b> = Madden-Julian Oscillation</span>
+      <span class="acronym-chip"><b>RMM</b> = Real-time Multivariate MJO index</span>
+      <span class="acronym-chip"><b>ENSO</b> = El Niño-Southern Oscillation</span>
+      <span class="acronym-chip"><b>JTWC</b> = Joint Typhoon Warning Center</span>
+      <span class="acronym-chip"><b>NHC</b> = National Hurricane Center</span>
+      <span class="acronym-chip"><b>CPHC</b> = Central Pacific Hurricane Center</span>
+      <span class="acronym-chip"><b>SEIO</b> = Southeast Indian Ocean</span>
+      <span class="acronym-chip"><b>CPC</b> = Climate Prediction Center</span>
+      <span class="acronym-chip"><b>NCEP</b> = National Centers for Environmental Prediction</span>
+      <span class="acronym-chip"><b>NWS</b> = National Weather Service</span>
+      <span class="acronym-chip"><b>NOAA</b> = National Oceanic and Atmospheric Administration</span>
+    </p>
+    <div class="layman-box"><span class="layman-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><ul><li><strong>Weekly global tropical weather risk summary</strong>, published by NOAA</li><li>Covers the next 2–3 weeks worldwide</li><li>Flags: where tropical storms may form, heavy rain zones, drought areas</li><li>Also reports current El Niño / La Niña and MJO status</li><li>Two formats per week: text briefing + PDF slides</li></ul></div>
+    <div class="folder-entry">
+      <h3><code>Briefing/YYYY</code><span class="folder-date">2025-11-25</span></h3>
+      <p class="meta">Sample: <code>20251118_cpc_gth_briefing.pdf</code> · 2 files</p>
+      <div class="schema-box">
+      <div class="schema-box-header"><span class="schema-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span> Dataset Schema</div>
+      <div class="schema-no-data">Unstructured text / narrative report — no tabular schema applies.</div>
+    </div>
+    <details class="content-box">
+        <summary>View sample file</summary>
+        <pre>Weeks 2-3 Global Tropics Hazards Outlook
+11/18/2025
+Nick Novella
+NWS / NCEP / Climate Prediction Center
+
+Outlook Review: TC development &amp; anomalous precipitation during the past week  
+• SEIO: TS05S (11/15, 11/18)
+X
+X
+ENSO: (Nov 13, 2025 Update)       next update on Thursday, Dec 11th
+• ENSO Alert System Status: La Niña Advisory
+• La Niña is favored to continue into the Northern Hemisphere winter, with a transition to ENSO-neutral 
+most likely in Jan-Mar, 2026 (61% chance).
+MJO and other subseasonal tropical variability:
+• The MJO remains active, but has begun to slow and weaken over the Western Pacific likely due to destructive 
+interference with the La Nina base state.
+• Forecasts favor a continuation of more disorganized MJO activity, followed by more of a renewal of amplitude and 
+resumption of eastward propagation across the Western Pacific, possibly reaching the Western Hemisphere in 
+December.   
+• A slowed MJO is expected to be favorable for additional tropical cyclogenesis in the eastern Hemisphere, with 
+decreased chances in the eastern Pacific and Atlantic basin, consistent with climatology.  
+• Western Pacific MJO events typically favors the development of high latitude ridging over western North America, 
+allowing for troughing downstream to promoting the advection of unseasonably arctic air into portions of the 
+northwestern and north-central CONUS. 
+Synopsis of Climate Modes:
+GTH Outlook:
+
+Green: Enhanced Divergence Aloft    Brown: Enhanced Convergence Aloft 
+200-hPa Velocity Potential Anomaly Maps:
+• Both the strength and structure 
+of the spatial pattern has 
+gradually broken down since 
+late March, suggestive of a 
+disorganizing MJO. 
+• Continued destructive 
+interference with La Nina is 
+forecast during the next few 
+weeks, as the suppressed 
+phase of the MJO weakens the  
+Low Frequency footprint near 
+120E, with the enhanced phase 
+propagateing eastward across 
+the Western Pacific and into the 
+Western Hemisphere.
+• The ECMWF based velocity 
+potential forecasts are weaker 
+with the MJO than its RMM 
+forecasts
+RMM Index Observations &amp; Forecasts:
+• Models generally favor continued weakening of the MJO signals (with some solutions favoring a 
+westward retreat) during the next week or so, followed by a resumption of a more canonical eastward 
+propagation across the Western Pacific.
+• Renewed MJO activity in the longer leads appears to be the MJO expressing itself more off the equator 
+in the zonal wind and OLR forecasts (RMM evaluates conditions from 15S to 15N).  
+Outgoing Longwave Radiation (OLR) Anomaly Time/Lon Plots: 
+
+850-mb Zonal Wind Anomaly Time/Lon Plots: 
+
+Historical Precipitation Anomalies By MJO Phase:  
+Historical TC Origin Anomalies By MJO Phase &amp; Weeks 2+3 Genesis Climo:  
+
+Tropical Cyclone Monitoring/Forecast: NHC / CPHC  
+Tropical Cyclone Monitoring/Forecast: JTWC  
+TC Probabilistic Genesis / Tools : Weeks 2+3 
+Day 9 (11/27)
+
+Teleconnection Indices: PNA / AO:
+Composites:
+
+Mean 500-hPa Height Anomaly Forecasts: Weeks 2+3 
+Official Temperature &amp; Precipitation Forecasts:</pre>
+      </details>
+    </div>
+    <div class="folder-entry">
+      <h3><code>PDF/YYYY</code><span class="folder-date">2025-11-25</span></h3>
+      <p class="meta">Sample: <code>20251125_cpc_gth_briefing.pdf</code> · 2 files</p>
+      <div class="schema-box">
+      <div class="schema-box-header"><span class="schema-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span> Dataset Schema</div>
+      <div class="schema-no-data">Unstructured text / narrative report — no tabular schema applies.</div>
+    </div>
+    <details class="content-box">
+        <summary>View sample file</summary>
+        <pre>[PDF document – text extraction yielded no content]</pre>
+      </details>
+    </div>
+  </section>
+  <section id="vol-learnings" class="volume-section">
+    <h2>Learnings</h2>
+    <p class="vol-subtitle">Climate Pattern Reference</p>
+    <ul class="vol-desc">
+      <li>Educational reference materials on climate teleconnections</li>
+      <li>Covers patterns like PNA and their regional weather impacts</li>
+    </ul>
+    <p class="acronym-line">
+      <span class="acronym-chip"><b>PNA</b> = Pacific-North American teleconnection pattern</span>
+      <span class="acronym-chip"><b>ENSO</b> = El Niño-Southern Oscillation</span>
+      <span class="acronym-chip"><b>CPC</b> = Climate Prediction Center</span>
+      <span class="acronym-chip"><b>NWS</b> = National Weather Service</span>
+    </p>
+    <div class="layman-box"><span class="layman-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><ul><li><strong>Background reading</strong> for anyone new to climate data</li><li>Plain-language guides explaining what each climate pattern is</li><li>Covers how patterns like PNA and ENSO affect US weather</li><li><strong>Start here</strong> if the rest of this catalog feels unfamiliar</li></ul></div>
+    <div class="folder-entry">
+      <h3><code>learnings</code></h3>
+      <p class="meta">Sample: <code>cpc_pna.txt</code> · 2 files</p>
+      <div class="schema-box">
+      <div class="schema-box-header"><span class="schema-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span> Dataset Schema</div>
+      <div class="schema-no-data">Unstructured text / narrative report — no tabular schema applies.</div>
+    </div>
+    <details class="content-box">
+        <summary>View sample file</summary>
+        <pre>The Pacific/ North American teleconnection pattern (PNA) is one of the most prominent modes of low-frequency variability in the Northern Hemisphere extratropics. The positive phase of the PNA pattern features above-average heights in the vicinity of Hawaii and over the intermountain region of North America, and below-average heights located south of the Aleutian Islands and over the southeastern United States. The PNA pattern is associated with strong fluctuations in the strength and location of the East Asian jet stream. The positive phase is associated with an enhanced East Asian jet stream and with an eastward shift in the jet exit region toward the western United States. The negative phase is associated with a westward retraction of that jet stream toward eastern Asia, blocking activity over the high latitudes of the North pacific, and a strong split-flow configuration over the central North Pacific.
+
+The positive phase of the PNA pattern is associated with above-average temperatures over western Canada and the extreme western United States, and below-average temperatures across the south-central and southeastern U.S. The PNA tends to have little impact on surface temperature variability over North America during summer. The associated precipitation anomalies include above-average totals in the Gulf of Alaska extending into the Pacific Northwestern United States, and below-average totals over the upper Midwestern United States.
+
+Although the PNA pattern is a natural internal mode of climate variability, it is also strongly influenced by the El Ni o/ Southern Oscillation (ENSO) phenomenon. The positive phase of the PNA pattern tends to be associated with Pacific warm episodes (El Ni o), and the negative phase tends to be associated with Pacific cold episodes (La Ni a).</pre>
+      </details>
+    </div>
+  </section>
+  <section id="vol-mjo" class="volume-section">
+    <h2>MJO</h2>
+    <p class="vol-subtitle">Madden-Julian Oscillation</p>
+    <ul class="vol-desc">
+      <li>Tropical weather wave circling the globe every 30–60 days</li>
+      <li>Alternates between enhanced and suppressed rainfall phases</li>
+      <li>CPC reports: OLR anomalies, phase forecasts, regional impacts</li>
+    </ul>
+    <p class="acronym-line">
+      <span class="acronym-chip"><b>MJO</b> = Madden-Julian Oscillation</span>
+      <span class="acronym-chip"><b>OLR</b> = Outgoing Longwave Radiation</span>
+      <span class="acronym-chip"><b>RMM</b> = Real-time Multivariate MJO index</span>
+      <span class="acronym-chip"><b>GFS</b> = Global Forecast System</span>
+      <span class="acronym-chip"><b>ECMWF</b> = European Centre for Medium-Range Weather Forecasts</span>
+      <span class="acronym-chip"><b>CPC</b> = Climate Prediction Center</span>
+      <span class="acronym-chip"><b>NCEP</b> = National Centers for Environmental Prediction</span>
+      <span class="acronym-chip"><b>NWS</b> = National Weather Service</span>
+      <span class="acronym-chip"><b>IOD</b> = Indian Ocean Dipole</span>
+      <span class="acronym-chip"><b>SST</b> = Sea Surface Temperature</span>
+      <span class="acronym-chip"><b>GEFS</b> = Global Ensemble Forecast System</span>
+      <span class="acronym-chip"><b>CONUS</b> = Contiguous US</span>
+    </p>
+    <div class="layman-box"><span class="layman-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><ul><li><strong>Giant rain pulse</strong> that circles the entire globe every 5–7 weeks</li><li>Boosts rainfall in regions it passes over; suppresses it elsewhere</li><li>Can shift temperatures across North America weeks later</li><li>One of the <strong>most reliable 2–4 week weather signals</strong> forecasters have</li><li>Tracked via CPC reports with phase diagrams and regional impact maps</li></ul></div>
+    <div class="folder-entry">
+      <h3><code>mjo/unzip/MJO/2006</code><span class="folder-date">2006-12-25</span></h3>
+      <p class="meta">Sample: <code>20061225_cpc_mjo_commentary.pdf</code> · 2 files</p>
+      <div class="schema-box">
+      <div class="schema-box-header"><span class="schema-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span> Dataset Schema</div>
+      <div class="schema-no-data">Unstructured text / narrative report — no tabular schema applies.</div>
+    </div>
+    <details class="content-box">
+        <summary>View sample file</summary>
+        <pre>Madden/Julian Oscillation: 
+Recent Evolution, Current 
+Status and Forecasts
+Update prepared by
+Climate Prediction Center / NCEP
+December 25, 2006
+Outline
+• Overview
+• Recent Evolution and Current Conditions
+• Madden Julian Oscillation Forecast 
+• Summary
+Overview 
+• The latest observations indicate that the MJO remains weak but needs to be closely monitored.  
+• During week 1, there is an increased chance of above (below) normal rainfall for sections of the 
+tropical western Pacific Ocean (southern Maritime Continent and northern Australia) due to the 
+current El Nino conditions. Also, wet conditions are expected for much of the Indian Ocean and 
+sections of the western Maritime Continent.
+• Wet (dry) conditions are expected to remain fo r sections of the eastern Indian Ocean, western 
+Maritime Continent and western Pacific Ocean (southern maritime Continent and northern 
+Australia) during week 2. 
+• Favorable conditions for tropical cyclogenesis are e xpected to exist for sections of the Indian Ocean 
+during both weeks 1 and 2. 
+850-hPa Vector Wind Anomalies  (m s-1)
+Note that 
+shading 
+denotes the 
+magnitude of 
+the anomalous 
+wind vectors
+Robust westerly 
+anomalies remain in the 
+Indian Ocean associated 
+with the enhanced 
+convection during the 
+past 1-2 weeks. 
+Westerly anomalies 
+remain (albeit weaker) 
+across sections of the 
+equatorial eastern 
+Pacific Ocean. 
+Easterly anomalies now 
+stretch from the eastern Indian 
+Ocean to the Date Line.  
+Low-level (850-hPa) Zonal (east-
+west) Wind Anomalies (m s-1)
+Longitude
+Time
+Weaker-than-average easterlies or 
+westerlies (orange/red shading) 
+Stronger-than-average easterlies 
+(blue shading)
+Easterly anomalies have 
+strengthened some during the 
+past few days near the Date 
+Line. 
+Periods of westerly anomalies 
+were frequent near and west of 
+the Date Line during 
+September, October, and early 
+November. 
+Outgoing Longwave Radiation 
+(OLR) Anomalies (7.5°S-7.5°N)
+Drier-than-average conditions (/red shading) 
+Wetter-than-average conditions (blue shading)
+Longitude
+Time
+OLR anomalies associated 
+with the MJO propagated 
+eastward from the Indian to 
+western Pacific Oceans 
+beginning in early September.
+Suppressed convection across the 
+Maritime Continent continues to shift 
+gradually eastward while enhanced 
+convection continues in the Indian 
+Ocean. Periodic areas of enhanced 
+convection continue near the Date 
+Line.  
+Anomalous OLR: Last 30 days
+Drier-than-average conditions (red shading) 
+Wetter-than-average conditions (blue shading)
+Dry conditions have been persistent across 
+sections of the Maritime Continent and 
+Australia throughout the period. 
+During mid-late December, 
+enhanced convection was more 
+prevalent across the western and  
+central Pacific Ocean. 
+Extensive enhanced convection has 
+redeveloped across the western 
+Indian Ocean during the past ten 
+days. 
+1  DEC 2006
+200-hPa Velocity Potential 
+Anomalies (5°S-5°N)
+Negative anomalies (green 
+shading) indicate favorable 
+conditions for precipitation.
+Positive anomalies (brown 
+shading) indicate unfavorable 
+conditions for precipitation.
+Longitude
+Time
+Moderate to strong MJO activity was 
+observed from late-September to 
+mid-October. 
+The MJO weakened considerably 
+during the late October to mid-
+December time period. 
+The MJO was incoherent 
+during much of August and 
+September. 
+200-hPa Vector Winds and Anomalies  
+(m s-1)
+Note that shading denotes the 
+magnitude of the anomalous 
+wind vectors.
+Strong easterly anomalies centered 
+along the equator stretch from the 
+Atlantic Ocean to Africa. 
+The latest downwelling Kelvin wave 
+was initiated in early October and 
+appears to be the strongest in over a 
+year and close to reaching the South 
+America coast.
+Heat Content Evolution in the Eq. 
+Pacific
+Longitude
+Time
+Starting in April, above normal upper 
+oceanic water temperatures expanded 
+from the western Pacific into the 
+eastern Pacific in part due to Kelvin 
+wave activity. 
+MJO Index (Magnitude and Phase)
+The current state of the MJO as determined by an index based on 
+Empirical Orthogonal Function (EOF) analysis using combined 
+fields of near-equatorially-averaged 850 hPa zonal wind, 200 
+hPa zonal wind, and satellite-observed outgoing longwave 
+radiation (OLR) (Wheeler and Hendon, 2004).
+The axes represent the time series of the two leading modes of 
+variability and are used to measure the amplitude while the 
+triangular areas indicate the phase or location of the enhanced 
+phase of the MJO. The farther away from the center of the circle
+the stronger the MJO. Different color lines indicate different 
+months.
+Although the MJO projection has strengthened, 
+the MJO remains weak as indicated by only 
+minor eastward movement. 
+The MJO was strong during October as 
+indicated by a strong projection and eastward 
+propagation from the Maritime Continent to the 
+Indian Ocean (red line).  
+Statistical OLR MJO Forecast
+The forecast indicates 
+enhanced convection in the 
+Indian Ocean and western 
+Maritime Continent during 
+the next 5-10 days. 
+Global Forecast System (GFS) Week 1 
+Precipitation Forecast
+Potential Benefits/Hazards – Week 1
+Valid December 26 – January 1, 2007
+1. An increased chance for above normal rainfall for much of the Indian Ocean and western Maritime Continent. 
+2. Favorable conditions exist for tropical cyclogenesis for the Indian Ocean.
+3. An increased chance for  below normal rainfall across the southern Maritime Continent and northern Australia.
+4. An increased chance for above normal rainfall for sections of the western Pacific Ocean.
+
+Potential Benefits/Hazards – Week 2
+Valid January 2 – January 8, 2006
+1. An increased chance for above normal rainfall for the eastern Indian Ocean and western Maritime Continent. 
+2. Favorable conditions exist for tropical cyclogenesis for the southern Indian Ocean. 
+3. An increased chance for  below normal rainfall for sections of the southern Maritime Continent and northern Australia. 
+4. An increased chance for above normal rainfall for sections of the western Pacific Ocean.
+
+Summary
+• The latest observations indicate that the MJO remains weak but needs to be closely monitored.  
+• During week 1, there is an increased chance of above (below) normal rainfall for sections of the 
+tropical western Pacific Ocean (southern Maritime Continent and northern Australia) due to the 
+current El Nino conditions. Also, wet conditions are expected for much of the Indian Ocean and 
+sections of the western Maritime Continent.
+• Wet (dry) conditions are expected to remain fo r sections of the eastern Indian Ocean, western 
+Maritime Continent and western Pacific Ocean (southern maritime Continent and northern 
+Australia) during week 2. 
+• Favorable conditions for tropical cyclogenesis are e xpected to exist for sections of the Indian Ocean 
+during both weeks 1 and 2. </pre>
+      </details>
+    </div>
+    <div class="folder-entry">
+      <h3><code>mjo/unzip/MJO/2025</code><span class="folder-date">2025-11-24</span></h3>
+      <p class="meta">Sample: <code>20251124_cpc_mjo_commentary.pdf</code> · 2 files</p>
+      <div class="schema-box">
+      <div class="schema-box-header"><span class="schema-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span> Dataset Schema</div>
+      <div class="schema-no-data">Unstructured text / narrative report — no tabular schema applies.</div>
+    </div>
+    <details class="content-box">
+        <summary>View sample file</summary>
+        <pre>Madden-Julian Oscillation: 
+Recent Evolution, Current Status and 
+Predictions
+Update prepared by the Climate Prediction Center
+NWS / NCEP / CPC
+24 November 2025
+• MJO activity became more incoherent during the past week, as the background La Niña base state and 
+faster moving modes both contributed to destructive interference.
+• Dynamical model MJO index forecasts have remained consistent showing a resumption of MJO-type 
+evolution during the last week of November into early December, with the enhanced convective phase 
+crossing the Pacific.
+• Given the below-average SSTs along the equatorial central and eastern Pacific, enhanced convection 
+associated with the MJO may be more apparent away from the Equator.
+• The ENSO background state will continue to destructively interfere with the MJO evolution, but 
+dynamical model guidance shows an eventual breakdown of the enhanced trade regime during early 
+December, with the ECMWF bringing strong low-level westerly anomalies across the Pacific.
+• The MJO favors continued tropical cyclogenesis across the Northwest Pacific basin. Dynamical models 
+favor additional development over the Bay of Bengal during Week-1, with development also possible in 
+the vicinity of Australia.
+• During Week-2 and Week-3, the favored progression of the MJO brings increased chances for tropical 
+cyclogenesis across the southwestern Pacific basin.
+A discussion of potential impacts for the global tropics and those related to the U.S. are updated on Tuesday at: 
+http://www.cpc.ncep.noaa.gov/products/precip/CWlink/ghazards/index.php
+Overview
+Green shades: Anomalous divergence (favorable for precipitation)
+Brown shades: Anomalous convergence (unfavorable for precipitation)
+200-hPa Velocity Potential Anomalies
+• During November, the low frequency base state favoring enhanced convection over the Maritime Continent 
+continued to play a large role in the tropical circulation, with higher frequency modes bringing periods of 
+enhanced divergence aloft across the Pacific.
+• More recently, enhanced convection increased once again across the far western Pacific following the 
+suppressed phase of a equatorial Kelvin wave.
+
+Shading denotes the zonal wind anomaly. Blue shades: Anomalous easterlies. Red shades: Anomalous westerlies.
+200-hPa Wind Anomalies
+• A significant change to the Indian Ocean Dipole state appears to have occurred during November, with 
+persistent easterlies near 60E replaced with westerly anomalies.
+• Eastward progression of easterly anomalies associated with the MJO appears to have been disrupted over the 
+West Pacific.
+• Westerly anomalies associated with the La Niña background state strengthened over the central and eastern 
+Pacific.
+
+Shading denotes the zonal wind anomaly. Blue shades: Anomalous easterlies. Red shades: Anomalous westerlies.
+850-hPa Wind Anomalies
+• An eastward shift in westerly anomalies over the Indian Ocean occurred during November.
+• Strong westerly (easterly) anomalies over the Maritime Continent (central Pacific) are consistent with 
+ongoing La Niña activity.
+• No clear intraseasonal footprint is apparent in the low-level wind field, with disruptions to the base state 
+occurring through more transient modes. 
+
+Outgoing Longwave Radiation (OLR) Anomalies
+Green shades: Anomalous convection (wetness)
+Brown shades: Anomalous subsidence (dryness)
+• Enhanced convection over the Maritime Continent remains the dominant feature in the tropical OLR pattern.
+• Enhanced convection appears to have propagated across the Pacific during mid-November, but most of the 
+activity has been off-Equator.
+• Suppressed convection returned to the far West Pacific during mid-November, but more recently enhanced 
+convection and potential tropical cyclone activity has returned.
+
+SSTs and Weekly Heat Content Evolution in the Equatorial Pacific
+• Below-normal SSTs are observed across all Niño regions, with the Niño 1+2 region remaining variable.  
+• Below normal subsurface temperatures envelop nearly the entire Western Hemisphere, with the strongest 
+negative anomalies concentrated over the eastern Pacific consistent with the ongoing La Niña event.
+
+MJO Index: Recent Evolution
+• While remaining in Phase 6 (West Pacific)., 
+the RMM index has exhibited little eastward 
+propagation during mid-November, with 
+fluctuations in amplitude due to the passage 
+of higher frequency modes.
+For more information on the RMM index and how to interpret its forecast please see:
+https://www.cpc.ncep.noaa.gov/products/precip/CWlink/MJO/CPC_MJOinformation.pdf
+MJO Index: Forecast Evolution
+• The GEFS and ECMWF ensemble members show good agreement favoring a resumption of 
+eastward propagation across the Pacific over the next two weeks.
+• Both model systems depict an increase in amplitude of the index as it crosses the Pacific.
+• The GEFS has a slightly faster propagation speed and higher amplitude than most of the 
+ECMWF ensemble members.
+GEFS Forecast ECMWF Forecast
+MJO: GEFS Forecast Evolution
+Figures below show MJO associated OLR anomalies only (reconstructed from RMM1 and RMM2) and do not include 
+contributions from other modes (i.e., ENSO, monsoons, etc.)
+• The GEFS OLR anomaly forecast based on the 
+RMM index shows a robust Pacific MJO event 
+unfolding.
+MJO: Constructed Analog Forecast Evolution
+Figures below show MJO associated OLR anomalies only (reconstructed from RMM1 and RMM2) and do not include 
+contributions from other modes (i.e., ENSO, monsoons, etc.)
+• The constructed analog is similar to the GEFS, with 
+even higher amplitude as the MJO signal crosses 
+the Pacific basin over the next two weeks.
+MJO: Tropical Composite Maps by RMM Phase
+850-hPa Velocity Potential and 
+Wind Anomalies Precipitation Anomalies
+
+MJO: CONUS Composite Maps by RMM Phase - Temperature
+Left hand side plots show 
+temperature anomalies by MJO 
+phase for MJO events that have 
+occurred over the three month 
+period in the historical record. Blue 
+(red) shades show negative 
+(positive) anomalies respectively. 
+Right hand side plots show a 
+measure of significance for the left 
+hand side anomalies. Purple 
+shades indicate areas in which the 
+anomalies are significant at the 
+95% or better confidence level.
+More information: http://www.cpc.ncep.noaa.gov/products/precip/CWlink/MJO/mjo.shtml
+
+MJO: CONUS Composite Maps by RMM Phase - Precipitation
+More information: http://www.cpc.ncep.noaa.gov/products/precip/CWlink/MJO/mjo.shtml
+Left hand side plots show 
+precipitation anomalies by MJO 
+phase for MJO events that have 
+occurred over the three month 
+period in the historical record. 
+Brown (green) shades show 
+negative (positive) anomalies 
+respectively. 
+Right hand side plots show a 
+measure of significance for the left 
+hand side anomalies. Purple 
+shades indicate areas in which the 
+anomalies are significant at the 
+95% or better confidence level.
+</pre>
+      </details>
+    </div>
+  </section>
+  <section id="vol-mjo_phase" class="volume-section">
+    <h2>MJO Phase</h2>
+    <p class="vol-subtitle">Daily Phase Tracking</p>
+    <ul class="vol-desc">
+      <li>Daily MJO phase number (1–8)</li>
+      <li>Each phase maps to a specific geographic location of enhanced convection</li>
+      <li>Used to forecast regional precipitation &amp; temperature anomalies</li>
+    </ul>
+    <p class="acronym-line">
+      <span class="acronym-chip"><b>MJO</b> = Madden-Julian Oscillation</span>
+      <span class="acronym-chip"><b>OLR</b> = Outgoing Longwave Radiation</span>
+      <span class="acronym-chip"><b>SST</b> = Sea Surface Temperature</span>
+      <span class="acronym-chip"><b>CPC</b> = Climate Prediction Center</span>
+    </p>
+    <div class="layman-box"><span class="layman-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><ul><li>The MJO's global journey is split into <strong>8 numbered phases</strong></li><li>Each phase = a specific geographic location of the rain pulse</li><li>Knowing today's phase lets forecasters predict regional impacts 2–4 weeks out</li><li>Example: <em>phase 6 → cold air risk for eastern US in winter</em></li><li>This dataset tracks that phase number every single day</li></ul></div>
+    
+    <div class="data-layer-separator"><span class="layer-label-raw">Raw data — as received</span></div>
+    <div class="folder-entry">
+      <h3><code>mjo_phase/YYYYMMDD</code><span class="folder-date">latest snapshot: 2025-11-25</span></h3>
+      <p class="meta">Sample: <code>MJO_PHASE_historical.md</code> · 2 files</p>
+      <div class="schema-box">
+      <div class="schema-box-header"><span class="schema-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span> Dataset Schema</div>
+      <table class="schema-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+      <tr>
+        <td class="schema-field">wx_index</td>
+        <td class="schema-type">string</td>
+        <td class="schema-note">Index name — always MJO_PHASE</td>
+      </tr>
+      <tr>
+        <td class="schema-field">wx_date</td>
+        <td class="schema-type">date</td>
+        <td class="schema-note">Calendar date (YYYY-MM-DD)</td>
+      </tr>
+      <tr>
+        <td class="schema-field">wx_value</td>
+        <td class="schema-type">int</td>
+        <td class="schema-note">Current MJO phase number (1–8); each phase maps to a geographic region of enhanced convection</td>
+      </tr>
+        </tbody>
+      </table><div class="schema-note" style="padding:0.3rem 0.7rem 0.5rem;border-top:1px solid #e2e8f0">Phase 1 = Indian Ocean · Phase 4–5 = Maritime Continent · Phase 6–7 = Western Pacific · Phase 8 = Western Hemisphere</div>
+    </div>
+    <details class="content-box">
+        <summary>View sample file</summary>
+        <pre># MJO_PHASE - Historical Data
+
+**Generated:** 2025-11-25 10:40:50
+
+**Period:** 2025-10-21 to 2025-11-24
+
+**Total Records:** 35
+
+## Data Summary
+
+- **Mean Value:** 5.171
+- **Min Value:** 3.000
+- **Max Value:** 6.000
+- **Std Dev:** 0.822
+
+## Historical Data Table
+
+| wx_index   | wx_date    |   wx_value |
+|:-----------|:-----------|-----------:|
+| MJO_PHASE  | 2025-10-21 |          3 |
+| MJO_PHASE  | 2025-10-22 |          4 |
+| MJO_PHASE  | 2025-10-23 |          4 |
+| MJO_PHASE  | 2025-10-24 |          4 |
+| MJO_PHASE  | 2025-10-25 |          4 |
+| MJO_PHASE  | 2025-10-26 |          4 |
+| MJO_PHASE  | 2025-10-27 |          4 |
+| MJO_PHASE  | 2025-10-28 |          5 |
+| MJO_PHASE  | 2025-10-29 |          5 |
+| MJO_PHASE  | 2025-10-30 |          5 |
+| MJO_PHASE  | 2025-10-31 |          5 |
+| MJO_PHASE  | 2025-11-01 |          5 |
+| MJO_PHASE  | 2025-11-02 |          5 |
+| MJO_PHASE  | 2025-11-03 |          5 |
+| MJO_PHASE  | 2025-11-04 |          5 |
+| MJO_PHASE  | 2025-11-05 |          5 |
+| MJO_PHASE  | 2025-11-06 |          5 |
+| MJO_PHASE  | 2025-11-07 |          5 |
+| MJO_PHASE  | 2025-11-08 |          6 |
+| MJO_PHASE  | 2025-11-09 |          6 |
+| MJO_PHASE  | 2025-11-10 |          6 |
+| MJO_PHASE  | 2025-11-11 |          6 |
+| MJO_PHASE  | 2025-11-12 |          6 |
+| MJO_PHASE  | 2025-11-13 |          6 |
+| MJO_PHASE  | 2025-11-14 |          6 |
+| MJO_PHASE  | 2025-11-15 |          6 |
+| MJO_PHASE  | 2025-11-16 |          6 |
+| MJO_PHASE  | 2025-11-17 |          6 |
+| MJO_PHASE  | 2025-11-18 |          6 |
+| MJO_PHASE  | 2025-11-19 |          5 |
+| MJO_PHASE  | 2025-11-20 |          5 |
+| MJO_PHASE  | 2025-11-21 |          5 |
+| MJO_PHASE  | 2025-11-22 |          6 |
+| MJO_PHASE  | 2025-11-23 |          6 |
+| MJO_PHASE  | 2025-11-24 |          6 |</pre>
+      </details>
+    </div>
+  
+    <div class="data-layer-separator"><span class="layer-label-ingested">Ingested — Unity Catalog (Databricks)</span></div>
+    <div class="ingested-card">
+      <div class="ingested-card-header"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg> Delta Tables · edf.chatbot</div>
+      <ul class="ingested-table-list">
+      <li>
+        <div class="it-name">edf.chatbot.bronze_mjo_phase_forecast</div>
+        <div class="it-meta">
+          <span class="it-chip">Type <b>MANAGED</b></span>
+          <span class="it-chip">Format <b>DELTA</b></span>
+          <span class="it-chip">Catalog <b>edf</b></span>
+          <span class="it-chip">Schema <b>chatbot</b></span>
+        </div>
+        <div class="it-cols"><span class="it-col-pill ">wx_index<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_model<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_cycle<span style="opacity:.55"> int</span></span><span class="it-col-pill ">wx_member_id<span style="opacity:.55"> int</span></span><span class="it-col-pill ">wx_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_forecast_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_value<span style="opacity:.55"> int</span></span><span class="it-col-pill sys">_generated_ts<span style="opacity:.55"> ts</span></span><span class="it-col-pill sys">_source_file<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">_ingestion_folder<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">_ingested_at<span style="opacity:.55"> ts</span></span></div>
+        <div class="it-chip" style="margin-top:.3rem;font-style:italic">Ensemble MJO phase forecasts — one row per model / member / date</div>
+      
+        <details class="it-sample-details">
+          <summary>Sample data (5 rows)</summary>
+          <div class="it-sample"><table class="it-sample-table">
+            <thead><tr><th>wx_index</th><th>wx_model</th><th>wx_cycle</th><th>wx_member_id</th><th>wx_date</th><th>wx_forecast_date</th><th>wx_value</th></tr></thead>
+            <tbody><tr><td>MJO_PHASE</td><td>EURO_WEEKLY</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-17</td><td>6</td></tr><tr><td>MJO_PHASE</td><td>EURO_WEEKLY</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-18</td><td>6</td></tr><tr><td>MJO_PHASE</td><td>EURO_WEEKLY</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-19</td><td>6</td></tr><tr><td>MJO_PHASE</td><td>EURO_WEEKLY</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-20</td><td>6</td></tr><tr><td>MJO_PHASE</td><td>EURO_WEEKLY</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-21</td><td>6</td></tr></tbody>
+          </table></div>
+        </details>
+      </li>
+      <li>
+        <div class="it-name">edf.chatbot.bronze_mjo_phase_historical</div>
+        <div class="it-meta">
+          <span class="it-chip">Type <b>MANAGED</b></span>
+          <span class="it-chip">Format <b>DELTA</b></span>
+          <span class="it-chip">Catalog <b>edf</b></span>
+          <span class="it-chip">Schema <b>chatbot</b></span>
+        </div>
+        <div class="it-cols"><span class="it-col-pill ">wx_index<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_value<span style="opacity:.55"> int</span></span><span class="it-col-pill sys">_generated_ts<span style="opacity:.55"> ts</span></span><span class="it-col-pill sys">_source_file<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">_ingestion_folder<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">_ingested_at<span style="opacity:.55"> ts</span></span></div>
+        <div class="it-chip" style="margin-top:.3rem;font-style:italic">Observed daily MJO phase (1–8)</div>
+      
+        <details class="it-sample-details">
+          <summary>Sample data (5 rows)</summary>
+          <div class="it-sample"><table class="it-sample-table">
+            <thead><tr><th>wx_index</th><th>wx_date</th><th>wx_value</th></tr></thead>
+            <tbody><tr><td>MJO_PHASE</td><td>2025-10-20</td><td>3</td></tr><tr><td>MJO_PHASE</td><td>2025-10-21</td><td>3</td></tr><tr><td>MJO_PHASE</td><td>2025-10-22</td><td>4</td></tr><tr><td>MJO_PHASE</td><td>2025-10-23</td><td>4</td></tr><tr><td>MJO_PHASE</td><td>2025-10-24</td><td>4</td></tr></tbody>
+          </table></div>
+        </details>
+      </li>
+      </ul>
+    </div>
+  </section>
+  <section id="vol-nao" class="volume-section">
+    <h2>NAO</h2>
+    <p class="vol-subtitle">North Atlantic Oscillation</p>
+    <ul class="vol-desc">
+      <li>Daily index: pressure difference between Icelandic Low and Azores High</li>
+      <li>Positive NAO → milder Europe / colder E. North America</li>
+      <li>Negative NAO → cold European winters / milder E. North America</li>
+    </ul>
+    <p class="acronym-line">
+      <span class="acronym-chip"><b>NAO</b> = North Atlantic Oscillation</span>
+      <span class="acronym-chip"><b>E.</b> = Eastern</span>
+      <span class="acronym-chip"><b>CPC</b> = Climate Prediction Center</span>
+      <span class="acronym-chip"><b>NOAA</b> = National Oceanic and Atmospheric Administration</span>
+    </p>
+    <div class="layman-box"><span class="layman-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><ul><li><strong>Two air pressure systems over the North Atlantic</strong> constantly push against each other</li><li>Which one "wins" each season determines whether cold or mild air flows into Europe and the US</li><li><strong>Positive NAO</strong> → mild &amp; stormy Europe; cold eastern US</li><li><strong>Negative NAO</strong> → cold European winters; milder US east coast</li><li>One of the main drivers of winter weather on both sides of the Atlantic</li></ul></div>
+    
+    <div class="data-layer-separator"><span class="layer-label-raw">Raw data — as received</span></div>
+    <div class="folder-entry">
+      <h3><code>nao/YYYYMMDD</code><span class="folder-date">latest snapshot: 2025-11-25</span></h3>
+      <p class="meta">Sample: <code>NAO_historical.md</code> · 2 files</p>
+      <div class="schema-box">
+      <div class="schema-box-header"><span class="schema-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span> Dataset Schema</div>
+      <table class="schema-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+      <tr>
+        <td class="schema-field">wx_index</td>
+        <td class="schema-type">string</td>
+        <td class="schema-note">Index name — always NAO</td>
+      </tr>
+      <tr>
+        <td class="schema-field">wx_date</td>
+        <td class="schema-type">date</td>
+        <td class="schema-note">Calendar date (YYYY-MM-DD)</td>
+      </tr>
+      <tr>
+        <td class="schema-field">wx_value</td>
+        <td class="schema-type">float</td>
+        <td class="schema-note">Daily NAO index value (dimensionless; positive = milder Europe / colder E. North America)</td>
+      </tr>
+        </tbody>
+      </table>
+    </div>
+    <details class="content-box">
+        <summary>View sample file</summary>
+        <pre># NAO - Historical Data
+
+**Generated:** 2025-11-25 10:40:51
+
+**Period:** 2025-10-21 to 2025-11-25
+
+**Total Records:** 36
+
+## Data Summary
+
+- **Mean Value:** -0.771
+- **Min Value:** -3.324
+- **Max Value:** 0.868
+- **Std Dev:** 1.084
+
+## Historical Data Table
+
+| wx_index   | wx_date    |   wx_value |
+|:-----------|:-----------|-----------:|
+| NAO        | 2025-10-21 |    -0.3528 |
+| NAO        | 2025-10-22 |    -0.4194 |
+| NAO        | 2025-10-23 |    -0.8024 |
+| NAO        | 2025-10-24 |    -0.9832 |
+| NAO        | 2025-10-25 |    -0.9189 |
+| NAO        | 2025-10-26 |    -0.5676 |
+| NAO        | 2025-10-27 |    -0.4931 |
+| NAO        | 2025-10-28 |    -0.368  |
+| NAO        | 2025-10-29 |    -0.077  |
+| NAO        | 2025-10-30 |     0.0131 |
+| NAO        | 2025-10-31 |     0.1293 |
+| NAO        | 2025-11-01 |     0.3512 |
+| NAO        | 2025-11-02 |     0.8676 |
+| NAO        | 2025-11-03 |     0.714  |
+| NAO        | 2025-11-04 |    -0.2907 |
+| NAO        | 2025-11-05 |    -0.9804 |
+| NAO        | 2025-11-06 |    -0.97   |
+| NAO        | 2025-11-07 |    -0.9262 |
+| NAO        | 2025-11-08 |    -0.7537 |
+| NAO        | 2025-11-09 |    -0.8737 |
+| NAO        | 2025-11-10 |    -1.1313 |
+| NAO        | 2025-11-11 |    -1.8765 |
+| NAO        | 2025-11-12 |    -2.3936 |
+| NAO        | 2025-11-13 |    -2.4387 |
+| NAO        | 2025-11-14 |    -3.102  |
+| NAO        | 2025-11-15 |    -3.3236 |
+| NAO        | 2025-11-16 |    -2.7018 |
+| NAO        | 2025-11-17 |    -2.1769 |
+| NAO        | 2025-11-18 |    -1.6658 |
+| NAO        | 2025-11-19 |    -0.9492 |
+| NAO        | 2025-11-20 |    -0.0161 |
+| NAO        | 2025-11-21 |     0.405  |
+| NAO        | 2025-11-22 |     0.437  |
+| NAO        | 2025-11-23 |     0.3427 |
+| NAO        | 2025-11-24 |     0.2134 |
+| NAO        | 2025-11-25 |     0.3407 |</pre>
+      </details>
+    </div>
+  
+    <div class="data-layer-separator"><span class="layer-label-ingested">Ingested — Unity Catalog (Databricks)</span></div>
+    <div class="ingested-card">
+      <div class="ingested-card-header"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg> Delta Tables · edf.chatbot</div>
+      <ul class="ingested-table-list">
+      <li>
+        <div class="it-name">edf.chatbot.nao_forecast_bronze</div>
+        <div class="it-meta">
+          <span class="it-chip">Type <b>MANAGED</b></span>
+          <span class="it-chip">Format <b>DELTA</b></span>
+          <span class="it-chip">Catalog <b>edf</b></span>
+          <span class="it-chip">Schema <b>chatbot</b></span>
+        </div>
+        <div class="it-cols"><span class="it-col-pill ">wx_index<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_model<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_cycle<span style="opacity:.55"> int</span></span><span class="it-col-pill ">wx_member_id<span style="opacity:.55"> int</span></span><span class="it-col-pill ">wx_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_forecast_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_value<span style="opacity:.55"> float</span></span><span class="it-col-pill sys">source_folder<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">source_file<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">_ingested_at<span style="opacity:.55"> ts</span></span></div>
+        <div class="it-chip" style="margin-top:.3rem;font-style:italic">Ensemble NAO index forecasts</div>
+      
+        <details class="it-sample-details">
+          <summary>Sample data (5 rows)</summary>
+          <div class="it-sample"><table class="it-sample-table">
+            <thead><tr><th>wx_index</th><th>wx_model</th><th>wx_cycle</th><th>wx_member_id</th><th>wx_date</th><th>wx_forecast_date</th><th>wx_value</th></tr></thead>
+            <tbody><tr><td>NAO</td><td>EURO_ENS</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-17</td><td>-2.3587</td></tr><tr><td>NAO</td><td>EURO_ENS</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-18</td><td>-1.9287</td></tr><tr><td>NAO</td><td>EURO_ENS</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-19</td><td>-1.3379</td></tr><tr><td>NAO</td><td>EURO_ENS</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-20</td><td>-0.4631</td></tr><tr><td>NAO</td><td>EURO_ENS</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-21</td><td>0.4075</td></tr></tbody>
+          </table></div>
+        </details>
+      </li>
+      <li>
+        <div class="it-name">edf.chatbot.nao_historical_bronze</div>
+        <div class="it-meta">
+          <span class="it-chip">Type <b>MANAGED</b></span>
+          <span class="it-chip">Format <b>DELTA</b></span>
+          <span class="it-chip">Catalog <b>edf</b></span>
+          <span class="it-chip">Schema <b>chatbot</b></span>
+        </div>
+        <div class="it-cols"><span class="it-col-pill ">wx_index<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_value<span style="opacity:.55"> float</span></span><span class="it-col-pill sys">source_folder<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">source_file<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">_ingested_at<span style="opacity:.55"> ts</span></span></div>
+        <div class="it-chip" style="margin-top:.3rem;font-style:italic">Observed daily NAO index values</div>
+      
+        <details class="it-sample-details">
+          <summary>Sample data (5 rows)</summary>
+          <div class="it-sample"><table class="it-sample-table">
+            <thead><tr><th>wx_index</th><th>wx_date</th><th>wx_value</th><th>source_folder</th><th>source_file</th></tr></thead>
+            <tbody><tr><td>NAO</td><td>2025-10-20</td><td>-0.5264</td><td>20251124</td><td>NAO_historical.md</td></tr><tr><td>NAO</td><td>2025-10-21</td><td>-0.3528</td><td>20251124</td><td>NAO_historical.md</td></tr><tr><td>NAO</td><td>2025-10-22</td><td>-0.4194</td><td>20251124</td><td>NAO_historical.md</td></tr><tr><td>NAO</td><td>2025-10-23</td><td>-0.8024</td><td>20251124</td><td>NAO_historical.md</td></tr><tr><td>NAO</td><td>2025-10-24</td><td>-0.9832</td><td>20251124</td><td>NAO_historical.md</td></tr></tbody>
+          </table></div>
+        </details>
+      </li>
+      </ul>
+    </div>
+  </section>
+  <section id="vol-pna" class="volume-section">
+    <h2>PNA</h2>
+    <p class="vol-subtitle">Pacific-North American Pattern</p>
+    <ul class="vol-desc">
+      <li>Daily teleconnection index for Pacific/North America pressure anomalies</li>
+      <li>Positive → colder eastern US, warmer Alaska/W. Canada</li>
+      <li>Negative → reversed temperature anomalies</li>
+    </ul>
+    <p class="acronym-line">
+      <span class="acronym-chip"><b>PNA</b> = Pacific-North American teleconnection pattern</span>
+      <span class="acronym-chip"><b>W.</b> = Western</span>
+      <span class="acronym-chip"><b>CPC</b> = Climate Prediction Center</span>
+      <span class="acronym-chip"><b>NOAA</b> = National Oceanic and Atmospheric Administration</span>
+    </p>
+    <div class="layman-box"><span class="layman-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><ul><li><strong>Atmospheric wave</strong> linking Pacific Ocean patterns to North American weather</li><li><strong>Positive PNA</strong> → warm Alaska &amp; W. Canada; cold eastern US</li><li><strong>Negative PNA</strong> → reversed pattern</li><li>A key <em>teleconnection</em>: a distant shift that reliably impacts weather thousands of miles away</li><li>Strongly influenced by El Niño / La Niña cycles</li></ul></div>
+    
+    <div class="data-layer-separator"><span class="layer-label-raw">Raw data — as received</span></div>
+    <div class="folder-entry">
+      <h3><code>pna/YYYYMMDD</code><span class="folder-date">latest snapshot: 2025-11-25</span></h3>
+      <p class="meta">Sample: <code>PNA_historical.md</code> · 2 files</p>
+      <div class="schema-box">
+      <div class="schema-box-header"><span class="schema-icon"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 3v18"/><path d="M15 3v18"/></svg></span> Dataset Schema</div>
+      <table class="schema-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+      <tr>
+        <td class="schema-field">wx_index</td>
+        <td class="schema-type">string</td>
+        <td class="schema-note">Index name — always PNA</td>
+      </tr>
+      <tr>
+        <td class="schema-field">wx_date</td>
+        <td class="schema-type">date</td>
+        <td class="schema-note">Calendar date (YYYY-MM-DD)</td>
+      </tr>
+      <tr>
+        <td class="schema-field">wx_value</td>
+        <td class="schema-type">float</td>
+        <td class="schema-note">Daily PNA index value (dimensionless; positive = colder eastern US / warmer Alaska)</td>
+      </tr>
+        </tbody>
+      </table>
+    </div>
+    <details class="content-box">
+        <summary>View sample file</summary>
+        <pre># PNA - Historical Data
+
+**Generated:** 2025-11-25 10:40:51
+
+**Period:** 2025-10-21 to 2025-11-25
+
+**Total Records:** 36
+
+## Data Summary
+
+- **Mean Value:** 0.420
+- **Min Value:** -0.518
+- **Max Value:** 2.335
+- **Std Dev:** 0.637
+
+## Historical Data Table
+
+| wx_index   | wx_date    |   wx_value |
+|:-----------|:-----------|-----------:|
+| PNA        | 2025-10-21 |    -0.2317 |
+| PNA        | 2025-10-22 |     0.5509 |
+| PNA        | 2025-10-23 |     1.0991 |
+| PNA        | 2025-10-24 |     1.0008 |
+| PNA        | 2025-10-25 |     0.1882 |
+| PNA        | 2025-10-26 |    -0.0636 |
+| PNA        | 2025-10-27 |     0.1758 |
+| PNA        | 2025-10-28 |     0.9815 |
+| PNA        | 2025-10-29 |     1.1977 |
+| PNA        | 2025-10-30 |     2.3347 |
+| PNA        | 2025-10-31 |     2.0672 |
+| PNA        | 2025-11-01 |     0.8836 |
+| PNA        | 2025-11-02 |    -0.1743 |
+| PNA        | 2025-11-03 |     0.0168 |
+| PNA        | 2025-11-04 |    -0.2404 |
+| PNA        | 2025-11-05 |     0.5167 |
+| PNA        | 2025-11-06 |     0.4338 |
+| PNA        | 2025-11-07 |     0.3429 |
+| PNA        | 2025-11-08 |     0.4818 |
+| PNA        | 2025-11-09 |     1.1481 |
+| PNA        | 2025-11-10 |     0.7685 |
+| PNA        | 2025-11-11 |     0.2486 |
+| PNA        | 2025-11-12 |    -0.5185 |
+| PNA        | 2025-11-13 |    -0.2977 |
+| PNA        | 2025-11-14 |    -0.4981 |
+| PNA        | 2025-11-15 |    -0.0341 |
+| PNA        | 2025-11-16 |     0.6225 |
+| PNA        | 2025-11-17 |     0.757  |
+| PNA        | 2025-11-18 |     0.4947 |
+| PNA        | 2025-11-19 |     0.0495 |
+| PNA        | 2025-11-20 |     0.2544 |
+| PNA        | 2025-11-21 |     0.2516 |
+| PNA        | 2025-11-22 |    -0.1668 |
+| PNA        | 2025-11-23 |    -0.0757 |
+| PNA        | 2025-11-24 |     0.1923 |
+| PNA        | 2025-11-25 |     0.372  |</pre>
+      </details>
+    </div>
+  
+    <div class="data-layer-separator"><span class="layer-label-ingested">Ingested — Unity Catalog (Databricks)</span></div>
+    <div class="ingested-card">
+      <div class="ingested-card-header"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg> Delta Tables · edf.chatbot</div>
+      <ul class="ingested-table-list">
+      <li>
+        <div class="it-name">edf.chatbot.pna_forecast_bronze</div>
+        <div class="it-meta">
+          <span class="it-chip">Type <b>MANAGED</b></span>
+          <span class="it-chip">Format <b>DELTA</b></span>
+          <span class="it-chip">Catalog <b>edf</b></span>
+          <span class="it-chip">Schema <b>chatbot</b></span>
+        </div>
+        <div class="it-cols"><span class="it-col-pill ">wx_index<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_model<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_cycle<span style="opacity:.55"> int</span></span><span class="it-col-pill ">wx_member_id<span style="opacity:.55"> int</span></span><span class="it-col-pill ">wx_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_forecast_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_value<span style="opacity:.55"> float</span></span><span class="it-col-pill sys">source_folder_date<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">source_file<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">generated_at<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">ingested_at<span style="opacity:.55"> ts</span></span></div>
+        <div class="it-chip" style="margin-top:.3rem;font-style:italic">Ensemble PNA index forecasts</div>
+      
+        <details class="it-sample-details">
+          <summary>Sample data (5 rows)</summary>
+          <div class="it-sample"><table class="it-sample-table">
+            <thead><tr><th>wx_index</th><th>wx_model</th><th>wx_cycle</th><th>wx_member_id</th><th>wx_date</th><th>wx_forecast_date</th><th>wx_value</th></tr></thead>
+            <tbody><tr><td>PNA</td><td>EURO_ENS</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-17</td><td>0.6752</td></tr><tr><td>PNA</td><td>EURO_ENS</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-18</td><td>0.7381</td></tr><tr><td>PNA</td><td>EURO_ENS</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-19</td><td>0.1889</td></tr><tr><td>PNA</td><td>EURO_ENS</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-20</td><td>0.0765</td></tr><tr><td>PNA</td><td>EURO_ENS</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-21</td><td>0.447</td></tr></tbody>
+          </table></div>
+        </details>
+      </li>
+      <li>
+        <div class="it-name">edf.chatbot.pna_historical_bronze</div>
+        <div class="it-meta">
+          <span class="it-chip">Type <b>MANAGED</b></span>
+          <span class="it-chip">Format <b>DELTA</b></span>
+          <span class="it-chip">Catalog <b>edf</b></span>
+          <span class="it-chip">Schema <b>chatbot</b></span>
+        </div>
+        <div class="it-cols"><span class="it-col-pill ">wx_index<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_value<span style="opacity:.55"> float</span></span><span class="it-col-pill sys">source_folder_date<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">source_file<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">generated_at<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">ingested_at<span style="opacity:.55"> ts</span></span></div>
+        <div class="it-chip" style="margin-top:.3rem;font-style:italic">Observed daily PNA index values</div>
+      
+        <details class="it-sample-details">
+          <summary>Sample data (5 rows)</summary>
+          <div class="it-sample"><table class="it-sample-table">
+            <thead><tr><th>wx_index</th><th>wx_date</th><th>wx_value</th><th>source_folder_date</th><th>source_file</th></tr></thead>
+            <tbody><tr><td>PNA</td><td>2025-10-20</td><td>-0.8035</td><td>20251124</td><td>PNA_historical.md</td></tr><tr><td>PNA</td><td>2025-10-21</td><td>-0.2317</td><td>20251124</td><td>PNA_historical.md</td></tr><tr><td>PNA</td><td>2025-10-22</td><td>0.5509</td><td>20251124</td><td>PNA_historical.md</td></tr><tr><td>PNA</td><td>2025-10-23</td><td>1.0991</td><td>20251124</td><td>PNA_historical.md</td></tr><tr><td>PNA</td><td>2025-10-24</td><td>1.0008</td><td>20251124</td><td>PNA_historical.md</td></tr></tbody>
+          </table></div>
+        </details>
+      </li>
+      </ul>
+    </div>
+  </section>
+  <section id="vol-wpo" class="volume-section">
+    <h2>WPO</h2>
+    <p class="vol-subtitle">West Pacific Oscillation</p>
+    <ul class="vol-desc">
+      <li>Daily index: atmospheric pressure patterns over western Pacific</li>
+      <li>Influences jet stream and weather across North America</li>
+      <li>Used in seasonal temperature &amp; energy demand forecasting</li>
+    </ul>
+    <p class="acronym-line">
+      <span class="acronym-chip"><b>WPO</b> = West Pacific Oscillation</span>
+      <span class="acronym-chip"><b>CPC</b> = Climate Prediction Center</span>
+      <span class="acronym-chip"><b>NOAA</b> = National Oceanic and Atmospheric Administration</span>
+      <span class="acronym-chip"><b>SST</b> = Sea Surface Temperature</span>
+    </p>
+    <div class="layman-box"><span class="layman-icon"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></span><ul><li><strong>Pressure pattern over the western Pacific</strong> acting as a jet stream remote control</li><li>Shifts can steer Arctic cold air southward into North America — or keep it locked away</li><li>Useful for predicting <strong>temperature swings weeks in advance</strong></li><li>Directly relevant to heating &amp; cooling energy demand forecasting</li></ul></div>
+    
+    <div class="data-layer-separator"><span class="layer-label-raw">Raw data — as received</span></div>
+    <div class="folder-entry">
+      <h3><code>wpo/YYYYMMDD</code><span class="folder-date">latest snapshot: 2025-11-25</span></h3>
+      <p class="meta">Sample: <code>WPO_historical.md</code> · 2 files</p>
+    </div>
+  
+    <div class="data-layer-separator"><span class="layer-label-ingested">Ingested — Unity Catalog (Databricks)</span></div>
+    <div class="ingested-card">
+      <div class="ingested-card-header"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4.03 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4.03 3 9 3s9-1.34 9-3"/></svg> Delta Tables · edf.chatbot</div>
+      <ul class="ingested-table-list">
+      <li>
+        <div class="it-name">edf.chatbot.bronze_wpo_forecast</div>
+        <div class="it-meta">
+          <span class="it-chip">Type <b>MANAGED</b></span>
+          <span class="it-chip">Format <b>DELTA</b></span>
+          <span class="it-chip">Catalog <b>edf</b></span>
+          <span class="it-chip">Schema <b>chatbot</b></span>
+        </div>
+        <div class="it-cols"><span class="it-col-pill ">wx_index<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_model<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_cycle<span style="opacity:.55"> int</span></span><span class="it-col-pill ">wx_member_id<span style="opacity:.55"> int</span></span><span class="it-col-pill ">wx_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_forecast_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_value<span style="opacity:.55"> float</span></span><span class="it-col-pill sys">generated_at<span style="opacity:.55"> ts</span></span><span class="it-col-pill sys">source_folder<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">source_file<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">_ingested_at<span style="opacity:.55"> ts</span></span></div>
+        <div class="it-chip" style="margin-top:.3rem;font-style:italic">Ensemble WPO index forecasts</div>
+      
+        <details class="it-sample-details">
+          <summary>Sample data (5 rows)</summary>
+          <div class="it-sample"><table class="it-sample-table">
+            <thead><tr><th>wx_index</th><th>wx_model</th><th>wx_cycle</th><th>wx_member_id</th><th>wx_date</th><th>wx_forecast_date</th><th>wx_value</th></tr></thead>
+            <tbody><tr><td>WPO</td><td>EURO_WEEKLY</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-17</td><td>1.669</td></tr><tr><td>WPO</td><td>EURO_WEEKLY</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-18</td><td>1.9158</td></tr><tr><td>WPO</td><td>EURO_WEEKLY</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-19</td><td>2.5084</td></tr><tr><td>WPO</td><td>EURO_WEEKLY</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-20</td><td>2.7275</td></tr><tr><td>WPO</td><td>EURO_WEEKLY</td><td>0</td><td>0</td><td>2025-11-17</td><td>2025-11-21</td><td>2.1546</td></tr></tbody>
+          </table></div>
+        </details>
+      </li>
+      <li>
+        <div class="it-name">edf.chatbot.bronze_wpo_historical</div>
+        <div class="it-meta">
+          <span class="it-chip">Type <b>MANAGED</b></span>
+          <span class="it-chip">Format <b>DELTA</b></span>
+          <span class="it-chip">Catalog <b>edf</b></span>
+          <span class="it-chip">Schema <b>chatbot</b></span>
+        </div>
+        <div class="it-cols"><span class="it-col-pill ">wx_index<span style="opacity:.55"> str</span></span><span class="it-col-pill ">wx_date<span style="opacity:.55"> date</span></span><span class="it-col-pill ">wx_value<span style="opacity:.55"> float</span></span><span class="it-col-pill sys">generated_at<span style="opacity:.55"> ts</span></span><span class="it-col-pill sys">source_folder<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">source_file<span style="opacity:.55"> str</span></span><span class="it-col-pill sys">_ingested_at<span style="opacity:.55"> ts</span></span></div>
+        <div class="it-chip" style="margin-top:.3rem;font-style:italic">Observed daily WPO index values</div>
+      
+        <details class="it-sample-details">
+          <summary>Sample data (5 rows)</summary>
+          <div class="it-sample"><table class="it-sample-table">
+            <thead><tr><th>wx_index</th><th>wx_date</th><th>wx_value</th><th>source_folder</th><th>source_file</th></tr></thead>
+            <tbody><tr><td>WPO</td><td>2025-10-20</td><td>1.6373</td><td>20251124</td><td>WPO_historical.md</td></tr><tr><td>WPO</td><td>2025-10-21</td><td>1.7874</td><td>20251124</td><td>WPO_historical.md</td></tr><tr><td>WPO</td><td>2025-10-22</td><td>2.1096</td><td>20251124</td><td>WPO_historical.md</td></tr><tr><td>WPO</td><td>2025-10-23</td><td>2.2014</td><td>20251124</td><td>WPO_historical.md</td></tr><tr><td>WPO</td><td>2025-10-24</td><td>1.978</td><td>20251124</td><td>WPO_historical.md</td></tr></tbody>
+          </table></div>
+        </details>
+      </li>
+      </ul>
+    </div>
+  </section>
+  </main>
+</body>
+</html>

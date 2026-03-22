@@ -2,8 +2,8 @@
 """Sync databricks.yml and app.yaml from .env.local.
 
 Updates:
-  - databricks.yml: sql_warehouse.id, genie_space.space_id, serving_endpoint.name, target app name
-  - app.yaml: AGENT_MODEL_ENDPOINT, AMADEUS_UNITY_CATALOG_SCHEMA, DATABRICKS_WAREHOUSE_ID
+  - databricks.yml: sql_warehouse.id, serving_endpoint.name, target app name
+  - app.yaml: AGENT_MODEL_ENDPOINT, UNITY_CATALOG_SCHEMA, DATABRICKS_WAREHOUSE_ID
 
 Usage:
   uv run python deploy/sync_databricks_yml_from_env.py [--dry-run]
@@ -64,14 +64,6 @@ def main() -> int:
             content = re.sub(r"(sql_warehouse:\s*\n\s+)id: '[^']*'", r"\g<1>id: '" + wh_id + "'", content, count=1)
             changes.append(f"  sql_warehouse.id <- DATABRICKS_WAREHOUSE_ID={wh_id}")
 
-    # genie_space.space_id <- AMADEUS_GENIE_CHECKIN
-    genie_id = os.environ.get("AMADEUS_GENIE_CHECKIN", "").strip()
-    if genie_id:
-        m = re.search(r"genie_space:.*?space_id: '([^']*)'", content, re.DOTALL)
-        if m and m.group(1) != genie_id:
-            content = re.sub(r"space_id: '[^']*'", f"space_id: '{genie_id}'", content, count=1)
-            changes.append(f"  genie_space.space_id <- AMADEUS_GENIE_CHECKIN={genie_id}")
-
     # serving_endpoint.name <- AGENT_MODEL_ENDPOINT
     endpoint = os.environ.get("AGENT_MODEL_ENDPOINT", "").strip() or get_endpoint_from_app_yaml()
     if endpoint:
@@ -85,29 +77,29 @@ def main() -> int:
             )
             changes.append(f"  serving_endpoint.name <- AGENT_MODEL_ENDPOINT={endpoint}")
 
-    # targets.airops-checkin app name <- DBX_APP_NAME
+    # targets.template app name <- DBX_APP_NAME
     app_name = os.environ.get("DBX_APP_NAME", "").strip()
     if app_name:
         m = re.search(
-            r"airops-checkin:\s*\n\s+mode: production\s*\n\s+workspace:.*?agent_langgraph:\s*\n\s+name: ([^\n]+)",
+            r"template:\s*\n\s+mode: production\s*\n\s+workspace:.*?agent_langgraph:\s*\n\s+name: ([^\n]+)",
             content,
             re.DOTALL,
         )
         current = m.group(1).strip().strip('"').strip("'") if m else ""
         if current != app_name:
             content = re.sub(
-                r"(airops-checkin:\s*\n\s+mode: production\s*\n\s+workspace:.*?agent_langgraph:\s*\n\s+name: )[^\n]+",
+                r"(template:\s*\n\s+mode: production\s*\n\s+workspace:.*?agent_langgraph:\s*\n\s+name: )[^\n]+",
                 r"\g<1>" + app_name,
                 content,
                 count=1,
                 flags=re.DOTALL,
             )
-            changes.append(f"  targets.airops-checkin app name <- DBX_APP_NAME={app_name}")
+            changes.append(f"  targets.template app name <- DBX_APP_NAME={app_name}")
 
-    # app.yaml: AGENT_MODEL_ENDPOINT, AMADEUS_UNITY_CATALOG_SCHEMA, DATABRICKS_WAREHOUSE_ID
+    # app.yaml: AGENT_MODEL_ENDPOINT, UNITY_CATALOG_SCHEMA, DATABRICKS_WAREHOUSE_ID
     app_yml = ROOT / "app.yaml"
     if app_yml.exists():
-        schema_spec = os.environ.get("AMADEUS_UNITY_CATALOG_SCHEMA", "").strip()
+        schema_spec = os.environ.get("UNITY_CATALOG_SCHEMA", "").strip()
         wh_id = os.environ.get("DATABRICKS_WAREHOUSE_ID", "").strip()
         app_content = app_yml.read_text()
         app_changed = False
@@ -123,16 +115,16 @@ def main() -> int:
                 app_changed = True
                 changes.append(f"  app.yaml AGENT_MODEL_ENDPOINT <- {endpoint}")
         if schema_spec:
-            m = re.search(r"AMADEUS_UNITY_CATALOG_SCHEMA\s*\n\s+value:\s*[\"']([^\"']*)[\"']", app_content)
+            m = re.search(r"UNITY_CATALOG_SCHEMA\s*\n\s+value:\s*[\"']([^\"']*)[\"']", app_content)
             if m and m.group(1) != schema_spec:
                 app_content = re.sub(
-                    r"(AMADEUS_UNITY_CATALOG_SCHEMA\s*\n\s+value:\s*)[\"'][^\"']*[\"']",
+                    r"(UNITY_CATALOG_SCHEMA\s*\n\s+value:\s*)[\"'][^\"']*[\"']",
                     r'\g<1>"' + schema_spec + '"',
                     app_content,
                     count=1,
                 )
                 app_changed = True
-                changes.append(f"  app.yaml AMADEUS_UNITY_CATALOG_SCHEMA <- {schema_spec}")
+                changes.append(f"  app.yaml UNITY_CATALOG_SCHEMA <- {schema_spec}")
         if wh_id:
             m = re.search(r"DATABRICKS_WAREHOUSE_ID\s*\n\s+value:\s*[\"']([^\"']*)[\"']", app_content)
             if m and m.group(1) != wh_id:

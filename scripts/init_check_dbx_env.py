@@ -399,12 +399,12 @@ def list_genie_spaces() -> list[tuple[str, str]]:
         return []
 
 
-TABLES_TO_VERIFY = ["checkin_metrics", "flights", "checkin_agents", "border_officers", "border_terminals"]
+TABLES_TO_VERIFY = ["example_data"]
 
 
 def print_asset_checks() -> None:
     """Print catalog, schema, tables, volume checks (same as create_all_assets, excluding Genie)."""
-    spec = os.environ.get("AMADEUS_UNITY_CATALOG_SCHEMA", "").strip()
+    spec = os.environ.get("UNITY_CATALOG_SCHEMA", "").strip()
     if "." not in spec:
         return
     catalog, schema_name = spec.split(".", 1)
@@ -434,7 +434,7 @@ def print_asset_checks() -> None:
 
 
 def verify_schema() -> tuple[bool, str]:
-    spec = os.environ.get("AMADEUS_UNITY_CATALOG_SCHEMA", "").strip()
+    spec = os.environ.get("UNITY_CATALOG_SCHEMA", "").strip()
     if "." not in spec:
         return False, "need catalog.schema"
     try:
@@ -448,9 +448,9 @@ def verify_schema() -> tuple[bool, str]:
 
 def verify_tables() -> tuple[bool, str]:
     """Verify checkin_metrics, flights, checkin_agents, border_officers, border_terminals exist. Return (ok, msg)."""
-    spec = os.environ.get("AMADEUS_UNITY_CATALOG_SCHEMA", "").strip()
+    spec = os.environ.get("UNITY_CATALOG_SCHEMA", "").strip()
     if "." not in spec:
-        return False, "AMADEUS_UNITY_CATALOG_SCHEMA not set"
+        return False, "UNITY_CATALOG_SCHEMA not set"
     catalog, schema_name = spec.split(".", 1)
     full_schema = f"{catalog}.{schema_name}"
     tables = TABLES_TO_VERIFY
@@ -596,14 +596,14 @@ def verify_app_grants() -> tuple[bool, list[str]]:
     """
     from tools.sql_executor import execute_query, get_warehouse
 
-    app_name = os.environ.get("DBX_APP_NAME", "agent-airops-checkin").strip()
-    spec = os.environ.get("AMADEUS_UNITY_CATALOG_SCHEMA", "").strip()
+    app_name = os.environ.get("DBX_APP_NAME", "agent-langgraph").strip()
+    spec = os.environ.get("UNITY_CATALOG_SCHEMA", "").strip()
     wh_id = os.environ.get("DATABRICKS_WAREHOUSE_ID", "").strip()
 
     issues: list[str] = []
 
     if "." not in spec:
-        return False, ["AMADEUS_UNITY_CATALOG_SCHEMA not set (need catalog.schema)"]
+        return False, ["UNITY_CATALOG_SCHEMA not set (need catalog.schema)"]
     catalog, schema_name = spec.split(".", 1)
 
     try:
@@ -711,7 +711,7 @@ def run_resource(
     inact = inactive.get(key, [])
 
     section(label)
-    if key == "AMADEUS_UNITY_CATALOG_SCHEMA":
+    if key == "UNITY_CATALOG_SCHEMA":
         load_env_for_key(key, cur or "")
         print_asset_checks()
     ok, msg = False, ""
@@ -735,28 +735,28 @@ def run_resource(
     KEEP_AND_CREATE_ASSETS = "keep + create all missing assets"
     choices: list[str] = []
     tables_ok = True
-    if key == "AMADEUS_UNITY_CATALOG_SCHEMA" and cur:
+    if key == "UNITY_CATALOG_SCHEMA" and cur:
         tables_ok, _ = verify_tables()
     if cur and ok:
-        if key == "AMADEUS_UNITY_CATALOG_SCHEMA":
+        if key == "UNITY_CATALOG_SCHEMA":
             choices = ["keep", ADD_NEW_CATALOG]
             if not tables_ok:
                 choices.insert(1, KEEP_AND_CREATE_ASSETS)
         else:
             choices = ["keep", "add new"]
-    elif cur and key == "AMADEUS_UNITY_CATALOG_SCHEMA":
+    elif cur and key == "UNITY_CATALOG_SCHEMA":
         choices = [CREATE_ASSETS_NOW, ADD_NEW_CATALOG]
     elif cur:
         choices = ["add new"]
     else:
-        choices = [ADD_NEW_CATALOG] if key == "AMADEUS_UNITY_CATALOG_SCHEMA" else ["enter new"]
+        choices = [ADD_NEW_CATALOG] if key == "UNITY_CATALOG_SCHEMA" else ["enter new"]
     for i, (_, val) in enumerate(inact, 1):
         choices.append(f"activate [{i}]")
     if not choices:
         choices = ["enter new"]
 
     # Schema invalid and only add-new-catalog (no cur) → run create_all_assets (mandatory)
-    if key == "AMADEUS_UNITY_CATALOG_SCHEMA" and choices == [ADD_NEW_CATALOG]:
+    if key == "UNITY_CATALOG_SCHEMA" and choices == [ADD_NEW_CATALOG]:
         hint = " (catalog.schema)"
         val = input(f"  Enter {key}{hint}: ").strip()
         if not val:
@@ -766,7 +766,7 @@ def run_resource(
         write_env_entry(ENV_FILE, key, val)
         load_dotenv(ENV_FILE, override=True)
         load_env_for_key(key, val)
-        print(f"  {B}Creating schema, tables, volume, Genie ...{W}\n")
+        print(f"  {B}Creating schema and tables ...{W}\n")
         rc = subprocess.call(
             ["uv", "run", "python", "data/init/create_all_assets.py"],
             cwd=ROOT,
@@ -779,12 +779,12 @@ def run_resource(
         return True
 
     # Genie invalid and only "add new" → branch to asset creation dialog
-    ASSET_KEYS = ("AMADEUS_GENIE_CHECKIN",)
+    ASSET_KEYS: tuple[str, ...] = ()
     if key in ASSET_KEYS and choices == ["add new"]:
         try:
             raw = input(f"  {C}Create project assets now? [y/N]: {W}").strip().lower()
             if raw in ("y", "yes"):
-                print(f"  {B}Creating schema, tables, volume, Genie ...{W}\n")
+                print(f"  {B}Creating schema and tables ...{W}\n")
                 rc = subprocess.call(
                     ["uv", "run", "python", "data/init/create_all_assets.py"],
                     cwd=ROOT,
@@ -805,7 +805,7 @@ def run_resource(
 
     if choice == "keep":
         return True
-    if choice == KEEP_AND_CREATE_ASSETS and key == "AMADEUS_UNITY_CATALOG_SCHEMA" and cur:
+    if choice == KEEP_AND_CREATE_ASSETS and key == "UNITY_CATALOG_SCHEMA" and cur:
         print(f"  {B}Creating tables, procedures, Genie ...{W}\n")
         rc = subprocess.call(
             ["uv", "run", "python", "data/init/create_all_assets.py"],
@@ -817,7 +817,7 @@ def run_resource(
             print(f"\n  {FAIL} Asset creation exited with {rc}{W}\n")
             abort_step()
         return True
-    if choice == CREATE_ASSETS_NOW and key == "AMADEUS_UNITY_CATALOG_SCHEMA" and cur:
+    if choice == CREATE_ASSETS_NOW and key == "UNITY_CATALOG_SCHEMA" and cur:
         print(f"  {B}Creating schema, tables, Genie ...{W}\n")
         rc = subprocess.call(
             ["uv", "run", "python", "data/init/create_all_assets.py"],
@@ -829,7 +829,7 @@ def run_resource(
             print(f"\n  {FAIL} Asset creation exited with {rc}{W}\n")
             abort_step()
         return True
-    if choice == ADD_NEW_CATALOG and key == "AMADEUS_UNITY_CATALOG_SCHEMA":
+    if choice == ADD_NEW_CATALOG and key == "UNITY_CATALOG_SCHEMA":
         hint = " (catalog.schema)"
         val = input(f"  Enter {key}{hint}: ").strip()
         if not val:
@@ -839,7 +839,7 @@ def run_resource(
         write_env_entry(ENV_FILE, key, val)
         load_dotenv(ENV_FILE, override=True)
         load_env_for_key(key, val)
-        print(f"  {B}Creating schema, tables, volume, Genie ...{W}\n")
+        print(f"  {B}Creating schema and tables ...{W}\n")
         rc = subprocess.call(
             ["uv", "run", "python", "data/init/create_all_assets.py"],
             cwd=ROOT,
@@ -930,13 +930,13 @@ def run_check_only() -> None:
     uc_failed = False
     section("Unity Catalog")
     ok, msg = verify_schema()
-    print(f"  {OK if ok else FAIL} AMADEUS_UNITY_CATALOG_SCHEMA {C}({msg}){W}")
+    print(f"  {OK if ok else FAIL} UNITY_CATALOG_SCHEMA {C}({msg}){W}")
     if not ok:
         all_ok = False
         uc_failed = True
 
     # Tables (tree format)
-    spec = os.environ.get("AMADEUS_UNITY_CATALOG_SCHEMA", "").strip()
+    spec = os.environ.get("UNITY_CATALOG_SCHEMA", "").strip()
     tables = ["checkin_metrics", "flights", "checkin_agents", "border_officers", "border_terminals"]
     if "." in spec:
         catalog, schema_name = spec.split(".", 1)
@@ -961,12 +961,6 @@ def run_check_only() -> None:
             all_ok = False
             uc_failed = True
 
-    section("Genie")
-    ok, msg = verify_genie()
-    print(f"  {OK if ok else FAIL} AMADEUS_GENIE_CHECKIN {C}({msg}){W}")
-    if not ok:
-        all_ok = False
-
     section("MLflow")
     ok, msg = verify_mlflow()
     print(f"  {OK if ok else FAIL} MLFLOW_EXPERIMENT_ID {C}({msg}){W}")
@@ -977,7 +971,7 @@ def run_check_only() -> None:
     grants_ok, grants_issues = verify_app_grants()
     grants_failed = not grants_ok
     if grants_ok:
-        app_name = os.environ.get("DBX_APP_NAME", "agent-airops-checkin").strip()
+        app_name = os.environ.get("DBX_APP_NAME", "agent-langgraph").strip()
         print(f"  {OK} UC tables, routines, warehouse {C}({app_name}){W}")
     else:
         for issue in grants_issues:
@@ -995,7 +989,7 @@ def run_check_only() -> None:
             try:
                 raw = input(f"  {C}Create project assets now? [y/N]: {W}").strip().lower()
                 if raw in ("y", "yes"):
-                    print(f"  {B}Creating schema, tables, volume, Genie ...{W}\n")
+                    print(f"  {B}Creating schema and tables ...{W}\n")
                     rc = subprocess.call(
                         ["uv", "run", "python", "data/init/create_all_assets.py"],
                         cwd=ROOT,
@@ -1067,19 +1061,19 @@ def main() -> None:
 
     load_dotenv(ENV_FILE, override=True)
     run_resource_warehouse()
-    run_resource("AMADEUS_UNITY_CATALOG_SCHEMA", "AMADEUS_UNITY_CATALOG_SCHEMA", verify_schema, "catalog.schema")
+    run_resource("UNITY_CATALOG_SCHEMA", "UNITY_CATALOG_SCHEMA", verify_schema, "catalog.schema")
 
     # Tables check: if schema OK but tables missing → offer asset creation
     load_dotenv(ENV_FILE, override=True)
-    if os.environ.get("AMADEUS_UNITY_CATALOG_SCHEMA"):
+    if os.environ.get("UNITY_CATALOG_SCHEMA"):
         ok, msg = verify_tables()
         if not ok:
-            section("Tables (checkin_metrics, flights, checkin_agents, border_officers, border_terminals)")
+            section("Tables (example_data)")
             print(f"  {FAIL} {msg}{W}")
             try:
                 raw = input(f"  {C}Create project assets now? [y/N]: {W}").strip().lower()
                 if raw in ("y", "yes"):
-                    print(f"  {B}Creating schema, tables, volume, Genie ...{W}\n")
+                    print(f"  {B}Creating schema and tables ...{W}\n")
                     rc = subprocess.call(
                         ["uv", "run", "python", "data/init/create_all_assets.py"],
                         cwd=ROOT,
@@ -1096,7 +1090,6 @@ def main() -> None:
                 print(f"  {DIM}Skipped{W}\n")
                 abort_step()
 
-    run_resource_genie()
     run_resource_mlflow()
 
     section("Done")

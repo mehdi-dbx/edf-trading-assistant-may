@@ -10,8 +10,6 @@ import { useSession } from '@/contexts/SessionContext';
 import { useTheme } from 'next-themes';
 import { Sparkles } from 'lucide-react';
 
-const CUSTOMER_NAME = 'Airport Check-in Command Center';
-
 export function AppHeader() {
   const { session, loading } = useSession();
   const { setTheme, resolvedTheme } = useTheme();
@@ -27,19 +25,20 @@ export function AppHeader() {
     <header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b bg-background px-3 py-2">
       <div className="flex items-center gap-3">
         <SidebarToggle />
+        <img
+          src="https://api.the-trackr.com/companies/logo/edf-trading"
+          alt="EDF Trading"
+          className="h-12 w-auto object-contain"
+        />
         <span className="font-semibold tracking-tight text-foreground text-base">
-          Amadeus Fixed Resource Management
+          EDF Trading Assistant
         </span>
       </div>
-      <div className="flex flex-1 items-center justify-center px-4">
-        <span className="font-bold text-muted-foreground text-lg">
-          {CUSTOMER_NAME}
-        </span>
-      </div>
+      <div className="flex flex-1" />
       <div className="flex items-center gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-600 px-3 py-1.5 font-medium text-white text-sm">
           <Sparkles className="h-4 w-4" />
-          Garv
+          Assistant
         </span>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
