@@ -14,6 +14,7 @@ from mlflow.types.responses import (
 )
 
 from agent_server.utils import get_databricks_host_from_env, process_agent_astream_events
+from tools.get_current_time import get_current_time
 from tools.placeholder_tool import placeholder_tool
 from tools.query_example_data import query_example_data
 from tools.query_knowledge_assistant import query_knowledge_assistant
@@ -33,6 +34,7 @@ def _get_genie_host() -> str:
 
 async def init_agent():
     tools = [
+        get_current_time,
         query_knowledge_assistant,
         query_example_data,
         placeholder_tool,
@@ -53,7 +55,9 @@ async def init_agent():
 
     endpoint = os.environ.get("AGENT_MODEL_ENDPOINT", "").strip()
     if not endpoint:
-        raise ValueError("AGENT_MODEL_ENDPOINT must be set (e.g. claude-sonnet-4-6, databricks-gpt-5-2)")
+        raise ValueError(
+            "AGENT_MODEL_ENDPOINT must be set (e.g. databricks-claude-sonnet-4-6, databricks-gpt-5-2)"
+        )
     return create_agent(tools=tools, model=ChatDatabricks(endpoint=endpoint))
 
 
@@ -69,11 +73,18 @@ async def non_streaming(request: ResponsesAgentRequest) -> ResponsesAgentRespons
 
 def _load_system_prompt() -> str:
     base = Path(__file__).resolve().parents[1] / "prompt"
+    style_path = base / "style.prompt"
     main_path = base / "main.prompt"
     kb_path = base / "knowledge.base"
+    style = style_path.read_text(encoding="utf-8").strip() if style_path.exists() else ""
     content = main_path.read_text(encoding="utf-8").strip() if main_path.exists() else ""
     kb_content = kb_path.read_text(encoding="utf-8").strip() if kb_path.exists() else ""
-    return content.replace("{{KNOWLEDGE_BASE}}", kb_content)
+    main_filled = content.replace("{{KNOWLEDGE_BASE}}", kb_content)
+    if style and main_filled:
+        return f"{style}\n\n---\n\n{main_filled}"
+    if style:
+        return style
+    return main_filled
 
 
 @stream()

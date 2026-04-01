@@ -17,22 +17,53 @@ def load_ka_mapping() -> dict[str, str]:
     if not KA_LIST_PATH.exists():
         return mapping
 
-    # Format: endpoint_name\t# id=... display_name=value
-    display_re = re.compile(r"display_name=(\S+)")
+    # Formats:
+    #   Comment lines (# …) skipped.
+    #   Aligned: serving_endpoint | display_name | … (space-padded, " | " separators).
+    #   Legacy tab: endpoint\t#\tdisplay_name\t|\t…
+    #   Legacy: display_name : value … or display_name=value
+    display_re_colon = re.compile(r"display_name\s*:\s*(\S+)")
+    display_re_eq = re.compile(r"display_name=(\S+)")
+
+    def parse_aligned_pipe_line(line: str) -> tuple[str, str] | None:
+        """Monospace-aligned row: ka-* | display_name | …"""
+        if not line.startswith("ka-") or " | " not in line:
+            return None
+        parts = [p.strip() for p in line.split("|")]
+        while parts and parts[-1] == "":
+            parts.pop()
+        if len(parts) < 2:
+            return None
+        endpoint_name, display_name = parts[0], parts[1]
+        if not endpoint_name.startswith("ka-"):
+            return None
+        return endpoint_name, display_name
+
+    def display_name_from_comment(comment: str) -> str | None:
+        if "\t|\t" in comment:
+            after_hash = comment[1:] if comment.startswith("#") else comment
+            first = after_hash.split("\t|\t", 1)[0].strip().lstrip("\t")
+            return first or None
+        match = display_re_colon.search(comment) or display_re_eq.search(comment)
+        return match.group(1).strip() if match else None
 
     for line in KA_LIST_PATH.read_text().splitlines():
         line = line.strip()
         if not line or line.startswith("#"):
+            continue
+        aligned = parse_aligned_pipe_line(line)
+        if aligned:
+            endpoint_name, display_name = aligned
+            key = display_name.lower()
+            mapping[key] = endpoint_name
             continue
         parts = line.split("\t", 1)
         if len(parts) < 2:
             continue
         endpoint_name = parts[0].strip()
         comment = parts[1]
-        match = display_re.search(comment)
-        if match:
-            display_name = match.group(1).strip()
-            # Normalize to lowercase for case-insensitive lookup
+        display_name = display_name_from_comment(comment)
+        if display_name:
             key = display_name.lower()
             mapping[key] = endpoint_name
     return mapping
