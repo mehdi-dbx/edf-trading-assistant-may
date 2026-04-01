@@ -22,7 +22,7 @@ from databricks.sdk import WorkspaceClient
 
 
 def main() -> int:
-    default_app = os.environ.get("DBX_APP_NAME", "agent-langgraph").strip()
+    default_app = os.environ.get("DBX_APP_NAME", "agent-edf-trading-assistant").strip()
     parser = argparse.ArgumentParser(description="Retrieve app service principal info")
     parser.add_argument(
         "app_name",

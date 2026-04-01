@@ -37,7 +37,8 @@ This runs: create_catalog_schema, init SQL (checkin_metrics, flights, checkin_ag
 
 3. **Add resources to `databricks.yml` if missing**
    - Run `authorize_endpoint_for_app.py` if serving_endpoint is not in the bundle
-   - Run `authorize_genie_for_app.py` if genie_space is not in the bundle
+   - Run `authorize_genie_for_app.py` if genie_space is not in the bundle (YAML only — bundle attachment)
+   - For **pre-deploy verify** / Genie API errors (“Can View”), run `grant_genie_space_permissions.py` with **no args** (grants **only your user**). After deploy, `deploy.sh` also runs it with `--app-name` so the app SP gets access (`authorize_genie_for_app.py` only edits `databricks.yml`).
 
 ### 2.2 Deploy
 
@@ -50,6 +51,8 @@ Or with a specific target:
 DEPLOY_TARGET=airops-checkin ./deploy/deploy.sh
 ```
 
+The script uses **`DBX_APP_NAME`** from `.env.local` (default app name: `agent-edf-trading-assistant`) for bind, grants, and URL output.
+
 The script:
 1. Syncs `databricks.yml` from `.env.local`
 2. Binds existing app if it exists (avoids "App already exists" error)
@@ -57,18 +60,28 @@ The script:
 4. Starts the app
 5. Runs `grant_app_tables.py` (UC table access)
 6. Runs `authorize_warehouse_for_app.py` (warehouse CAN_USE)
+7. Runs `grant_genie_space_permissions.py --app-name $APP_NAME` (Genie CAN_RUN for current user + that app’s SP)
 
 ### 2.3 Post-deploy grants (run manually if deploy.sh skips them)
 
 ```bash
+# App name: set DBX_APP_NAME in .env.local (e.g. agent-edf-trading-assistant) or pass explicitly.
 # Tables (USE CATALOG, USE SCHEMA, ALL PRIVILEGES on tables)
-uv run python deploy/grant/grant_app_tables.py agent-airops-checkin --schema mc.amadeus-checkin
+uv run python deploy/grant/grant_app_tables.py agent-edf-trading-assistant --schema edf.chatbot
 
 # Functions and procedures (EXECUTE)
-uv run python deploy/grant/grant_app_functions.py agent-airops-checkin --schema mc.amadeus-checkin
+uv run python deploy/grant/grant_app_functions.py agent-edf-trading-assistant --schema edf.chatbot
 
 # Warehouse CAN_USE
-uv run python deploy/grant/authorize_warehouse_for_app.py agent-airops-checkin
+uv run python deploy/grant/authorize_warehouse_for_app.py agent-edf-trading-assistant
+
+# Genie space — your user only (fixes "Can View" / pre-deploy verify; no app required)
+.venv/bin/python deploy/grant/grant_genie_space_permissions.py
+# After deploy, also grant the app SP (replace with your DBX_APP_NAME)
+# .venv/bin/python deploy/grant/grant_genie_space_permissions.py --app-name your-app-name
+
+# KA endpoints (CAN_QUERY), if not already run
+# uv run python deploy/grant/grant_ka_endpoints_for_app.py agent-edf-trading-assistant
 ```
 
 **Note:** `grant_app_functions.py` is not called by `deploy.sh`. Run it manually after deploy if your agent uses UC procedures (e.g. update_checkin_agent, confirm_arrival, update_border_officer, update_flight_risk).
@@ -80,10 +93,11 @@ uv run python deploy/grant/authorize_warehouse_for_app.py agent-airops-checkin
 | Lesson | Detail |
 |--------|--------|
 | **Service principal uses client ID** | Unity Catalog GRANTs use `service_principal_client_id` (UUID), not the display name. Use `retrieve_app_sp.py` to get it. |
-| **Bind before deploy** | If the app already exists, run `databricks bundle deployment bind agent_langgraph agent-airops-checkin -t airops-checkin --auto-approve` before deploy. |
+| **Bind before deploy** | If the app already exists, run `databricks bundle deployment bind agent_edf_trading_assistant <DBX_APP_NAME> -t template --auto-approve` before deploy (replace `<DBX_APP_NAME>` with e.g. `agent-edf-trading-assistant`). |
 | **Tables and functions are separate** | Tables need `grant_app_tables.py`; functions/procedures need `grant_app_functions.py`. Both require USE CATALOG and USE SCHEMA first. |
 | **Warehouse permission is separate** | The app needs CAN_USE on the SQL warehouse; `authorize_warehouse_for_app.py` does this via the Permissions API. |
 | **Genie and endpoint in bundle** | The app must have `genie_space` and `serving_endpoint` resources in `databricks.yml` so the app's service principal gets CAN_RUN and CAN_QUERY. |
+| **Genie workspace ACL is separate** | Listing `genie_space` in the bundle does not grant workspace object permissions. Run `grant_genie_space_permissions.py` (or you get "Can View" / permission errors on Genie APIs). |
 | **TASK_EVENTS_URL for notifications** | Task-created toasts require the agent to POST to the Node API. Without `TASK_EVENTS_URL`, notifications will not work. |
 
 ---
@@ -93,11 +107,12 @@ uv run python deploy/grant/authorize_warehouse_for_app.py agent-airops-checkin
 | Trap | Why it fails | Fix |
 |------|--------------|-----|
 | **Forgetting TASK_EVENTS_URL in app.yaml** | Agent creates tasks but never notifies the frontend; "New Load Task" toast never appears. | Add `TASK_EVENTS_URL: "http://127.0.0.1:3000"` to `app.yaml` env (Node runs on CHAT_APP_PORT=3000 in deployed app). |
-| **Deploying without binding** | "An app with the same name already exists" — bundle tries to create a new app. | Bind first: `databricks bundle deployment bind agent_langgraph agent-airops-checkin -t airops-checkin --auto-approve` |
+| **Deploying without binding** | "An app with the same name already exists" — bundle tries to create a new app. | Bind first: `databricks bundle deployment bind agent_edf_trading_assistant agent-edf-trading-assistant -t template --auto-approve` |
 | **Missing grant_app_functions** | Agent gets "permission denied" when calling UC procedures. | Run `grant_app_functions.py` after deploy. |
 | **Wrong warehouse ID** | Queries fail or use wrong warehouse. | Set `DATABRICKS_WAREHOUSE_ID` in `.env.local`; sync runs before deploy. |
 | **403 on Foundation Model API** | Workspace admin must enable Foundation Model APIs. | Ask admin or use a different model endpoint. |
 | **DATABRICKS_HOST without https://** | SDK/CLI fails to connect. | Use `https://<workspace>.databricks.com` or `https://<workspace>.cloud.databricks.com`. |
+| **"Can View" on Genie space** | Your user has no Genie workspace ACL. | `.venv/bin/python deploy/grant/grant_genie_space_permissions.py` (user only; add `--app-name …` for the app SP after deploy) |
 
 ---
 
@@ -131,7 +146,7 @@ env:
 | `DATABRICKS_CONFIG_PROFILE` | CLI profile (e.g. `DEFAULT`, `airops-trial`) |
 | `DATABRICKS_HOST` | Workspace URL (must include `https://`) |
 | `DATABRICKS_TOKEN` | PAT or OAuth token |
-| `DBX_APP_NAME` | App name (e.g. `agent-airops-checkin`) |
+| `DBX_APP_NAME` | App name (e.g. `agent-edf-trading-assistant`) |
 | `AGENT_MODEL_ENDPOINT` | Foundation Model endpoint name |
 | `DATABRICKS_WAREHOUSE_ID` | SQL warehouse ID for UC queries |
 | `AMADEUS_UNITY_CATALOG_SCHEMA` | Catalog.schema (e.g. `mc.amadeus-checkin`) |
@@ -157,8 +172,8 @@ This reads `OPENAI_API_KEY` from `.env.local` and stores it in Databricks secret
 2. **Run sync before deploy** — `sync_databricks_yml_from_env.py` keeps `databricks.yml` aligned with `.env.local`.
 3. **Use deploy.sh** — It orchestrates bind, validate, deploy, start, and grants.
 4. **Run grant_app_functions after deploy** — If your agent uses UC procedures, add this step (or add it to deploy.sh).
-5. **Check app URL after deploy** — `databricks apps get agent-airops-checkin --output json | jq -r '.url'`
-6. **View logs on failure** — `databricks apps logs agent-airops-checkin --follow`
+5. **Check app URL after deploy** — `databricks apps get agent-edf-trading-assistant --output json | jq -r '.url'` (or your `DBX_APP_NAME`)
+6. **View logs on failure** — `databricks apps logs agent-edf-trading-assistant --follow`
 7. **Test locally first** — `./scripts/start_local.sh` before deploying.
 8. **Document workspace-specific IDs** — Warehouse, Genie Space, and endpoint IDs vary by workspace; keep them in `.env.local`, not hardcoded.
 
@@ -178,5 +193,6 @@ This reads `OPENAI_API_KEY` from `.env.local` and stores it in Databricks secret
 | `deploy/grant/authorize_warehouse_for_app.py` | Grant CAN_USE on warehouse |
 | `deploy/grant/authorize_endpoint_for_app.py` | Add serving_endpoint to databricks.yml |
 | `deploy/grant/authorize_genie_for_app.py` | Add genie_space to databricks.yml |
+| `deploy/grant/grant_genie_space_permissions.py` | Grant Genie space via Permissions API (default: **current user only**; optional `--app-name` for app SP) |
 | `app.yaml` | App env config (command, env vars) |
 | `databricks.yml` | Bundle config (resources, targets) |

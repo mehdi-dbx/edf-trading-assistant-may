@@ -228,3 +228,4 @@ sketch
 .backend.pid
 .frontend.pid
 .node.pid.env.local.e2
+.env.local.v1

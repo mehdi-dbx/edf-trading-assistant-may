@@ -4,7 +4,7 @@
 Usage:
   uv run python deploy/grant/grant_app_tables.py [APP_NAME] [--schema SCHEMA]
 
-  APP_NAME: Databricks app name (default: agent-langgraph)
+  APP_NAME: Databricks app name (default: DBX_APP_NAME or agent-edf-trading-assistant)
   --schema: Catalog.schema (default: from UNITY_CATALOG_SCHEMA or edf.template)
 """
 import argparse
@@ -22,11 +22,12 @@ from databricks.sdk import WorkspaceClient
 from tools.sql_executor import execute_statement, get_warehouse
 
 DEFAULT_SCHEMA = os.environ.get("UNITY_CATALOG_SCHEMA", "edf.template")
+DEFAULT_APP = os.environ.get("DBX_APP_NAME", "agent-edf-trading-assistant").strip()
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Grant SELECT on UC tables to app service principal")
-    parser.add_argument("app_name", nargs="?", default="agent-langgraph", help="Databricks app name")
+    parser.add_argument("app_name", nargs="?", default=DEFAULT_APP, help="Databricks app name")
     parser.add_argument(
         "--schema",
         default=DEFAULT_SCHEMA,

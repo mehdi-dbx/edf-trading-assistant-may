@@ -1,5 +1,5 @@
-/* Import Geist fonts from Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&display=swap');
+/* Outfit (sans, default Extra Light 200) + Geist Mono for code */
+@import url('https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Outfit:wght@200..900&display=swap');
 
 /* set base path to root directory to include utility classes from app, components, pages, etc. */
 @import "tailwindcss";
@@ -13,7 +13,7 @@
 
 /* define design tokens (light mode) */
 :root {
-  --font-geist: 'Geist', sans-serif;
+  --font-outfit: 'Outfit', sans-serif;
   --font-geist-mono: 'Geist Mono', monospace;
 
   --background: hsl(0 0% 100%);
@@ -90,7 +90,7 @@
 
 /* define theme */
 @theme {
-  --font-sans: var(--font-geist);
+  --font-sans: var(--font-outfit);
   --font-mono: var(--font-geist-mono);
 
   --breakpoint-toast-mobile: 600px;
@@ -200,7 +200,8 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-geist), sans-serif;
+    font-family: var(--font-outfit), sans-serif;
+    font-weight: 200;
     overflow-x: hidden;
     position: relative;
   }

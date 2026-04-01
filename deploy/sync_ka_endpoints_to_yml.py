@@ -2,7 +2,7 @@
 """Sync KA endpoints from data/ka.list into databricks.yml.
 
 Reads data/ka.list, parses endpoint names, and adds/updates serving_endpoint
-resources under apps.agent_langgraph.resources so the app can query KA endpoints.
+resources under apps.agent_edf_trading_assistant.resources so the app can query KA endpoints.
 
 Usage:
   uv run python deploy/sync_ka_endpoints_to_yml.py [--dry-run]

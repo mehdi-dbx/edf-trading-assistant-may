@@ -596,7 +596,7 @@ def verify_app_grants() -> tuple[bool, list[str]]:
     """
     from tools.sql_executor import execute_query, get_warehouse
 
-    app_name = os.environ.get("DBX_APP_NAME", "agent-langgraph").strip()
+    app_name = os.environ.get("DBX_APP_NAME", "agent-edf-trading-assistant").strip()
     spec = os.environ.get("UNITY_CATALOG_SCHEMA", "").strip()
     wh_id = os.environ.get("DATABRICKS_WAREHOUSE_ID", "").strip()
 
@@ -971,7 +971,7 @@ def run_check_only() -> None:
     grants_ok, grants_issues = verify_app_grants()
     grants_failed = not grants_ok
     if grants_ok:
-        app_name = os.environ.get("DBX_APP_NAME", "agent-langgraph").strip()
+        app_name = os.environ.get("DBX_APP_NAME", "agent-edf-trading-assistant").strip()
         print(f"  {OK} UC tables, routines, warehouse {C}({app_name}){W}")
     else:
         for issue in grants_issues:

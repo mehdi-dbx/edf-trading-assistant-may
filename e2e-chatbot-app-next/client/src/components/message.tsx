@@ -4,6 +4,10 @@ import { AnimatedAssistantIcon } from './animation-assistant-icon';
 import { Response } from './elements/response';
 import { MessageContent } from './elements/message';
 import { KnowledgeBaseCard } from './elements/knowledge-base-card';
+import {
+  KaSourcesCard,
+  parseKaToolOutputFromUnknown,
+} from './elements/ka-sources-card';
 import { parseResponseBlocks, hasResponseBlocks } from '@/lib/response-blocks';
 import {
   Tool,
@@ -287,8 +291,11 @@ const PurePreviewMessage = ({
 
             // Render Databricks tool calls and results
             if (part.type === `dynamic-tool`) {
-              if (!showIntermediateSteps) return null;
-              const { toolCallId, input, state, errorText, output, toolName } = part;
+              const { toolCallId, input, state, errorText, output, toolName } =
+                part;
+              if (!showIntermediateSteps) {
+                return null;
+              }
 
               // Check if this is an MCP tool call by looking for approvalRequestId in metadata
               // This works across all states (approval-requested, approval-denied, output-available)
@@ -381,6 +388,16 @@ const PurePreviewMessage = ({
                             <div className="rounded border p-2 text-red-500">
                               Error: {errorText}
                             </div>
+                          ) : toolName === 'query_knowledge_assistant' ? (
+                            (() => {
+                              const ka = parseKaToolOutputFromUnknown(output);
+                              const text = ka?.answer ?? (typeof output === 'string' ? output : JSON.stringify(output, null, 2));
+                              return (
+                                <div className="whitespace-pre-wrap font-mono text-sm">
+                                  {text}
+                                </div>
+                              );
+                            })()
                           ) : (
                             <div className="whitespace-pre-wrap font-mono text-sm">
                               {typeof output === 'string'
@@ -425,6 +442,26 @@ const PurePreviewMessage = ({
               );
             }
           })}
+
+          {message.role === 'assistant' && (() => {
+            const allKaSources = message.parts
+              .filter((p) => p.type === 'dynamic-tool' && (p as { toolName?: string }).toolName === 'query_knowledge_assistant')
+              .flatMap((p) => {
+                const tp = p as { state?: string; output?: unknown; providerExecuted?: boolean };
+                const isOutputReady = tp.state === 'output-available' ||
+                  (tp.providerExecuted && !isLoading && tp.state === 'input-available');
+                if (!isOutputReady) return [];
+                const ka = parseKaToolOutputFromUnknown(tp.output);
+                return ka?.sources?.length ? ka.sources : [];
+              });
+            if (!allKaSources.length) return null;
+            return (
+              <KaSourcesCard
+                answer=""
+                sources={allKaSources}
+              />
+            );
+          })()}
 
           {message.role === 'assistant' &&
             isLoading &&

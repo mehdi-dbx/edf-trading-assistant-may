@@ -28,7 +28,7 @@ tools = await mcp_client.get_tools()
 ```yaml
 resources:
   apps:
-    agent_langgraph:
+    agent_edf_trading_assistant:
       resources:
         - name: 'my_genie_space'
           genie_space:
@@ -40,7 +40,7 @@ resources:
 **Step 3:** Deploy and run:
 ```bash
 databricks bundle deploy
-databricks bundle run agent_langgraph  # Required to start app with new code!
+databricks bundle run agent_edf_trading_assistant  # Required to start app with new code!
 ```
 
 See **deploy** skill for more details.
@@ -99,5 +99,5 @@ env:
 - **MLflow experiment**: Already configured in template, no action needed
 - **Multiple resources**: Add multiple entries under `resources:` list
 - **Permission types vary**: Each resource type has specific permission values
-- **Deploy + Run after changes**: Run both `databricks bundle deploy` AND `databricks bundle run agent_langgraph`
+- **Deploy + Run after changes**: Run both `databricks bundle deploy` AND `databricks bundle run agent_edf_trading_assistant`
 - **valueFrom matching**: Ensure `app.yaml` `valueFrom` values match `databricks.yml` resource `name` values

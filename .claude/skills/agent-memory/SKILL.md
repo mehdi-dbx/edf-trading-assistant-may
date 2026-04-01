@@ -159,7 +159,7 @@ Add the Lakebase database resource to your app:
 ```yaml
 resources:
   apps:
-    agent_langgraph:
+    agent_edf_trading_assistant:
       name: "your-app-name"
       source_code_path: ./
 
@@ -364,7 +364,7 @@ curl -X POST https://<app-url>/invocations \
 | **"permission denied for table store"** | Missing grants | Add `database` resource to databricks.yml |
 | **"Memory not available - no user_id"** | Missing user_id | Pass `custom_inputs.user_id` in request |
 | **Memory not persisting** | Different user_ids | Use consistent user_id across requests |
-| **App not updated after deploy** | Forgot to run bundle | Run `databricks bundle run agent_langgraph` after deploy |
+| **App not updated after deploy** | Forgot to run bundle | Run `databricks bundle run agent_edf_trading_assistant` after deploy |
 
 ---
 

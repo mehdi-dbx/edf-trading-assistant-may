@@ -103,7 +103,7 @@ export const KaSourcesCard = memo(function KaSourcesCard({
       {assistantName ? (
         <p className="mb-2 text-muted-foreground text-xs">{assistantName}</p>
       ) : null}
-      <div className="whitespace-pre-wrap text-foreground text-sm">{answer}</div>
+      {answer ? <div className="whitespace-pre-wrap text-foreground text-sm">{answer}</div> : null}
       {n === 0 ? (
         <p className="mt-2 text-muted-foreground text-xs">
           No source documents list was returned for this query (citations may be

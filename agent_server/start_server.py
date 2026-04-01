@@ -51,7 +51,11 @@ def get_table(table_name: str):
 
 
 if os.environ.get("MLFLOW_EXPERIMENT_ID", "").strip():
-    setup_mlflow_git_based_version_tracking()
+    try:
+        setup_mlflow_git_based_version_tracking()
+    except Exception:
+        # Stale experiment ID (e.g. after switching workspace) — deploy/import still works
+        pass
 
 
 def main():

@@ -223,8 +223,16 @@ def query_knowledge_assistant(assistant_name: str, question: str) -> str:
             input=[{"role": "user", "content": question}],
             max_output_tokens=2048,
         )
-        answer = response.output_text or ""
-        sources = _merge_sources(answer, response)
-        return _ka_tool_result_json(answer, assistant_name, sources)
+        raw = response.output_text or ""
+        # Some KAs return JSON: {"answer": "...", "source_documents": [...]}
+        # Unwrap so the agent and frontend receive readable text, not raw JSON.
+        try:
+            parsed = json.loads(raw.strip())
+            if isinstance(parsed, dict) and isinstance(parsed.get("answer"), str):
+                raw = parsed["answer"]
+        except (json.JSONDecodeError, ValueError):
+            pass
+        sources = _merge_sources(response.output_text or "", response)
+        return _ka_tool_result_json(raw, assistant_name, sources)
     except Exception as e:
         return f"Error querying {endpoint}: {e}"

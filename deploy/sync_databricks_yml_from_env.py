@@ -2,7 +2,8 @@
 """Sync databricks.yml and app.yaml from .env.local.
 
 Updates:
-  - databricks.yml: sql_warehouse.id, serving_endpoint.name, target app name
+  - databricks.yml: sql_warehouse.id, serving_endpoint.name, genie_space.space_id,
+    target app name
   - app.yaml: AGENT_MODEL_ENDPOINT, UNITY_CATALOG_SCHEMA, DATABRICKS_WAREHOUSE_ID
 
 Usage:
@@ -77,18 +78,33 @@ def main() -> int:
             )
             changes.append(f"  serving_endpoint.name <- AGENT_MODEL_ENDPOINT={endpoint}")
 
+    # genie_space.space_id <- EDF_TRADING_GENIE_ROOM
+    genie_room = os.environ.get("EDF_TRADING_GENIE_ROOM", "").strip()
+    if genie_room:
+        m = re.search(r"genie_space:.*?space_id: '([^']*)'", content, re.DOTALL)
+        if m and m.group(1) != genie_room:
+            content = re.sub(
+                r"(genie_space:[\s\S]*?space_id: )'[^']*'",
+                r"\g<1>'" + genie_room + "'",
+                content,
+                count=1,
+            )
+            changes.append(
+                f"  genie_space.space_id <- EDF_TRADING_GENIE_ROOM={genie_room}"
+            )
+
     # targets.template app name <- DBX_APP_NAME
     app_name = os.environ.get("DBX_APP_NAME", "").strip()
     if app_name:
         m = re.search(
-            r"template:\s*\n\s+mode: production\s*\n\s+workspace:.*?agent_langgraph:\s*\n\s+name: ([^\n]+)",
+            r"template:\s*\n\s+mode: production\s*\n\s+workspace:.*?agent_edf_trading_assistant:\s*\n\s+name: ([^\n]+)",
             content,
             re.DOTALL,
         )
         current = m.group(1).strip().strip('"').strip("'") if m else ""
         if current != app_name:
             content = re.sub(
-                r"(template:\s*\n\s+mode: production\s*\n\s+workspace:.*?agent_langgraph:\s*\n\s+name: )[^\n]+",
+                r"(template:\s*\n\s+mode: production\s*\n\s+workspace:.*?agent_edf_trading_assistant:\s*\n\s+name: )[^\n]+",
                 r"\g<1>" + app_name,
                 content,
                 count=1,

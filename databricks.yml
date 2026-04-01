@@ -1,15 +1,15 @@
 bundle:
-  name: agent_langgraph
+  name: agent_edf_trading_assistant
 
 resources:
   # MLflow experiment for agent tracing - automatically created by bundle
   experiments:
-    agent_langgraph_experiment:
+    agent_edf_trading_assistant_experiment:
       name: /Users/${workspace.current_user.userName}/${bundle.name}-${bundle.target}
 
   apps:
-    agent_langgraph:
-      name: "${bundle.target}-agent-langgraph"
+    agent_edf_trading_assistant:
+      name: "${bundle.target}-agent-edf-trading-assistant"
       description: "LangGraph agent application"
       source_code_path: ./
 
@@ -17,90 +17,89 @@ resources:
       resources:
         - name: 'experiment'
           experiment:
-            experiment_id: "${resources.experiments.agent_langgraph_experiment.id}"
+            experiment_id: "${resources.experiments.agent_edf_trading_assistant_experiment.id}"
             permission: 'CAN_MANAGE'
         - name: 'sql_warehouse'
           sql_warehouse:
-            id: 'f96bf82f247a1f42'
+            id: '5fab259c214f158e'
             permission: 'CAN_USE'
         - name: 'serving_endpoint'
           serving_endpoint:
-            name: 'claude-sonnet-4-6'
+            name: 'databricks-claude-sonnet-4-6'
             permission: 'CAN_QUERY'
         # OpenAI secret for voice: add OPENAI_API_KEY to .env.local, run ./deploy/setup_openai_secret.sh, then uncomment:
         # - name: 'openai_api_key'
         #   secret:
         #     scope: 'template'
-        #     key: 'openai-api-key'
+        #     key: 'openai-ap`i-key'
         #     permission: 'READ'
 
         # --- KA endpoints (from data/ka.list) ---
-        - name: 'ka_00138eb9'
+        - name: 'ka_02272bf7'
           serving_endpoint:
-            name: 'ka-00138eb9-endpoint'
+            name: 'ka-02272bf7-endpoint'
             permission: 'CAN_QUERY'
-        - name: 'ka_296a5e81'
+        - name: 'ka_17df95e6'
           serving_endpoint:
-            name: 'ka-296a5e81-endpoint'
+            name: 'ka-17df95e6-endpoint'
             permission: 'CAN_QUERY'
-        - name: 'ka_4ec75e4c'
+        - name: 'ka_279c2e24'
           serving_endpoint:
-            name: 'ka-4ec75e4c-endpoint'
+            name: 'ka-279c2e24-endpoint'
             permission: 'CAN_QUERY'
-        - name: 'ka_5a105383'
+        - name: 'ka_409508df'
           serving_endpoint:
-            name: 'ka-5a105383-endpoint'
+            name: 'ka-409508df-endpoint'
             permission: 'CAN_QUERY'
-        - name: 'ka_5cd019a5'
+        - name: 'ka_7597b13d'
           serving_endpoint:
-            name: 'ka-5cd019a5-endpoint'
+            name: 'ka-7597b13d-endpoint'
             permission: 'CAN_QUERY'
-        - name: 'ka_61806910'
+        - name: 'ka_7a682a22'
           serving_endpoint:
-            name: 'ka-61806910-endpoint'
+            name: 'ka-7a682a22-endpoint'
             permission: 'CAN_QUERY'
-        - name: 'ka_64e256da'
+        - name: 'ka_91765c48'
           serving_endpoint:
-            name: 'ka-64e256da-endpoint'
+            name: 'ka-91765c48-endpoint'
             permission: 'CAN_QUERY'
-        - name: 'ka_69061eaf'
+        - name: 'ka_94be15a3'
           serving_endpoint:
-            name: 'ka-69061eaf-endpoint'
+            name: 'ka-94be15a3-endpoint'
             permission: 'CAN_QUERY'
-        - name: 'ka_7370ef1c'
+        - name: 'ka_b3e5b903'
           serving_endpoint:
-            name: 'ka-7370ef1c-endpoint'
+            name: 'ka-b3e5b903-endpoint'
             permission: 'CAN_QUERY'
-        - name: 'ka_79b609b3'
+        - name: 'ka_bdea1d75'
           serving_endpoint:
-            name: 'ka-79b609b3-endpoint'
+            name: 'ka-bdea1d75-endpoint'
             permission: 'CAN_QUERY'
-        - name: 'ka_aa684c1e'
+        - name: 'ka_c887ed34'
           serving_endpoint:
-            name: 'ka-aa684c1e-endpoint'
+            name: 'ka-c887ed34-endpoint'
             permission: 'CAN_QUERY'
-        - name: 'ka_b0fdac6d'
+        - name: 'ka_d4972e01'
           serving_endpoint:
-            name: 'ka-b0fdac6d-endpoint'
+            name: 'ka-d4972e01-endpoint'
             permission: 'CAN_QUERY'
-        - name: 'ka_cb13cd52'
+        - name: 'ka_db468426'
           serving_endpoint:
-            name: 'ka-cb13cd52-endpoint'
+            name: 'ka-db468426-endpoint'
             permission: 'CAN_QUERY'
-        - name: 'ka_d690527e'
+        - name: 'ka_e507f805'
           serving_endpoint:
-            name: 'ka-d690527e-endpoint'
+            name: 'ka-e507f805-endpoint'
             permission: 'CAN_QUERY'
-        - name: 'ka_daa7c012'
+        - name: 'ka_e77484a5'
           serving_endpoint:
-            name: 'ka-daa7c012-endpoint'
+            name: 'ka-e77484a5-endpoint'
             permission: 'CAN_QUERY'
-        # ka_ee88f235 removed: app resource limit 20 (had 21)
         # --- end KA endpoints ---
         - name: 'genie_trading'
           genie_space:
             name: 'EDF TRADING'
-            space_id: '01f125ff96d61121a20aab6e7d0b080d'
+            space_id: '01f12af979b51f8c90cb6f5aa2d50416'
             permission: 'CAN_RUN'
 
 targets:
@@ -115,8 +114,8 @@ targets:
     #   host: https://...
     resources:
       apps:
-        agent_langgraph:
-          name: agent-langgraph
+        agent_edf_trading_assistant:
+          name: agent-edf-trading-assistant
 
   # Default target (DBX_APP_NAME in .env.local)
   # Use: databricks bundle deploy  (no -t needed) or ./deploy/deploy.sh
@@ -127,5 +126,5 @@ targets:
       root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/template
     resources:
       apps:
-        agent_langgraph:
-          name: agent-edf-trading
+        agent_edf_trading_assistant:
+          name: agent-edf-trading-assistant

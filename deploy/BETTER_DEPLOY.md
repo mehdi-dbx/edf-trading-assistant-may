@@ -119,7 +119,7 @@ node.log
 ```bash
 if [[ "$1" == "--restart-only" ]]; then
   echo "Restarting app (no deploy)..."
-  databricks bundle run agent_langgraph -t "$TARGET"
+  databricks bundle run agent_edf_trading_assistant -t "$TARGET"
   exit 0
 fi
 ```

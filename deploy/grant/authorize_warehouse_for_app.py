@@ -35,7 +35,7 @@ def get_warehouse_id() -> str | None:
 
 
 def main() -> int:
-    default_app = os.environ.get("DBX_APP_NAME", "agent-langgraph").strip()
+    default_app = os.environ.get("DBX_APP_NAME", "agent-edf-trading-assistant").strip()
     parser = argparse.ArgumentParser(
         description="Grant CAN_USE on SQL warehouse to app service principal"
     )

@@ -11,11 +11,9 @@ if [[ ! -d e2e-chatbot-app-next ]]; then
 fi
 
 # Free ports 8000, 3000, 3001 if in use (e.g. previous run)
-# Only kill LISTEN processes, not clients (e.g. Firefox with localhost:3000 open)
-for port in 8000 3000 3001; do
-  pid=$(lsof -ti :$port -sTCP:LISTEN 2>/dev/null) || true
-  [[ -n "$pid" ]] && kill $pid 2>/dev/null || true
-done
+# shellcheck source=local-stack-ports.sh
+source "$ROOT/scripts/local-stack-ports.sh"
+kill_local_stack_ports
 sleep 1
 
 # Load .env then .env.local so DATABRICKS_* and API_PROXY are set for all children
@@ -24,6 +22,22 @@ set -a
 [[ -f .env.local ]] && source .env.local
 set +a
 export API_PROXY="${API_PROXY:-http://localhost:8000/invocations}"
+
+# Prefer project .venv so we do not hit PyPI on every run when `uv run` would sync.
+run_python() {
+  if [[ -x "$ROOT/.venv/bin/python" ]]; then
+    "$ROOT/.venv/bin/python" "$@"
+  else
+    uv run python "$@"
+  fi
+}
+run_start_server() {
+  if [[ -x "$ROOT/.venv/bin/start-server" ]]; then
+    "$ROOT/.venv/bin/start-server" "$@"
+  else
+    uv run start-server "$@"
+  fi
+}
 
 BACKEND_PID=""
 NODE_PID=""
@@ -57,10 +71,10 @@ wait_for() {
 (cd e2e-chatbot-app-next && npm run build:server) || true
 
 # Verify backend imports before starting (fail fast on SyntaxError etc.)
-uv run python -c "from agent_server.start_server import app" || { echo "Backend import failed. Check backend.log or run: uv run start-server"; exit 1; }
+run_python -c "from agent_server.start_server import app" || { echo "Backend import failed. Check backend.log or run: uv run start-server"; exit 1; }
 
 # Start each process simply, capture the subshell PID
-uv run start-server --reload >> "$ROOT/backend.log" 2>&1 &
+run_start_server --reload >> "$ROOT/backend.log" 2>&1 &
 BACKEND_PID=$!
 wait_for "http://127.0.0.1:8000/health" "Backend" || true
 

@@ -66,7 +66,7 @@ Add the Lakebase `database` resource to your app in `databricks.yml`:
 ```yaml
 resources:
   apps:
-    agent_langgraph:
+    agent_edf_trading_assistant:
       name: "your-app-name"
       source_code_path: ./
 
@@ -199,7 +199,7 @@ This creates these tables in the `public` schema:
 databricks bundle deploy
 
 # Start/restart the app with new code (REQUIRED!)
-databricks bundle run agent_langgraph
+databricks bundle run agent_edf_trading_assistant
 ```
 
 > **Note:** `bundle deploy` only uploads files and configures resources. `bundle run` is required to actually start the app with the new code.
@@ -210,15 +210,15 @@ databricks bundle run agent_langgraph
 
 ```yaml
 bundle:
-  name: agent_langgraph
+  name: agent_edf_trading_assistant
 
 resources:
   experiments:
-    agent_langgraph_experiment:
+    agent_edf_trading_assistant_experiment:
       name: /Users/${workspace.current_user.userName}/${bundle.name}-${bundle.target}
 
   apps:
-    agent_langgraph:
+    agent_edf_trading_assistant:
       name: "my-agent-app"
       description: "Agent with long-term memory"
       source_code_path: ./
@@ -226,7 +226,7 @@ resources:
       resources:
         - name: 'experiment'
           experiment:
-            experiment_id: "${resources.experiments.agent_langgraph_experiment.id}"
+            experiment_id: "${resources.experiments.agent_edf_trading_assistant_experiment.id}"
             permission: 'CAN_MANAGE'
 
         # Lakebase instance for long-term memory
@@ -284,7 +284,7 @@ env:
 | **"permission denied for table store"** | Missing grants | The `database` resource in DAB should handle this; verify the resource is configured |
 | **"Failed to connect to Lakebase"** | Wrong instance name | Verify instance name in databricks.yml and .env |
 | **Connection pool errors on exit** | Python cleanup race | Ignore `PythonFinalizationError` - it's harmless |
-| **App not updated after deploy** | Forgot to run bundle | Run `databricks bundle run agent_langgraph` after deploy |
+| **App not updated after deploy** | Forgot to run bundle | Run `databricks bundle run agent_edf_trading_assistant` after deploy |
 | **valueFrom not resolving** | Resource name mismatch | Ensure `valueFrom` value matches `name` in databricks.yml resources |
 
 ---
