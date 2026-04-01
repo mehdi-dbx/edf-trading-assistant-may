@@ -18,6 +18,7 @@ import { sessionRouter } from './routes/session';
 import { messagesRouter } from './routes/messages';
 import { configRouter } from './routes/config';
 import { tablesRouter } from './routes/tables';
+import { filesRouter } from './routes/files';
 import multer from 'multer';
 import { authMiddleware, requireAuth } from './middleware/auth';
 import { ChatSDKError } from '@chat-template/core/errors';
@@ -187,6 +188,7 @@ app.use('/api/session', sessionRouter);
 app.use('/api/messages', messagesRouter);
 app.use('/api/config', configRouter);
 app.use('/api/tables', tablesRouter);
+app.use('/api/files', filesRouter);
 
 // 404 for unmatched API routes (return JSON, not HTML)
 app.use('/api', (_req, res) => {

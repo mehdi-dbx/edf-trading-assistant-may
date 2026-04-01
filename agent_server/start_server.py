@@ -14,7 +14,9 @@ app = server.app  # noqa: F841
 
 import os
 
+import requests as _requests
 from fastapi import HTTPException
+from fastapi.responses import StreamingResponse
 
 from tools.sql_executor import execute_query, get_warehouse  # noqa: E402
 
@@ -48,6 +50,37 @@ def get_table(table_name: str):
         return {"columns": columns, "rows": rows}
     except Exception as e:
         raise HTTPException(status_code=502, detail=str(e))
+
+
+@app.get("/files")
+def serve_volume_file(path: str):
+    """Proxy a UC Volume file from the Databricks Files API.
+
+    `path` must be an absolute Volume path starting with /Volumes/...
+    Auth lives here (Python backend) — Node server has no Databricks credentials.
+    """
+    if not path.startswith("/Volumes/"):
+        raise HTTPException(status_code=400, detail="path must start with /Volumes/")
+    from databricks.sdk import WorkspaceClient
+    try:
+        w = WorkspaceClient()
+        host = (w.config.host or "").rstrip("/")
+        auth_headers = w.config.authenticate()
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Databricks auth error: {e}")
+    url = f"{host}/api/2.0/fs/files{path}"
+    resp = _requests.get(url, headers=auth_headers, stream=True, timeout=30)
+    if resp.status_code != 200:
+        raise HTTPException(status_code=resp.status_code, detail=resp.text[:200])
+    media_type = resp.headers.get("content-type", "application/octet-stream")
+
+    def _iter():
+        for chunk in resp.iter_content(chunk_size=65536):
+            if chunk:
+                yield chunk
+
+    return StreamingResponse(_iter(), media_type=media_type,
+                             headers={"Content-Disposition": "inline"})
 
 
 if os.environ.get("MLFLOW_EXPERIMENT_ID", "").strip():

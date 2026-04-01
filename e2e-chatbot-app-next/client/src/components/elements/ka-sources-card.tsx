@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
 
-export type KaSourceItem = { title: string; excerpt: string };
+export type KaSourceItem = { title: string; excerpt: string; url?: string };
 
 export type KaToolPayload = {
   answer: string;
@@ -15,8 +15,14 @@ export type KaToolPayload = {
   sources?: KaSourceItem[];
 };
 
+function volumePathToUrl(path: string): { displayName: string; url: string } | null {
+  if (!path.startsWith('/Volumes/')) return null;
+  const basename = path.split('/').pop() ?? path;
+  return { displayName: basename, url: `/api/files?path=${encodeURIComponent(path)}` };
+}
+
 function normalizeSourceRow(raw: Record<string, unknown>): KaSourceItem | null {
-  const title =
+  const rawTitle =
     (typeof raw.title === 'string' && raw.title) ||
     (typeof raw.document_name === 'string' && raw.document_name) ||
     (typeof raw.name === 'string' && raw.name) ||
@@ -27,8 +33,12 @@ function normalizeSourceRow(raw: Record<string, unknown>): KaSourceItem | null {
       : typeof raw.text === 'string'
         ? raw.text
         : '';
-  if (!title && !excerpt) return null;
-  return { title: title || 'Source', excerpt };
+  if (!rawTitle && !excerpt) return null;
+  const volumeLink = volumePathToUrl(rawTitle);
+  if (volumeLink) {
+    return { title: volumeLink.displayName, excerpt, url: volumeLink.url };
+  }
+  return { title: rawTitle || 'Source', excerpt };
 }
 
 function payloadFromParsedObject(o: Record<string, unknown>): KaToolPayload | null {
@@ -135,7 +145,18 @@ export const KaSourcesCard = memo(function KaSourcesCard({
             <ul className="space-y-3">
               {sources.map((s, i) => (
                 <li key={`${s.title}-${i}`} className="text-sm">
-                  <p className="font-medium text-foreground">{s.title}</p>
+                  {s.url ? (
+                    <a
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+                    >
+                      {s.title}
+                    </a>
+                  ) : (
+                    <p className="font-medium text-foreground">{s.title}</p>
+                  )}
                   {s.excerpt ? (
                     <p className="wrap-break-word mt-1 text-muted-foreground">
                       {s.excerpt}
