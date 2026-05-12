@@ -40,6 +40,8 @@ cd edf-trading-assistant
 
 ### ![Step 2](https://img.shields.io/badge/Step_2-Setup_Workspace-blue?style=for-the-badge)
 
+![Setup Wizard](https://img.shields.io/badge/Recommended-Run_Setup_Wizard-ff6600?style=for-the-badge)
+
 ```bash
 uv run setup
 ```
