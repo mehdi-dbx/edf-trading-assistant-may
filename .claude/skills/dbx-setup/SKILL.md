@@ -1,5 +1,5 @@
 ---
-name: setup
+name: dbx-setup
 description: "Configure workspace resources for the EDF Trading Assistant. Use when: (1) First time deploying on a new workspace, (2) User says 'setup', 'configure workspace', or 'setup environment', (3) KA endpoints need refreshing, (4) Genie space or warehouse changed, (5) User asks 'how to set up'."
 ---
 

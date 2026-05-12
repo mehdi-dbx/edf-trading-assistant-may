@@ -56,7 +56,7 @@ Ask the user: "I see there's an existing app with the same name. Would you like 
 | Task | Skill | Path |
 |------|-------|------|
 | First-time auth + MLflow | **quickstart** | `.claude/skills/quickstart/SKILL.md` |
-| Workspace setup (all resources) | **setup** | `.claude/skills/setup/SKILL.md` |
+| Workspace setup (all resources) | **dbx-setup** | `.claude/skills/dbx-setup/SKILL.md` |
 | Find tools/resources | **discover-tools** | `.claude/skills/discover-tools/SKILL.md` |
 | Deploy to Databricks | **deploy** | `.claude/skills/deploy/SKILL.md` |
 | Add tools & permissions | **add-tools** | `.claude/skills/add-tools/SKILL.md` |

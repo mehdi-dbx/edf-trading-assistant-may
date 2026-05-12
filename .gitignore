@@ -217,7 +217,7 @@ sketch
 !.claude/skills/lakebase-setup/
 !.claude/skills/agent-memory/
 !.claude/skills/migrate-from-model-serving/
-!.claude/skills/setup/
+!.claude/skills/dbx-setup/
 
 # Pre-built frontend: allow committing app dist so fresh users skip npm install/build
 !app/client/dist/
