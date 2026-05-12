@@ -72,7 +72,13 @@ def serve_volume_file(path: str):
     resp = _requests.get(url, headers=auth_headers, stream=True, timeout=30)
     if resp.status_code != 200:
         raise HTTPException(status_code=resp.status_code, detail=resp.text[:200])
-    media_type = resp.headers.get("content-type", "application/octet-stream")
+    media_type = resp.headers.get("content-type", "") or ""
+    # Databricks Files API often returns application/octet-stream even for text/PDF.
+    # Infer from extension so the browser renders inline instead of downloading.
+    if not media_type or media_type == "application/octet-stream":
+        import mimetypes
+        guessed, _ = mimetypes.guess_type(path)
+        media_type = guessed or "application/octet-stream"
 
     def _iter():
         for chunk in resp.iter_content(chunk_size=65536):

@@ -11,7 +11,15 @@ description: "Run and test the agent locally. Use when: (1) User says 'run local
 uv run start-app
 ```
 
-This starts the agent at http://localhost:8000
+This starts the agent at http://localhost:8000.
+
+The frontend ships **pre-built** — `npm run build` is skipped automatically when `app/client/dist/` and `app/server/dist/` exist. Only `npm install` runs (to resolve workspace refs).
+
+To force a full frontend rebuild (after modifying frontend code):
+
+```bash
+uv run start-app --rebuild
+```
 
 ## Server Options
 

@@ -23,7 +23,7 @@ A weather intelligence chatbot for EDF energy traders. It answers questions abou
 ```
 
 - **Backend**: FastAPI + MLflow AgentServer (ResponsesAgent interface), LangGraph agent with tool calling
-- **Frontend**: React/Vite chat app (`e2e-chatbot-app-next/`), communicates via Node API proxy
+- **Frontend**: React/Vite chat app (`app/`), communicates via Node API proxy
 - **LLM**: `databricks-claude-sonnet-4-6` served via Databricks Model Serving
 - **Data layer**: Unity Catalog tables in `edf.chatbot` schema, queried via Genie MCP or direct SQL; UC Volumes for document files
 
@@ -34,7 +34,7 @@ A weather intelligence chatbot for EDF energy traders. It answers questions abou
 | `agent_server/` | Agent logic (`agent.py`), FastAPI server (`start_server.py`), evaluation, utils |
 | `tools/` | Agent tools: KA query, SQL executor, time, example data, placeholder |
 | `prompt/` | System prompt files: `main.prompt`, `style.prompt`, `knowledge.base`, `user.prompt` |
-| `e2e-chatbot-app-next/` | Full-stack Next.js/React chat UI with Node API server |
+| `app/` | Full-stack Next.js/React chat UI with Node API server |
 | `data/` | Data definitions, table lists, KA endpoint list, SQL utilities, CSV-to-Delta loader |
 | `data/def/` | Data dictionary HTML, structured tables list, unstructured volumes list |
 | `deploy/` | Deployment scripts, permission grants (Genie, KA endpoints, warehouse, tables) |
@@ -50,7 +50,7 @@ A weather intelligence chatbot for EDF energy traders. It answers questions abou
 - **`tools/query_example_data.py`** -- Queries example data table
 - **`tools/get_current_time.py`** -- Returns current time for temporal context
 - **Genie MCP** -- DatabricksMCPServer for natural language SQL over `edf.chatbot` Delta tables
-- **`e2e-chatbot-app-next/`** -- React chat UI with conversation history, KA source cards, code blocks, reasoning display
+- **`app/`** -- React chat UI with conversation history, KA source cards, code blocks, reasoning display
 
 ## Configuration
 

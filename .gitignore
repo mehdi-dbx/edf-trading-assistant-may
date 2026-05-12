@@ -218,6 +218,10 @@ sketch
 !.claude/skills/agent-memory/
 !.claude/skills/migrate-from-model-serving/
 
+# Pre-built frontend: allow committing app dist so fresh users skip npm install/build
+!app/client/dist/
+!app/server/dist/
+
 **/.env
 **/.env.local
 .env.local
@@ -229,3 +233,4 @@ sketch
 .frontend.pid
 .node.pid.env.local.e2
 .env.local.v1
+app/client/dist/assets/wasm-*.js

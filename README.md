@@ -31,7 +31,7 @@ After the setup is complete, you can start the agent server and the chat app loc
 uv run start-app
 ```
 
-This will start the agent server and the chat app at http://localhost:8000.
+This will start the agent server and the chat app at http://localhost:8000. The frontend ships pre-built — `npm run build` is skipped when `app/client/dist/` exists. Use `uv run start-app --rebuild` to force a frontend rebuild after modifying frontend code.
 
 For local development with live reload (backend, Node API, and Vite frontend), use:
 

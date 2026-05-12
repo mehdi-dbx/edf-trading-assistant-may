@@ -47,7 +47,7 @@ So every app start runs a full npm install and build on the container. That is t
 
 ```bash
 echo "Building frontend..."
-(cd e2e-chatbot-app-next && npm ci && npm run build) || {
+(cd app && npm ci && npm run build) || {
   echo "Warning: Frontend build failed. App will build on start."
 }
 ```
@@ -71,10 +71,10 @@ Create `.databricksignore` at project root to exclude:
 ```
 .venv/
 node_modules/
-e2e-chatbot-app-next/node_modules/
-e2e-chatbot-app-next/client/node_modules/
-e2e-chatbot-app-next/server/node_modules/
-e2e-chatbot-app-next/packages/*/node_modules/
+app/node_modules/
+app/client/node_modules/
+app/server/node_modules/
+app/packages/*/node_modules/
 
 __pycache__/
 *.py[cod]
@@ -91,7 +91,7 @@ htmlcov/
 !ARCHITECTURE.md
 docs/
 reference/
-e2e-chatbot-app-next/tests/
+app/tests/
 *.test.ts
 *.spec.ts
 
@@ -132,7 +132,7 @@ fi
 
 `npm run build` runs `db:migrate` first. In the deployed app, `migrate.ts` exits 0 when no DB is configured, but it still runs.
 
-Add to `e2e-chatbot-app-next/package.json`:
+Add to `app/package.json`:
 
 ```json
 "build:deploy": "npm run build:client && npm run build:server"

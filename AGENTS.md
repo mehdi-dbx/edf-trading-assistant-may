@@ -99,7 +99,7 @@ Ask the user: "I see there's an existing app with the same name. Would you like 
 | `agent_server/evaluate_agent.py` | Agent evaluation with MLflow scorers |
 | `databricks.yml` | Bundle config & resource permissions |
 | `scripts/quickstart.py` | One-command setup script |
-| `scripts/start_app.py` | Build + run backend and frontend (used for deploy) |
+| `scripts/start_app.py` | Run backend and frontend; skips build if pre-built dist exists (`--rebuild` to force) |
 | `scripts/start_local.sh` | Full local stack: backend (8000) + Node API (3001) + Vite (3000), port cleanup |
 | `scripts/restart_local.sh` | Kill processes on 8000/3000/3001, then `exec start_local.sh` |
 | `scripts/discover_tools.py` | Discovers available workspace resources |

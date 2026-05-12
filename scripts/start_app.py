@@ -32,7 +32,7 @@ FRONTEND_READY = [r"Server is running on http://localhost"]
 
 
 class ProcessManager:
-    def __init__(self, port=8000):
+    def __init__(self, port=8000, rebuild=False):
         self.backend_process = None
         self.frontend_process = None
         self.backend_ready = False
@@ -41,6 +41,7 @@ class ProcessManager:
         self.backend_log = None
         self.frontend_log = None
         self.port = port
+        self.rebuild = rebuild
 
     def monitor_process(self, process, name, log_file, patterns):
         is_ready = False
@@ -77,10 +78,10 @@ class ProcessManager:
             self.failed.set()
 
     def clone_frontend_if_needed(self):
-        if Path("e2e-chatbot-app-next").exists():
+        if Path("app").exists():
             return True
 
-        print("Cloning e2e-chatbot-app-next...")
+        print("Cloning app...")
         for url in [
             "https://github.com/databricks/app-templates.git",
             "git@github.com:databricks/app-templates.git",
@@ -97,16 +98,16 @@ class ProcessManager:
         else:
             print("ERROR: Failed to clone repository.")
             print(
-                "Manually download from: https://download-directory.github.io/?url=https://github.com/databricks/app-templates/tree/main/e2e-chatbot-app-next"
+                "Manually download from: https://download-directory.github.io/?url=https://github.com/databricks/app-templates/tree/main/app"
             )
             return False
 
         subprocess.run(
-            ["git", "sparse-checkout", "set", "e2e-chatbot-app-next"],
+            ["git", "sparse-checkout", "set", "app"],
             cwd="temp-app-templates",
             check=True,
         )
-        Path("temp-app-templates/e2e-chatbot-app-next").rename("e2e-chatbot-app-next")
+        Path("temp-app-templates/app").rename("app")
         shutil.rmtree("temp-app-templates", ignore_errors=True)
         return True
 
@@ -175,14 +176,31 @@ class ProcessManager:
             )
 
             # Setup and start frontend
-            frontend_dir = Path("e2e-chatbot-app-next")
-            for cmd, desc in [("npm install", "install"), ("npm run build", "build")]:
-                print(f"Running npm {desc}...")
+            frontend_dir = Path("app")
+            client_dist = frontend_dir / "client" / "dist" / "index.html"
+            server_dist = frontend_dir / "server" / "dist" / "index.mjs"
+            has_prebuilt = client_dist.exists() and server_dist.exists()
+
+            # npm install is always needed (resolves workspace refs for npm run start)
+            print("Running npm install...")
+            result = subprocess.run(
+                "npm install".split(), cwd=frontend_dir, capture_output=True, text=True
+            )
+            if result.returncode != 0:
+                print(f"npm install failed: {result.stderr}")
+                return 1
+
+            if has_prebuilt and not self.rebuild:
+                print("Pre-built frontend found — skipping build (use --rebuild to force)")
+            else:
+                if self.rebuild:
+                    print("Rebuilding frontend (--rebuild flag)...")
+                print("Running npm build...")
                 result = subprocess.run(
-                    cmd.split(), cwd=frontend_dir, capture_output=True, text=True
+                    "npm run build".split(), cwd=frontend_dir, capture_output=True, text=True
                 )
                 if result.returncode != 0:
-                    print(f"npm {desc} failed: {result.stderr}")
+                    print(f"npm build failed: {result.stderr}")
                     return 1
 
             self.frontend_process = self.start_process(
@@ -233,8 +251,12 @@ def main():
         usage="%(prog)s [OPTIONS]\n\nAll options are passed through to start-server. "
         "Use 'uv run start-server --help' for available options."
     )
-    # Parse known args (none currently) and pass remaining to backend
-    _, backend_args = parser.parse_known_args()
+    parser.add_argument(
+        "--rebuild", action="store_true",
+        help="Force npm install + build even if pre-built dist exists",
+    )
+    # Parse known args and pass remaining to backend
+    known, backend_args = parser.parse_known_args()
 
     # Extract port from backend_args if specified
     port = 8000
@@ -246,7 +268,7 @@ def main():
                 pass
             break
 
-    sys.exit(ProcessManager(port=port).run(backend_args))
+    sys.exit(ProcessManager(port=port, rebuild=known.rebuild).run(backend_args))
 
 
 if __name__ == "__main__":

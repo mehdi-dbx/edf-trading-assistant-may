@@ -1,6 +1,6 @@
 # Databricks App Deployment Guide
 
-This document summarizes the deployment process, lessons learned, traps to avoid, and best practices for the amadeus-checkin app (agent + e2e-chatbot-app-next frontend).
+This document summarizes the deployment process, lessons learned, traps to avoid, and best practices for the amadeus-checkin app (agent + app frontend).
 
 ---
 
