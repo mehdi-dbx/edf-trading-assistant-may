@@ -3,83 +3,145 @@ name: setup
 description: "Configure workspace resources for the EDF Trading Assistant. Use when: (1) First time deploying on a new workspace, (2) User says 'setup', 'configure workspace', or 'setup environment', (3) KA endpoints need refreshing, (4) Genie space or warehouse changed, (5) User asks 'how to set up'."
 ---
 
-# Workspace Setup
+# Workspace Setup — Interactive Guide
 
-Interactive wizard that configures all workspace-specific resources in `.env.local` and `databricks.yml`.
+I run each step myself, check the result, fix errors, and tell the user what happened before moving on.
 
-## Full Setup (all steps)
+## How I execute this
 
-```bash
-uv run setup
-```
+I run each step via `uv run setup --step <name>`, read the output, report the result to the user, and only proceed to the next step if the current one succeeded. If a step fails, I diagnose and fix before continuing.
 
-Walks through: host, auth, warehouse, schema, model endpoint, KA endpoints, Genie space, MLflow.
+## Step sequence
 
-## Quick Check (non-interactive)
+### Step 1: Check current state first
 
 ```bash
 uv run setup --check
 ```
 
-Verifies all resources are configured and reachable. Exits with code 1 if any check fails.
+Read the output. If everything passes, tell the user "All resources are configured" and ask if they want to re-configure anything specific. If some checks fail, proceed with the failing steps below.
 
-## Single Step
-
-```bash
-uv run setup --step <name>
-```
-
-Available steps:
-
-| Step | What it configures |
-|------|-------------------|
-| `host` | `DATABRICKS_HOST` — workspace URL |
-| `auth` | `DATABRICKS_TOKEN` or `DATABRICKS_CONFIG_PROFILE` |
-| `warehouse` | `DATABRICKS_WAREHOUSE_ID` — lists available, pick one |
-| `schema` | `UNITY_CATALOG_SCHEMA` — verify or create UC assets |
-| `model` | `AGENT_MODEL_ENDPOINT` — lists serving endpoints, pick one |
-| `ka` | Knowledge Assistants — fetch from workspace, write `data/ka.list`, sync to `databricks.yml`, validate prompt refs |
-| `genie` | `EDF_TRADING_GENIE_ROOM` — lists Genie spaces, pick one, updates `.env.local` + `databricks.yml` |
-| `mlflow` | `MLFLOW_EXPERIMENT_ID` — keep or create new |
-| `check` | Same as `--check` |
-
-## List Steps
+### Step 2: DATABRICKS_HOST
 
 ```bash
-uv run setup --steps
+uv run setup --step host
 ```
 
-## KA Step Details
+- **Success**: Tell user which host is configured, move to Step 3
+- **Fail**: The script is interactive — if it can't run non-interactively, tell the user to set `DATABRICKS_HOST` in `.env.local` manually, then re-run
 
-The `ka` step is the most important — it chains 4 operations:
-
-1. Fetches all Knowledge Assistants from the workspace REST API
-2. Writes endpoint mapping to `data/ka.list`
-3. Syncs KA serving_endpoint resources into `databricks.yml`
-4. Validates that backtick references in `prompt/main.prompt` resolve against the new ka.list
-
-If prompt references don't match (e.g. KA display names differ), the user needs to update `prompt/main.prompt`.
-
-## What Gets Written
-
-- **`.env.local`** — All env vars (host, token, warehouse ID, Genie room, experiment ID, model endpoint)
-- **`data/ka.list`** — KA endpoint mapping (by KA step)
-- **`databricks.yml`** — KA serving_endpoint resources + Genie space_id (by KA and Genie steps)
-
-## After Setup
+### Step 3: Authentication
 
 ```bash
-uv run start-app        # test locally
-# or
-databricks bundle deploy && databricks bundle run agent_edf_trading_assistant  # deploy
-cd deploy/grant && bash run_all_grants.sh  # grant app permissions
+uv run setup --step auth
 ```
+
+- **Success**: Tell user which auth method is active (token or profile), move on
+- **Fail**: Guide user to run `databricks auth login` or set `DATABRICKS_TOKEN` in `.env.local`
+
+### Step 4: SQL Warehouse
+
+```bash
+uv run setup --step warehouse
+```
+
+- **Success**: Report warehouse name and ID
+- **Fail**: Tell user to check warehouse exists and is running
+
+### Step 5: Unity Catalog Schema
+
+```bash
+uv run setup --step schema
+```
+
+- **Success**: Report schema and table status
+- **Fail**: Offer to run `uv run python data/init/create_all_assets.py` to create missing assets
+
+### Step 6: Model Endpoint
+
+```bash
+uv run setup --step model
+```
+
+- **Success**: Report endpoint name and ready state
+- **Fail**: Tell user to check serving endpoint exists (e.g. `databricks-claude-sonnet-4-6`)
+
+### Step 7: Knowledge Assistants (critical step)
+
+```bash
+uv run setup --step ka
+```
+
+This is the most important step. It:
+1. Fetches all KAs from the workspace
+2. Writes `data/ka.list`
+3. Syncs KA endpoints into `databricks.yml`
+4. Validates prompt references
+
+- **Success**: Report how many KAs found, whether prompt refs all resolve
+- **Prompt mismatch warning**: Tell user which backtick refs in `prompt/main.prompt` don't match, and help them update the mapping table
+- **No KAs found**: Tell user they need to create KAs first using the companion project [edf-trading-data](https://github.com/mehdi-dbx/edf-trading-data)
+- **Fail (API error)**: Check that `DATABRICKS_HOST` and `DATABRICKS_TOKEN` are set in `.env.local`
+
+### Step 8: Genie Space
+
+```bash
+uv run setup --step genie
+```
+
+- **Success**: Report Genie space name and ID
+- **Fail**: Tell user to create a Genie space in the workspace UI first
+
+### Step 9: MLflow Experiment
+
+```bash
+uv run setup --step mlflow
+```
+
+- **Success**: Report experiment name and ID
+- **Fail**: Offer to create a new experiment
+
+### Step 10: Final verification
+
+```bash
+uv run setup --check
+```
+
+Report the full status. If all green, tell user:
+- `uv run start-app` to test locally
+- `databricks bundle deploy && databricks bundle run agent_edf_trading_assistant` to deploy
+- `cd deploy/grant && bash run_all_grants.sh` to grant app permissions
+
+## Important notes
+
+- Steps 2-9 are **interactive** (they prompt for input via stdin). When running them, use the Bash tool and let the user see and respond to prompts.
+- If the user wants to skip a step, move to the next one.
+- If a step needs a value the user doesn't have yet, note it and continue with other steps. Come back to it later.
+- The `--check` mode is non-interactive and safe to run anytime.
+
+## Available switches
+
+| Command | What it does |
+|---------|-------------|
+| `uv run setup` | Full interactive wizard (all steps sequentially) |
+| `uv run setup --check` | Non-interactive verification of all resources |
+| `uv run setup --step <name>` | Run one step: `host`, `auth`, `warehouse`, `schema`, `model`, `ka`, `genie`, `mlflow`, `check` |
+| `uv run setup --steps` | List all available step names |
+
+## What gets written
+
+| File | Written by |
+|------|-----------|
+| `.env.local` | All steps (env vars) |
+| `data/ka.list` | `ka` step (KA endpoint mapping) |
+| `databricks.yml` | `ka` step (KA resources), `genie` step (space_id) |
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| "DATABRICKS_HOST not set" | Run `uv run setup --step host` |
-| "No Knowledge Assistants found" | Create KAs first (see [edf-trading-data](https://github.com/mehdi-dbx/edf-trading-data)) |
-| Prompt refs don't match | Update `prompt/main.prompt` KA name mapping to match your KA display names |
-| "Could not fetch KAs" | Ensure `DATABRICKS_HOST` and `DATABRICKS_TOKEN` are set in `.env.local` |
+| Issue | Fix |
+|-------|-----|
+| "DATABRICKS_HOST not set" | `uv run setup --step host` |
+| "No Knowledge Assistants found" | Create KAs first with [edf-trading-data](https://github.com/mehdi-dbx/edf-trading-data) |
+| Prompt refs don't match | Update `prompt/main.prompt` KA name mapping to match workspace KA display names |
+| "Could not fetch KAs" | Set `DATABRICKS_HOST` and `DATABRICKS_TOKEN` in `.env.local` |
+| Auth expired | `databricks auth login` |
