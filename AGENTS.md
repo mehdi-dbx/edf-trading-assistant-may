@@ -55,7 +55,8 @@ Ask the user: "I see there's an existing app with the same name. Would you like 
 
 | Task | Skill | Path |
 |------|-------|------|
-| Setup, auth, first-time | **quickstart** | `.claude/skills/quickstart/SKILL.md` |
+| First-time auth + MLflow | **quickstart** | `.claude/skills/quickstart/SKILL.md` |
+| Workspace setup (all resources) | **setup** | `.claude/skills/setup/SKILL.md` |
 | Find tools/resources | **discover-tools** | `.claude/skills/discover-tools/SKILL.md` |
 | Deploy to Databricks | **deploy** | `.claude/skills/deploy/SKILL.md` |
 | Add tools & permissions | **add-tools** | `.claude/skills/add-tools/SKILL.md` |
@@ -74,7 +75,9 @@ Ask the user: "I see there's an existing app with the same name. Would you like 
 
 | Task | Command |
 |------|---------|
-| Setup | `uv run quickstart` |
+| First-time auth + MLflow | `uv run quickstart` |
+| Workspace setup (all resources) | `uv run setup` |
+| Check all resources | `uv run setup --check` |
 | Discover tools | `uv run discover-tools` |
 | Run locally (build + serve) | `uv run start-app` |
 | Run locally with live reload (dev) | `./scripts/start_local.sh` |

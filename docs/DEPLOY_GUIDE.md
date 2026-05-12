@@ -3,74 +3,72 @@
 This guide assumes the customer already has their KA data and Genie space set up in their workspace.
 
 ## Prerequisites
+
 - Databricks CLI (`brew install databricks/tap/databricks`)
 - `uv` (`brew install uv`)
 - `nvm` with Node 20 (`nvm use 20`)
 
-## 1. Clone & setup
+## 1. Clone & first-time auth
+
 ```bash
-git clone https://github.com/mehdi-dbx/edf-trading-assistant-may.git
-cd edf-trading-assistant-may
+git clone https://github.com/mehdi-dbx/edf-trading-assistant.git
+cd edf-trading-assistant
 uv run quickstart
 ```
 
-## 2. Update KA endpoints to match your workspace
+## 2. Configure workspace resources
 
-List your KA endpoints:
 ```bash
-python scripts/list_ka_endpoints.py
+uv run setup
 ```
 
-Replace `data/ka.list` with the output, then sync to `databricks.yml`:
+This single command walks you through everything:
+
+- **Host + auth** — Databricks connection
+- **Warehouse** — Lists available warehouses, pick one
+- **UC schema** — Verify or create `edf.chatbot` tables
+- **Model endpoint** — Lists serving endpoints, pick one (e.g. `databricks-claude-sonnet-4-6`)
+- **KA endpoints** — Fetches all KAs from workspace, writes `data/ka.list`, syncs to `databricks.yml`, validates prompt references
+- **Genie space** — Lists available spaces, pick one, updates `.env.local` + `databricks.yml`
+- **MLflow experiment** — Keep existing or create new
+
+To verify everything is configured:
+
 ```bash
-python deploy/sync_ka_endpoints_to_yml.py
+uv run setup --check
 ```
 
-## 3. Update Genie room
+To re-run a single step:
 
-Set your Genie space ID in `.env.local`:
 ```bash
-EDF_TRADING_GENIE_ROOM=<your-genie-space-id>
+uv run setup --step ka
 ```
 
-And update the `genie_space` block in `databricks.yml` with your space ID.
+## 3. Update prompt KA names (if different)
 
-## 4. Update prompt KA names (if different)
+If your KA display names differ from the defaults, update the mapping in `prompt/main.prompt` to match. The setup script warns about mismatches.
 
-If your KA display names differ from the defaults, update the mapping in `prompt/main.prompt` to match. Verify alignment:
-```bash
-python scripts/check_prompt_ka_names.py
-```
+## 4. Test locally
 
-## 5. Update warehouse & model endpoint
-
-In `.env.local` and `databricks.yml`, set:
-- `DATABRICKS_WAREHOUSE_ID` — your SQL warehouse ID
-- `AGENT_MODEL_ENDPOINT` — your serving endpoint (e.g. `databricks-claude-sonnet-4-6`)
-- `UNITY_CATALOG_SCHEMA` — your catalog.schema (e.g. `edf.chatbot`)
-
-## 6. Test locally
 ```bash
 uv run start-app
 ```
 
-## 7. Deploy
+## 5. Deploy
+
 ```bash
 databricks bundle deploy && databricks bundle run agent_edf_trading_assistant
 ```
 
-## 8. Grant permissions
+## 6. Grant permissions
+
 ```bash
 cd deploy/grant && bash run_all_grants.sh
 ```
-
-## Key principle
-
-Everything workspace-specific lives in 3 places: `data/ka.list`, `.env.local`, and `databricks.yml`. Get those right and the rest just works.
 
 ## Common issues
 
 - **"App already exists"** on deploy: run `databricks apps delete agent-edf-trading-assistant` and retry, or bind the existing app
 - **WeasyPrint error on macOS**: `brew install pango cairo`
 - **No Genie results**: verify `EDF_TRADING_GENIE_ROOM` is set in `.env.local`
-- **KA name mismatch**: run `python scripts/check_prompt_ka_names.py` to verify prompt names match endpoints
+- **KA name mismatch**: run `uv run setup --step ka` to re-fetch and validate
