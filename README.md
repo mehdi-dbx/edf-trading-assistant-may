@@ -17,7 +17,6 @@ Built on Databricks Agent Framework with LangGraph, deployed as a Databricks App
 ```bash
 git clone https://github.com/mehdi-dbx/edf-trading-assistant.git
 cd edf-trading-assistant
-uv run quickstart
 uv run setup
 uv run start-app
 ```
@@ -32,28 +31,20 @@ uv run start-app
 | [Databricks CLI](https://docs.databricks.com/dev-tools/cli/install.html) | `brew install databricks` |
 | Databricks workspace with KAs and Genie space | Where the agent connects |
 
-### ![Step 1](https://img.shields.io/badge/Step_1-Clone_&_Install-blue?style=for-the-badge)
+### ![Step 1](https://img.shields.io/badge/Step_1-Clone-blue?style=for-the-badge)
 
 ```bash
 git clone https://github.com/mehdi-dbx/edf-trading-assistant.git
 cd edf-trading-assistant
 ```
 
-### ![Step 2](https://img.shields.io/badge/Step_2-Authenticate-blue?style=for-the-badge)
-
-```bash
-uv run quickstart
-```
-
-This handles prerequisites check, Databricks OAuth login, MLflow experiment creation, and `.env` setup.
-
-### ![Step 3](https://img.shields.io/badge/Step_3-Configure_Workspace-blue?style=for-the-badge)
+### ![Step 2](https://img.shields.io/badge/Step_2-Setup_Workspace-blue?style=for-the-badge)
 
 ```bash
 uv run setup
 ```
 
-The setup wizard walks you through every workspace resource interactively:
+Single command that walks you through every workspace resource interactively (auth, warehouse, schema, model, KAs, Genie, MLflow):
 
 | Step | Resource | What it does |
 |------|----------|--------------|
@@ -80,7 +71,7 @@ uv run setup --step genie   # just the Genie space
 uv run setup --steps         # list all available steps
 ```
 
-### ![Step 4](https://img.shields.io/badge/Step_4-Run_Locally-green?style=for-the-badge)
+### ![Step 3](https://img.shields.io/badge/Step_3-Run_Locally-green?style=for-the-badge)
 
 ```bash
 uv run start-app
@@ -94,7 +85,7 @@ For local development with live reload:
 ./scripts/start_local.sh    # backend (8000) + Node API (3001) + Vite (3000)
 ```
 
-### ![Step 5](https://img.shields.io/badge/Step_5-Deploy-blueviolet?style=for-the-badge)
+### ![Step 4](https://img.shields.io/badge/Step_4-Deploy-blueviolet?style=for-the-badge)
 
 ```bash
 databricks bundle deploy && databricks bundle run agent_edf_trading_assistant
@@ -106,7 +97,7 @@ Then grant the app service principal access to all resources:
 cd deploy/grant && bash run_all_grants.sh
 ```
 
-### ![Step 6](https://img.shields.io/badge/Step_6-Query-blueviolet?style=for-the-badge)
+### ![Step 5](https://img.shields.io/badge/Step_5-Query-blueviolet?style=for-the-badge)
 
 Databricks Apps are only queryable via OAuth token (not PAT):
 
