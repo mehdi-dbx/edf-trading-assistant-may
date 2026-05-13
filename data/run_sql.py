@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run a SQL file. Substitutes __SCHEMA_QUALIFIED__ and __VOLUME_PATH__ from AMADEUS_UNITY_CATALOG_SCHEMA.
+"""Run a SQL file. Substitutes __SCHEMA_QUALIFIED__ and __VOLUME_PATH__ from UNITY_CATALOG_SCHEMA.
 Usage: python data/run_sql.py <path/to/file.sql>"""
 import os
 import sys

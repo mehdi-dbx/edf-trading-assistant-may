@@ -95,7 +95,7 @@ def _add_source(
 
 
 def _sources_from_dict_lists(data: Any, max_items: int = 20) -> list[dict[str, str]]:
-    """Parse Amadeus-style `source_documents` / `sources` from a JSON object."""
+    """Parse KA-style `source_documents` / `sources` from a JSON object."""
     sources: list[dict[str, str]] = []
     seen: set[tuple[str, str]] = set()
     if not isinstance(data, dict):

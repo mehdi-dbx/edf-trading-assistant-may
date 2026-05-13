@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Upload data/*.csv to Delta tables in AMADEUS_UNITY_CATALOG_SCHEMA. Creates volume 'data' if missing."""
+"""Upload data/*.csv to Delta tables in UNITY_CATALOG_SCHEMA. Creates volume 'data' if missing."""
 import os
 import re
 import sys
@@ -77,9 +77,9 @@ def main():
     from databricks.sdk.service.catalog import VolumeType
 
     w = WorkspaceClient()
-    spec = os.environ.get("AMADEUS_UNITY_CATALOG_SCHEMA") or ""
+    spec = os.environ.get("UNITY_CATALOG_SCHEMA") or ""
     if "." not in spec:
-        print("Set AMADEUS_UNITY_CATALOG_SCHEMA to catalog.schema", file=sys.stderr)
+        print("Set UNITY_CATALOG_SCHEMA to catalog.schema", file=sys.stderr)
         sys.exit(1)
     catalog, schema = spec.strip().split(".", 1)
 

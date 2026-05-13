@@ -1,6 +1,6 @@
 # How to Replicate PAT-ONLY Authentication
 
-If you already have the same `app` structure (e.g. from app-templates or amadeus-ground), no code changes are needed. Configure env vars and the existing code will use PAT.
+If you already have the same `app` structure (e.g. from app-templates), no code changes are needed. Configure env vars and the existing code will use PAT.
 
 ---
 

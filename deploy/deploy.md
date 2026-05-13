@@ -1,6 +1,6 @@
 # Databricks App Deployment Guide
 
-This document summarizes the deployment process, lessons learned, traps to avoid, and best practices for the amadeus-checkin app (agent + app frontend).
+This document summarizes the deployment process, lessons learned, traps to avoid, and best practices for the edf-trading-assistant app (agent + app frontend).
 
 ---
 
@@ -132,8 +132,8 @@ env:
 
 **Other important vars in app.yaml:**
 - `DATABRICKS_WAREHOUSE_ID` (or valueFrom)
-- `AMADEUS_UNITY_CATALOG_SCHEMA` (or your catalog.schema, e.g. mc.amadeus-checkin)
-- `AMADEUS_GENIE_CHECKIN` (Genie Space ID)
+- `UNITY_CATALOG_SCHEMA` (or your catalog.schema, e.g. edf.chatbot)
+- `EDF_TRADING_GENIE_ROOM` (Genie Space ID)
 - `AGENT_MODEL_ENDPOINT`
 - `API_PROXY` (for chat to reach agent)
 
@@ -149,8 +149,8 @@ env:
 | `DBX_APP_NAME` | App name (e.g. `agent-edf-trading-assistant`) |
 | `AGENT_MODEL_ENDPOINT` | Foundation Model endpoint name |
 | `DATABRICKS_WAREHOUSE_ID` | SQL warehouse ID for UC queries |
-| `AMADEUS_UNITY_CATALOG_SCHEMA` | Catalog.schema (e.g. `mc.amadeus-checkin`) |
-| `AMADEUS_GENIE_CHECKIN` | Genie Space ID |
+| `UNITY_CATALOG_SCHEMA` | Catalog.schema (e.g. `edf.chatbot`) |
+| `EDF_TRADING_GENIE_ROOM` | Genie Space ID |
 | `MLFLOW_EXPERIMENT_ID` | For agent tracing |
 | `TASK_EVENTS_URL` | Node API URL for task notifications (local: `http://127.0.0.1:3001`) |
 | `API_PROXY` | Agent invocations URL (e.g. `http://localhost:8000/invocations`) |
@@ -162,7 +162,7 @@ env:
 ./deploy/setup_openai_secret.sh
 ```
 
-This reads `OPENAI_API_KEY` from `.env.local` and stores it in Databricks secret scope `amadeus-checkin`, key `openai-api-key`. Deploy.sh runs it automatically if the key is set.
+This reads `OPENAI_API_KEY` from `.env.local` and stores it in Databricks secret scope `edf-trading-assistant`, key `openai-api-key`. Deploy.sh runs it automatically if the key is set.
 
 ---
 
